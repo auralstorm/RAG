@@ -20,7 +20,7 @@
 - Frontend：Vite + React + TypeScript；Chat/Admin 两个独立应用
 - RAG：LlamaIndex
 - Agent Runtime：LangGraph
-- Parser：当前优先 Docling，先完成 md/DOCX/PDF 基础解析；实际解析缺口再触发 MinerU PDF 备选验证，见 [POC-02](04-poc-acceptance-and-adr.md)
+- Parser：Docling 默认；独立 POC-02 已按用户决定延后，md/DOCX/PDF 的实际解析验证在 P3-01 正式集成时完成，实际缺口再触发 MinerU PDF 备选验证，见 [POC-02](04-poc-acceptance-and-adr.md)
 - Search：Elasticsearch 默认，OpenSearch 保留 POC 候选
 - Model Gateway：自研 Facade + LiteLLM
 - Async：RabbitMQ + Celery

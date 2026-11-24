@@ -174,7 +174,7 @@ class ParsedBlock:
 
 Parser 只负责内容解析，不直接写 ES、不决定 ACL、不负责平台 Document 状态。
 
-当前优先完成 Docling 的 Markdown、DOCX、PDF 基础解析；MinerU 保留为 PDF 备选，不作为当前集成依赖。先收集 Docling 在实际样本上的内容、表格、阅读顺序、引用定位及耗时证据；缺口经配置/OCR/Adapter 排查仍存在时，再按 [POC-02](04-poc-acceptance-and-adr.md) 使用同一批失败样本验证 MinerU，并保持 ParsedDocument 输出契约。
+用户于 2026-11-24 明确将独立 Parser POC 延后，Docling 的 Markdown、DOCX、PDF 实际解析验证合并到 P3-01 正式集成阶段，当前先推进 V1.0 主线契约与工程底座。Parser 验收仍需收集实际样本的内容、表格、阅读顺序、引用定位、错误和耗时证据；缺口经配置/OCR/Adapter 排查仍存在时，再按 [POC-02](04-poc-acceptance-and-adr.md) 使用同一批失败样本验证 MinerU，并保持 ParsedDocument 输出契约。MinerU 继续保留为 PDF 备选。
 
 ### 4.3 Chunking 策略
 
