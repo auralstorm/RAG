@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "DocumentSourceType": {
+      "enum": [
+        "UPLOAD",
+        "CONNECTOR"
+      ],
+      "title": "DocumentSourceType",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "document_ids": {
+      "default": [],
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Document Ids",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_types": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/DocumentSourceType"
+      },
+      "title": "Source Types",
+      "type": "array"
+    }
+  },
+  "title": "RetrievalFilters",
+  "type": "object"
+}

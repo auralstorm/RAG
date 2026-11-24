@@ -1,0 +1,45 @@
+{
+  "name": "enterprise-rag",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": "22.22.0",
+    "pnpm": "10.34.9"
+  },
+  "scripts": {
+    "dev:chat": "pnpm --filter @enterprise-rag/chat dev",
+    "dev:admin": "pnpm --filter @enterprise-rag/admin dev",
+    "build": "pnpm -r --if-present build",
+    "lint": "eslint frontend vitest.config.ts eslint.config.js commitlint.config.js",
+    "typecheck": "pnpm -r typecheck && tsc --noEmit -p tsconfig.tools.json",
+    "test": "vitest run",
+    "format:check": "prettier --check frontend package.json pnpm-workspace.yaml eslint.config.js vitest.config.ts commitlint.config.js .github .prettierrc.json",
+    "format": "prettier --write frontend package.json pnpm-workspace.yaml eslint.config.js vitest.config.ts commitlint.config.js .github .prettierrc.json",
+    "commitlint": "commitlint"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@eslint/js": "10.0.1",
+    "@testing-library/jest-dom": "8.0.0",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.13.0",
+    "jsdom": "29.1.1",
+    "prettier": "3.10.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vite": "8.3.6",
+    "vitest": "5.1.1"
+  }
+}

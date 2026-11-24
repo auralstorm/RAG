@@ -1,0 +1,372 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "Normalized [0,1] coordinates, origin at the page's top-left, in displayed orientation.",
+      "properties": {
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Left",
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Right",
+          "type": "number"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_id": {
+          "format": "uuid",
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "citation_id": {
+          "format": "uuid",
+          "title": "Citation Id",
+          "type": "string"
+        },
+        "citation_order": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Citation Order",
+          "type": "integer"
+        },
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "excerpt": {
+          "maxLength": 320,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "heading_path": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Heading Path",
+          "type": "array"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "locations": {
+          "items": {
+            "$ref": "#/$defs/SourceLocation"
+          },
+          "minItems": 1,
+          "title": "Locations",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "document_id",
+        "kb_id",
+        "document_version",
+        "citation_id",
+        "chunk_id",
+        "citation_order",
+        "title",
+        "locations",
+        "heading_path",
+        "excerpt"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "DocxSourceLocation": {
+      "additionalProperties": false,
+      "description": "Zero-based body element index, counting paragraphs and tables in original order.",
+      "properties": {
+        "element_index": {
+          "minimum": 0,
+          "title": "Element Index",
+          "type": "integer"
+        },
+        "element_type": {
+          "enum": [
+            "paragraph",
+            "table"
+          ],
+          "title": "Element Type",
+          "type": "string"
+        },
+        "kind": {
+          "const": "docx",
+          "default": "docx",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "element_index",
+        "element_type"
+      ],
+      "title": "DocxSourceLocation",
+      "type": "object"
+    },
+    "MarkdownSourceLocation": {
+      "additionalProperties": false,
+      "description": "Half-open Unicode code-point offsets in the original decoded Markdown source.",
+      "properties": {
+        "char_end": {
+          "exclusiveMinimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "markdown",
+          "default": "markdown",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "char_start",
+        "char_end"
+      ],
+      "title": "MarkdownSourceLocation",
+      "type": "object"
+    },
+    "MessageRole": {
+      "enum": [
+        "USER",
+        "ASSISTANT"
+      ],
+      "title": "MessageRole",
+      "type": "string"
+    },
+    "MessageStatus": {
+      "enum": [
+        "GENERATING",
+        "COMPLETED",
+        "REFUSED",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "title": "MessageStatus",
+      "type": "string"
+    },
+    "PdfSourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "const": "pdf",
+          "default": "pdf",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_no"
+      ],
+      "title": "PdfSourceLocation",
+      "type": "object"
+    },
+    "SourceLocation": {
+      "discriminator": {
+        "mapping": {
+          "docx": "#/$defs/DocxSourceLocation",
+          "markdown": "#/$defs/MarkdownSourceLocation",
+          "pdf": "#/$defs/PdfSourceLocation"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PdfSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/MarkdownSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/DocxSourceLocation"
+        }
+      ]
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "citations": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Citation"
+      },
+      "maxItems": 100,
+      "title": "Citations",
+      "type": "array"
+    },
+    "content": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Content"
+    },
+    "conversation_id": {
+      "format": "uuid",
+      "title": "Conversation Id",
+      "type": "string"
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "role": {
+      "$ref": "#/$defs/MessageRole"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sequence": {
+      "minimum": 1,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "status": {
+      "$ref": "#/$defs/MessageStatus"
+    },
+    "trace_id": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{32}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Id"
+    }
+  },
+  "required": [
+    "id",
+    "conversation_id",
+    "sequence",
+    "role",
+    "status",
+    "created_at"
+  ],
+  "title": "Message",
+  "type": "object"
+}

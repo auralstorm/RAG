@@ -1,0 +1,71 @@
+{
+  "$defs": {
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Current document restriction intersects KB permission; None explicitly means inherit.",
+  "properties": {
+    "acl_policy_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Acl Policy Id"
+    },
+    "allowed_subject_ids": {
+      "anyOf": [
+        {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Allowed Subject Ids"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "policy_version": {
+      "$ref": "#/$defs/PolicyVersion"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "document_id",
+    "kb_id",
+    "acl_policy_id",
+    "allowed_subject_ids",
+    "policy_version"
+  ],
+  "title": "DocumentAccessPolicy",
+  "type": "object"
+}

@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "IndexName": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Freshly observed internal alias state; both pointers must represent the same target.",
+  "properties": {
+    "active_index_version_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Active Index Version Id"
+    },
+    "alias_name": {
+      "$ref": "#/$defs/IndexName"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "physical_index_name": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IndexName"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kb_id",
+    "alias_name",
+    "active_index_version_id",
+    "physical_index_name"
+  ],
+  "title": "IndexAlias",
+  "type": "object"
+}

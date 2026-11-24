@@ -1,0 +1,533 @@
+{
+  "schema_version": "1.0",
+  "schemas": [
+    {
+      "frontend_group": null,
+      "name": "ApiErrorEnvelope",
+      "path": "schemas/api-error.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "common",
+      "name": "PaginationQuery",
+      "path": "schemas/pagination-query.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "common",
+      "name": "PageResponse",
+      "path": "schemas/page-response.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "User",
+      "path": "schemas/iam/user.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "Role",
+      "path": "schemas/iam/role.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "Permission",
+      "path": "schemas/iam/permission.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "UserRole",
+      "path": "schemas/iam/user-role.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "RolePermission",
+      "path": "schemas/iam/role-permission.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "SystemRoleCode",
+      "path": "schemas/iam/system-role-code.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "ResourceGrant",
+      "path": "schemas/iam/resource-grant.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "IdentityKey",
+      "path": "schemas/internal/identity-key.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ExternalIdentity",
+      "path": "schemas/internal/external-identity.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "LegacyPrincipalKey",
+      "path": "schemas/internal/legacy-principal-key.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "SubjectBinding",
+      "path": "schemas/internal/subject-binding.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AccessContext",
+      "path": "schemas/internal/access-context.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizationRequest",
+      "path": "schemas/internal/authorization-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizationSnapshot",
+      "path": "schemas/internal/authorization-snapshot.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PolicyDecision",
+      "path": "schemas/internal/policy-decision.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "KnowledgeBase",
+      "path": "schemas/knowledge/knowledge-base.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "EmbeddingBinding",
+      "path": "schemas/knowledge/embedding-binding.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "Document",
+      "path": "schemas/knowledge/document.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "DocumentVersion",
+      "path": "schemas/knowledge/document-version.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "DocumentVersionRef",
+      "path": "schemas/knowledge/document-version-ref.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionJob",
+      "path": "schemas/knowledge/ingestion-job.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionEvent",
+      "path": "schemas/knowledge/ingestion-event.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionFailure",
+      "path": "schemas/knowledge/ingestion-failure.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionProgress",
+      "path": "schemas/knowledge/ingestion-progress.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IndexVersion",
+      "path": "schemas/knowledge/index-version.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IndexPublication",
+      "path": "schemas/knowledge/index-publication.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredObjectRef",
+      "path": "schemas/internal/stored-object-ref.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredDocumentVersion",
+      "path": "schemas/internal/stored-document-version.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "DocumentAccessPolicy",
+      "path": "schemas/internal/document-access-policy.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexManifest",
+      "path": "schemas/internal/index-manifest.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexValidationReport",
+      "path": "schemas/internal/index-validation-report.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredIndexVersion",
+      "path": "schemas/internal/stored-index-version.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexAlias",
+      "path": "schemas/internal/index-alias.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationRequest",
+      "path": "schemas/internal/publication-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationSnapshot",
+      "path": "schemas/internal/publication-snapshot.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationPlan",
+      "path": "schemas/internal/publication-plan.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublishedDocumentSnapshot",
+      "path": "schemas/internal/published-document-snapshot.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedDocument",
+      "path": "schemas/internal/parsed-document.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedPage",
+      "path": "schemas/internal/parsed-page.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedBlock",
+      "path": "schemas/internal/parsed-block.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedTable",
+      "path": "schemas/internal/parsed-table.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsingWarning",
+      "path": "schemas/internal/parsing-warning.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParserInput",
+      "path": "schemas/internal/parser-input.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "Chunk",
+      "path": "schemas/internal/chunk.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalRequest",
+      "path": "schemas/internal/retrieval-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalFacts",
+      "path": "schemas/internal/retrieval-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalDocumentFacts",
+      "path": "schemas/internal/retrieval-document-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalIndexBinding",
+      "path": "schemas/internal/retrieval-index-binding.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizedRetrievalScope",
+      "path": "schemas/internal/authorized-retrieval-scope.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalSelection",
+      "path": "schemas/retrieval/retrieval-selection.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalFilters",
+      "path": "schemas/retrieval/retrieval-filters.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievedChunk",
+      "path": "schemas/retrieval/retrieved-chunk.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalDiagnostics",
+      "path": "schemas/retrieval/retrieval-diagnostics.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalResult",
+      "path": "schemas/retrieval/retrieval-result.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ScoreComponents",
+      "path": "schemas/retrieval/score-components.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkSource",
+      "path": "schemas/retrieval/chunk-source.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkSourceSpan",
+      "path": "schemas/retrieval/chunk-source-span.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkMetadata",
+      "path": "schemas/retrieval/chunk-metadata.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "Provider",
+      "path": "schemas/models/provider.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelConfig",
+      "path": "schemas/models/model-config.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelCost",
+      "path": "schemas/models/model-cost.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelUsage",
+      "path": "schemas/models/model-usage.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelFailure",
+      "path": "schemas/models/model-failure.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "SecretReference",
+      "path": "schemas/internal/secret-reference.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredProvider",
+      "path": "schemas/internal/stored-provider.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredModelConfig",
+      "path": "schemas/internal/stored-model-config.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelRequest",
+      "path": "schemas/internal/model-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelResponse",
+      "path": "schemas/internal/model-response.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelStreamEvent",
+      "path": "schemas/internal/model-stream-event.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "TokenMeasurement",
+      "path": "schemas/internal/token-measurement.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelCallFacts",
+      "path": "schemas/internal/model-call-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PreparedModelCall",
+      "path": "schemas/internal/prepared-model-call.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Conversation",
+      "path": "schemas/chat/conversation.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Message",
+      "path": "schemas/chat/message.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Citation",
+      "path": "schemas/chat/citation.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredConversation",
+      "path": "schemas/internal/stored-conversation.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredMessage",
+      "path": "schemas/internal/stored-message.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "Trace",
+      "path": "schemas/observability/trace.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "TraceSpan",
+      "path": "schemas/observability/trace-span.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "AuditEvent",
+      "path": "schemas/observability/audit-event.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "TraceIdentityLink",
+      "path": "schemas/internal/trace-identity-link.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredAuditEvent",
+      "path": "schemas/internal/stored-audit-event.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolDefinition",
+      "path": "schemas/internal/tool-definition.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolInvocation",
+      "path": "schemas/internal/tool-invocation.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolResult",
+      "path": "schemas/internal/tool-result.json",
+      "visibility": "internal"
+    }
+  ]
+}

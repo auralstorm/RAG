@@ -1,0 +1,37 @@
+{
+  "$defs": {
+    "LegacyPrincipalType": {
+      "enum": [
+        "ADMIN_USER",
+        "EMPLOYEE"
+      ],
+      "title": "LegacyPrincipalType",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Equal UUID values in different source profile types remain different identities.",
+  "properties": {
+    "principal_id": {
+      "format": "uuid",
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "principal_type": {
+      "$ref": "#/$defs/LegacyPrincipalType"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "principal_type",
+    "principal_id"
+  ],
+  "title": "LegacyPrincipalKey",
+  "type": "object"
+}

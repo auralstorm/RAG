@@ -20,11 +20,11 @@
 - Frontend：Vite + React + TypeScript；Chat/Admin 两个独立应用
 - RAG：LlamaIndex
 - Agent Runtime：LangGraph
-- Parser：Docling 默认，MinerU 复杂 PDF 备选
+- Parser：Docling 默认；独立 POC-02 已按用户决定延后，md/DOCX/PDF 的实际解析验证在 P3-01 正式集成时完成，实际缺口再触发 MinerU PDF 备选验证，见 [POC-02](04-poc-acceptance-and-adr.md)
 - Search：Elasticsearch 默认，OpenSearch 保留 POC 候选
 - Model Gateway：自研 Facade + LiteLLM
 - Async：RabbitMQ + Celery
-- DB：PostgreSQL；Cache：Redis；Object Storage：S3 compatible / MinIO
+- DB：PostgreSQL；Cache：Redis；Object Storage：S3 compatible / RustFS
 - Observability：OpenTelemetry + Phoenix
 - Evaluation：RAGAS + Golden Dataset
 - 工程组织：Monorepo；前端使用 pnpm workspace 管理两个应用与公共包，依据 [ADR-0014](../../adr/0014-monorepo-and-independent-frontend-apps.md)
@@ -35,3 +35,13 @@
 文档是基于当前已确认架构基线编写的研发设计 V1.0。POC 结果尚待实际执行，因此文中涉及性能阈值、模型表现、解析质量和部署容量的内容均需在目标环境中验证；POC 通过后再冻结具体版本、参数和 SLO。
 
 建议阅读顺序：统一契约规则 → RAG Engine → Agent Runtime → 数据库与 API → POC/ADR → 代码结构与研发任务 → 完整实施计划。
+
+## 实施记录
+
+- [P0-01 工程初始化与本地验收](implementation/P0-01.md)：记录实际命令、结果和待执行的远程检查，不代替阶段 Exit Criteria。
+- [P0-02 Docker 开发环境与就绪检查](implementation/P0-02.md)：记录依赖启动、持久化、故障恢复和重置验证。
+- 试点口径、问答样例和 Chat/Admin 验收流程见 [P0-05 MVP 需求与验收口径](implementation/P0-05.md)。
+
+对象存储已按用户确认采用 RustFS，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md) 与 [替换实施记录](implementation/rustfs-object-storage.md)。选型和开发验收已分开记录，POC-08 的生产准入检查继续在 P0-03 完成。
+
+当前进入 P0-03，已确认文档格式，百炼模型仅作为本次 POC 候选，执行顺序、功能证据及待确认项见 [P0-03 实施进度](implementation/P0-03.md)。

@@ -37,7 +37,7 @@ V1.4 在既有 Tool Gateway、Policy、Agent Registry、HITL 和评测底座上�
 
 ## 4. 技术与范围基线
 
-沿用 Python/FastAPI、React/TypeScript、PostgreSQL、Redis、RabbitMQ/Celery、S3/MinIO、OpenTelemetry/Phoenix、Tool Gateway、Model Gateway 和现有评测 Adapter。Workflow 的持久调度方案见 [ADR-0009](../../adr/0009-durable-workflow-and-shared-approval.md)，实施前用故障与长等待 POC 验证。
+沿用 Python/FastAPI、React/TypeScript、PostgreSQL、Redis、RabbitMQ/Celery、S3/RustFS、OpenTelemetry/Phoenix、Tool Gateway、Model Gateway 和现有评测 Adapter。Workflow 的持久调度方案见 [ADR-0009](../../adr/0009-durable-workflow-and-shared-approval.md)，实施前用故障与长等待 POC 验证。
 
 P0：受控声明式流程、版本发布、工单试点 Connector、Approval Center 最小审批组/分配/委托/升级/拒绝/撤回、可靠事件/定时器、结果对账、允许的补偿、业务审计、权限与恢复验收。
 

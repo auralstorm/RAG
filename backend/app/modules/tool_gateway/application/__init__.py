@@ -1,0 +1,1 @@
+"""Authorized Mock Tool execution."""

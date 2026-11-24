@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Trusted tokenizer result bound to exactly one request, not client-declared token counts.",
+  "properties": {
+    "input_tokens": {
+      "items": {
+        "exclusiveMinimum": 0,
+        "type": "integer"
+      },
+      "minItems": 1,
+      "title": "Input Tokens",
+      "type": "array"
+    },
+    "request_sha256": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tokenizer_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    }
+  },
+  "required": [
+    "request_sha256",
+    "tokenizer_version",
+    "input_tokens"
+  ],
+  "title": "TokenMeasurement",
+  "type": "object"
+}

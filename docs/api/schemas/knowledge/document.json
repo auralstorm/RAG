@@ -1,0 +1,112 @@
+{
+  "$defs": {
+    "DocumentSourceType": {
+      "enum": [
+        "UPLOAD",
+        "CONNECTOR"
+      ],
+      "title": "DocumentSourceType",
+      "type": "string"
+    },
+    "DocumentStatus": {
+      "enum": [
+        "ACTIVE",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "DocumentStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Logical resource; a newer failed processing version does not unpublish older content.",
+  "properties": {
+    "acl_policy_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Acl Policy Id"
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "created_by": {
+      "format": "uuid",
+      "title": "Created By",
+      "type": "string"
+    },
+    "current_version": {
+      "minimum": 1,
+      "title": "Current Version",
+      "type": "integer"
+    },
+    "deleted_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_type": {
+      "$ref": "#/$defs/DocumentSourceType"
+    },
+    "status": {
+      "$ref": "#/$defs/DocumentStatus"
+    },
+    "title": {
+      "maxLength": 512,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Title",
+      "type": "string"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "id",
+    "kb_id",
+    "title",
+    "source_type",
+    "current_version",
+    "status",
+    "acl_policy_id",
+    "created_by",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Document",
+  "type": "object"
+}

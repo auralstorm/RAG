@@ -1,0 +1,484 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "Normalized [0,1] coordinates, origin at the page's top-left, in displayed orientation.",
+      "properties": {
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Left",
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Right",
+          "type": "number"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "DocumentMimeType": {
+      "enum": [
+        "text/markdown",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "type": "string"
+    },
+    "DocxSourceLocation": {
+      "additionalProperties": false,
+      "description": "Zero-based body element index, counting paragraphs and tables in original order.",
+      "properties": {
+        "element_index": {
+          "minimum": 0,
+          "title": "Element Index",
+          "type": "integer"
+        },
+        "element_type": {
+          "enum": [
+            "paragraph",
+            "table"
+          ],
+          "title": "Element Type",
+          "type": "string"
+        },
+        "kind": {
+          "const": "docx",
+          "default": "docx",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "element_index",
+        "element_type"
+      ],
+      "title": "DocxSourceLocation",
+      "type": "object"
+    },
+    "MarkdownSourceLocation": {
+      "additionalProperties": false,
+      "description": "Half-open Unicode code-point offsets in the original decoded Markdown source.",
+      "properties": {
+        "char_end": {
+          "exclusiveMinimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "markdown",
+          "default": "markdown",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "char_start",
+        "char_end"
+      ],
+      "title": "MarkdownSourceLocation",
+      "type": "object"
+    },
+    "ParsedBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Block Id",
+          "type": "string"
+        },
+        "block_type": {
+          "$ref": "#/$defs/ParsedBlockType"
+        },
+        "heading_path": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Heading Path",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_location": {
+          "$ref": "#/$defs/SourceLocation"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParsedTable"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "text": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "block_id",
+        "block_type",
+        "text",
+        "source_location"
+      ],
+      "title": "ParsedBlock",
+      "type": "object"
+    },
+    "ParsedBlockType": {
+      "enum": [
+        "heading",
+        "paragraph",
+        "table",
+        "list",
+        "caption"
+      ],
+      "title": "ParsedBlockType",
+      "type": "string"
+    },
+    "ParsedDocumentMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "anyOf": [
+            {
+              "maxLength": 35,
+              "minLength": 2,
+              "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "title": "ParsedDocumentMetadata",
+      "type": "object"
+    },
+    "ParsedPage": {
+      "additionalProperties": false,
+      "description": "PDF has real page numbers; unpaginated sources use one container with page_no=None.",
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/ParsedBlock"
+          },
+          "title": "Blocks",
+          "type": "array"
+        },
+        "page_no": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Page No"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_no",
+        "blocks"
+      ],
+      "title": "ParsedPage",
+      "type": "object"
+    },
+    "ParsedTable": {
+      "additionalProperties": false,
+      "description": "Rectangular normalized cell text; unsupported structural loss needs a parser warning.",
+      "properties": {
+        "rows": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "minItems": 1,
+          "title": "Rows",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rows"
+      ],
+      "title": "ParsedTable",
+      "type": "object"
+    },
+    "ParsingWarning": {
+      "additionalProperties": false,
+      "description": "Stable adapter-mapped warning code; raw parser exception text is absent.",
+      "properties": {
+        "code": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceLocation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "ParsingWarning",
+      "type": "object"
+    },
+    "PdfSourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "const": "pdf",
+          "default": "pdf",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_no"
+      ],
+      "title": "PdfSourceLocation",
+      "type": "object"
+    },
+    "SourceLocation": {
+      "discriminator": {
+        "mapping": {
+          "docx": "#/$defs/DocxSourceLocation",
+          "markdown": "#/$defs/MarkdownSourceLocation",
+          "pdf": "#/$defs/PdfSourceLocation"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PdfSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/MarkdownSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/DocxSourceLocation"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "document_version_id": {
+      "format": "uuid",
+      "title": "Document Version Id",
+      "type": "string"
+    },
+    "file_hash": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ParsedDocumentMetadata"
+    },
+    "mime_type": {
+      "$ref": "#/$defs/DocumentMimeType"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/ParsedPage"
+      },
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+    },
+    "parser_name": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Parser Name",
+      "type": "string"
+    },
+    "parser_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "warnings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ParsingWarning"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "document_version_id",
+    "document_id",
+    "kb_id",
+    "document_version",
+    "file_hash",
+    "mime_type",
+    "parser_name",
+    "parser_version",
+    "pages"
+  ],
+  "title": "ParsedDocument",
+  "type": "object"
+}

@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "MockToolId": {
+      "const": "mock.request_status",
+      "type": "string"
+    },
+    "MockToolVersion": {
+      "const": "v1",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "default": false,
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "idempotent": {
+      "const": true,
+      "default": true,
+      "title": "Idempotent",
+      "type": "boolean"
+    },
+    "max_attempts": {
+      "const": 1,
+      "default": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "permission_code": {
+      "const": "tool.invoke_mock",
+      "default": "tool.invoke_mock",
+      "title": "Permission Code",
+      "type": "string"
+    },
+    "risk_level": {
+      "const": "LOW",
+      "default": "LOW",
+      "title": "Risk Level",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tool_id": {
+      "$ref": "#/$defs/MockToolId",
+      "default": "mock.request_status"
+    },
+    "tool_version": {
+      "$ref": "#/$defs/MockToolVersion",
+      "default": "v1"
+    }
+  },
+  "title": "ToolDefinition",
+  "type": "object"
+}

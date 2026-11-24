@@ -1,0 +1,23 @@
+[project]
+name = "enterprise-rag-backend"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "aio-pika==10.2.3",
+    "fastapi==0.165.0",
+    "httpx2==2.16.2",
+    "minio==7.2.20",
+    "psycopg[binary]==3.3.9",
+    "pydantic==2.14.4",
+    "pydantic-settings==2.16.3",
+    "redis==8.2.0",
+    "urllib3==2.8.0",
+    "uvicorn[standard]==0.54.0",
+]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

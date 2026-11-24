@@ -1,0 +1,786 @@
+{
+  "$defs": {
+    "AccessContext": {
+      "additionalProperties": false,
+      "description": "Internal server-created context, never authenticated by deserializing its fields.\n\nUser-supplied filters, token role claims and model output do not populate this type.\nactor_ref is pseudonymous correlation, not an alternative authorization subject.",
+      "properties": {
+        "actor_ref": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "identity_id": {
+          "format": "uuid",
+          "title": "Identity Id",
+          "type": "string"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "policy_version": {
+          "$ref": "#/$defs/PolicyVersion"
+        },
+        "purpose": {
+          "$ref": "#/$defs/AccessPurpose"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "subject_id": {
+          "format": "uuid",
+          "title": "Subject Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subject_id",
+        "identity_id",
+        "actor_ref",
+        "environment",
+        "purpose",
+        "policy_version",
+        "issued_at",
+        "expires_at"
+      ],
+      "title": "AccessContext",
+      "type": "object"
+    },
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
+    "ActorReference": {
+      "pattern": "^actor_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "ChatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Content",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "ChatRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "max_output_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens",
+          "type": "integer"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/ChatMessage"
+          },
+          "minItems": 1,
+          "title": "Messages",
+          "type": "array"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "chat",
+          "default": "chat",
+          "title": "Operation",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "response_format": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json_object"
+          ],
+          "title": "Response Format",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream": {
+          "default": false,
+          "title": "Stream",
+          "type": "boolean"
+        },
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "messages",
+        "max_output_tokens"
+      ],
+      "title": "ChatRequest",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "EmbeddingBinding": {
+      "additionalProperties": false,
+      "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "dimensions": {
+          "minimum": 1,
+          "title": "Dimensions",
+          "type": "integer"
+        },
+        "embedding_model_id": {
+          "format": "uuid",
+          "title": "Embedding Model Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedding_model_id",
+        "config_version",
+        "dimensions"
+      ],
+      "title": "EmbeddingBinding",
+      "type": "object"
+    },
+    "EmbeddingRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/EmbeddingBinding"
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "input_type": {
+          "enum": [
+            "query",
+            "document"
+          ],
+          "title": "Input Type",
+          "type": "string"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "embedding",
+          "default": "embedding",
+          "title": "Operation",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "texts": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Texts",
+          "type": "array"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "texts",
+        "binding",
+        "input_type"
+      ],
+      "title": "EmbeddingRequest",
+      "type": "object"
+    },
+    "Environment": {
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ],
+      "type": "string"
+    },
+    "ModelCapability": {
+      "enum": [
+        "chat",
+        "streaming",
+        "embedding",
+        "reranker",
+        "tool_call",
+        "json_mode"
+      ],
+      "title": "ModelCapability",
+      "type": "string"
+    },
+    "ModelRequest": {
+      "discriminator": {
+        "mapping": {
+          "chat": "#/$defs/ChatRequest",
+          "embedding": "#/$defs/EmbeddingRequest",
+          "rerank": "#/$defs/RerankRequest"
+        },
+        "propertyName": "operation"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ChatRequest"
+        },
+        {
+          "$ref": "#/$defs/EmbeddingRequest"
+        },
+        {
+          "$ref": "#/$defs/RerankRequest"
+        }
+      ]
+    },
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    },
+    "RegistryStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "RegistryStatus",
+      "type": "string"
+    },
+    "RerankRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "documents": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Documents",
+          "type": "array"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "rerank",
+          "default": "rerank",
+          "title": "Operation",
+          "type": "string"
+        },
+        "query": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Query",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top_n": {
+          "exclusiveMinimum": 0,
+          "title": "Top N",
+          "type": "integer"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "query",
+        "documents",
+        "top_n"
+      ],
+      "title": "RerankRequest",
+      "type": "object"
+    },
+    "SecretReference": {
+      "additionalProperties": false,
+      "description": "Opaque versioned reference; validation neither resolves nor grants secret access.",
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "secret_id": {
+          "format": "uuid",
+          "title": "Secret Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "secret_id",
+        "version",
+        "environment"
+      ],
+      "title": "SecretReference",
+      "type": "object"
+    },
+    "StoredModelConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/ModelCapability"
+          },
+          "minItems": 1,
+          "title": "Capabilities",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "context_window": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context Window"
+        },
+        "display_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Display Name",
+          "type": "string"
+        },
+        "embedding_dimension": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Embedding Dimension"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "is_default": {
+          "default": false,
+          "title": "Is Default",
+          "type": "boolean"
+        },
+        "max_batch_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Batch Size"
+        },
+        "max_concurrency": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Concurrency"
+        },
+        "max_input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Input Tokens",
+          "type": "integer"
+        },
+        "max_output_tokens": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Output Tokens"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "rpm_limit": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rpm Limit"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RegistryStatus"
+        },
+        "tokenizer_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "tpm_limit": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tpm Limit"
+        },
+        "vendor_model_key": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Vendor Model Key",
+          "type": "string"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "1",
+          "title": "Weight"
+        }
+      },
+      "required": [
+        "id",
+        "provider_id",
+        "config_version",
+        "display_name",
+        "status",
+        "capabilities",
+        "tokenizer_version",
+        "max_input_tokens",
+        "vendor_model_key"
+      ],
+      "title": "StoredModelConfig",
+      "type": "object"
+    },
+    "StoredProvider": {
+      "additionalProperties": false,
+      "properties": {
+        "base_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Base Url",
+          "type": "string"
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "credential_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecretReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "has_credential": {
+          "title": "Has Credential",
+          "type": "boolean"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "provider_type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Provider Type",
+          "type": "string"
+        },
+        "proxy_ref": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proxy Ref"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RegistryStatus"
+        },
+        "timeout_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "provider_type",
+        "config_version",
+        "status",
+        "has_credential",
+        "created_at",
+        "updated_at",
+        "base_url",
+        "credential_ref",
+        "timeout_seconds"
+      ],
+      "title": "StoredProvider",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt": {
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "context": {
+      "$ref": "#/$defs/AccessContext"
+    },
+    "max_attempts": {
+      "minimum": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "model": {
+      "$ref": "#/$defs/StoredModelConfig"
+    },
+    "prepared_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "provider": {
+      "$ref": "#/$defs/StoredProvider"
+    },
+    "request": {
+      "$ref": "#/$defs/ModelRequest"
+    },
+    "request_sha256": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timeout_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Timeout Seconds",
+      "type": "number"
+    }
+  },
+  "required": [
+    "request",
+    "context",
+    "provider",
+    "model",
+    "request_sha256",
+    "attempt",
+    "max_attempts",
+    "timeout_seconds",
+    "prepared_at"
+  ],
+  "title": "PreparedModelCall",
+  "type": "object"
+}

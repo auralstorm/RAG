@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "PageNumber": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "PageSize": {
+      "maximum": 100,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "items": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "page": {
+      "$ref": "#/$defs/PageNumber"
+    },
+    "page_size": {
+      "$ref": "#/$defs/PageSize"
+    },
+    "total": {
+      "minimum": 0,
+      "title": "Total",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "items",
+    "total",
+    "page",
+    "page_size"
+  ],
+  "title": "PageResponse[JsonValue]",
+  "type": "object"
+}

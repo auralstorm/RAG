@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "DocumentMimeType": {
+      "enum": [
+        "text/markdown",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "type": "string"
+    },
+    "StoredObjectRef": {
+      "additionalProperties": false,
+      "description": "Server-resolved S3 reference, never a URL or permission to download its contents.",
+      "properties": {
+        "bucket": {
+          "maxLength": 63,
+          "minLength": 3,
+          "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$",
+          "title": "Bucket",
+          "type": "string"
+        },
+        "object_key": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Object Key",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "size_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "object_key",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "StoredObjectRef",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Private input resolved by a trusted ingestion use case after source authorization.",
+  "properties": {
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "document_version_id": {
+      "format": "uuid",
+      "title": "Document Version Id",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "mime_type": {
+      "$ref": "#/$defs/DocumentMimeType"
+    },
+    "original": {
+      "$ref": "#/$defs/StoredObjectRef"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "document_version_id",
+    "document_id",
+    "kb_id",
+    "document_version",
+    "mime_type",
+    "original"
+  ],
+  "title": "ParserInput",
+  "type": "object"
+}

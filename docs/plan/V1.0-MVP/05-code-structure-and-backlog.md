@@ -136,7 +136,7 @@ enterprise-agent-platform/
 │   ├── docker/
 │   ├── compose/
 │   ├── elasticsearch/
-│   ├── minio/
+│   ├── rustfs/
 │   ├── rabbitmq/
 │   ├── observability/
 │   └── scripts/
@@ -236,7 +236,7 @@ flowchart LR
 | ID | 任务 | 交付物 / 验收 |
 |---|---|---|
 | INF-001 | Monorepo、uv、pnpm workspace、Vite React TS 双应用初始化 | 后端与 Chat/Admin 可分别启动/构建，公共包解析与格式化/静态检查通过 |
-| INF-002 | Docker Compose 环境 | PostgreSQL、Redis、ES、RabbitMQ、MinIO 健康检查 |
+| INF-002 | Docker Compose 环境 | PostgreSQL、Redis、ES、RabbitMQ、RustFS 健康检查 |
 | INF-003 | Alembic Migration | 可升级/回滚开发数据库 |
 | INF-004 | 对象存储 Adapter | 上传、下载、删除、预签名 URL |
 | INF-005 | Redis Adapter | TTL、缓存封装、连接健康 |

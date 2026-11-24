@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "EmbeddingBinding": {
+      "additionalProperties": false,
+      "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "dimensions": {
+          "minimum": 1,
+          "title": "Dimensions",
+          "type": "integer"
+        },
+        "embedding_model_id": {
+          "format": "uuid",
+          "title": "Embedding Model Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedding_model_id",
+        "config_version",
+        "dimensions"
+      ],
+      "title": "EmbeddingBinding",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "chunking_config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "embedding": {
+      "$ref": "#/$defs/EmbeddingBinding"
+    },
+    "index_version_id": {
+      "format": "uuid",
+      "title": "Index Version Id",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "pipeline_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kb_id",
+    "index_version_id",
+    "embedding",
+    "chunking_config_version",
+    "pipeline_version"
+  ],
+  "title": "RetrievalIndexBinding",
+  "type": "object"
+}

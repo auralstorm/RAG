@@ -5,7 +5,7 @@
 
 - 文档版本：V1.0
 - 日期：2026-11-23
-- 数据库：PostgreSQL（业务事实源）+ Elasticsearch（检索索引）+ Redis（短期状态/缓存）+ S3/MinIO（对象）
+- 数据库：PostgreSQL（业务事实源）+ Elasticsearch（检索索引）+ Redis（短期状态/缓存）+ S3/RustFS（对象）
 - 状态：MVP 逻辑设计；物理 DDL 以 Migration 为准
 
 ## 1. 设计原则
@@ -45,6 +45,8 @@ erDiagram
 ## 3. 核心表设计
 
 ### 3.1 IAM 与权限
+
+**逻辑契约落实（2026-11-24）：** P0-04-02 以 User、ExternalIdentity 与 SubjectBinding 明确规范平台主体及既有管理员/员工来源映射，字段、状态、权限与 Schema 见 [身份与授权契约](../../api/iam-policy-contracts.md) 和 [统一契约 2.1](../../architecture/统一契约与跨版本演进规则.md#21-v10-平台主体与身份授权契约)。下列 admin_users/employees 仍保留为原逻辑设计；实际 users/identities、来源关联和 FK/唯一约束由 P1-03 在调查实际消费者后冻结，本轮没有物理表迁移。
 
 #### `admin_users`
 - `id UUID PK`
@@ -91,6 +93,8 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 
 ### 3.2 Knowledge Base 与文档
 
+**契约落实（2026-11-24）：** 原表字段以下保留为逻辑设计输入；P0-04-03 明确 Document 生命周期/DocumentVersion 处理状态、按版本固定原件/解析引用、稳定 Job/Stage Key，以及 IndexVersion READY/Manifest/验证/发布前提，见 [知识契约](../../api/knowledge-contracts.md) 与 [统一契约 2.2](../../architecture/统一契约与跨版本演进规则.md#22-v10-知识资产入库与索引版本契约)。本轮没有物理表/列迁移，id/version、object_key 等存量映射须在实际 DDL 与消费者调查后实施。
+
 #### `knowledge_bases`
 - `id UUID PK`
 - `name VARCHAR(200)`
@@ -105,7 +109,7 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 #### `kb_permissions`
 - `id UUID PK`
 - `kb_id UUID FK`
-- `principal_type VARCHAR(24)`：ADMIN_USER / ROLE / EMPLOYEE / GROUP
+- `principal_type VARCHAR(24)`：ADMIN_USER / ROLE / EMPLOYEE / GROUP；规范契约增加 USER 表达平台 User.id，原来源类型/ID 继续按显式映射兼容
 - `principal_id UUID`
 - `permission VARCHAR(24)`：READ / MANAGE
 - `created_at`
@@ -141,6 +145,9 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 - Unique(`document_id`, `version`)
 
 #### `chunks`
+
+**契约落实（2026-11-24）：** P0-04-04 的 Chunk/ChunkMetadata/SourceLocation、完整版本引用、Parser/Retriever 契约与原字段映射见 [解析与检索契约](../../api/parsing-retrieval-contracts.md)；以下物理列仍为设计输入，跨页来源、Tokenizer 版本与父子关系须在实际 DDL/存量调查后显式落实。本轮无表/列迁移。
+
 - `id UUID PK`
 - `document_version_id UUID FK`
 - `kb_id UUID`
@@ -166,7 +173,7 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 - `alias_name VARCHAR(255)`
 - `embedding_model_id UUID`
 - `chunking_config_version VARCHAR(64)`
-- `status VARCHAR(24)`：BUILDING / VALIDATING / ACTIVE / ROLLED_BACK / FAILED / RETIRED
+- `status VARCHAR(24)`：BUILDING / VALIDATING / READY / ACTIVE / ROLLED_BACK / FAILED / RETIRED；READY 表达验证完成、尚未在线
 - `validation_report JSONB`
 - `created_at, published_at`
 - Unique(`kb_id`, `version`)
@@ -195,6 +202,8 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 - `created_at`
 
 ### 3.4 Model Gateway
+
+**契约落实（2026-11-24）：** P0-04-05 的 Provider/ModelConfig、私有 Secret/供应商引用、ModelRequest/Response/Usage 与调用规则见 [模型网关契约](../../api/model-gateway-contracts.md)。以下表字段仍为物理设计输入，密文列/Key 版本、路由标识和固定配置映射在 P2 调查实际存量后明确实施；本轮无表/列迁移，公开 DTO 不返回私有 Stored 模型。
 
 #### `providers`
 - `id UUID PK`
@@ -228,6 +237,10 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 记录调用元数据、耗时、Token、错误码、TraceId；不得记录明文 Key 或不必要的完整敏感 Prompt。
 
 ### 3.5 Conversation 与 Trace
+
+会话归属、消息状态与版本化引用采用 [会话、消息与引用契约](../../api/chat-contracts.md)。下列为表设计草案，物理映射、迁移与清理按 P4 验收。
+
+Trace、私有身份关联及 AuditEvent 的规范字段见 [Trace 与 AuditEvent 契约](../../api/trace-audit-contracts.md)。相关表的物理映射和保存规则按 P1/P5 验收。
 
 #### `conversations`
 - `id UUID PK`
@@ -337,6 +350,8 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 - 幂等：上传、重建索引、删除、配置发布等写操作支持 `Idempotency-Key`。
 - 版本：不兼容变化升主版本；新增可选字段保持兼容。
 - API 层只暴露平台 DTO，不暴露 ES Query DSL、Celery Task ID 内部细节或供应商密钥。
+
+公共 HTTP 契约的实际源码与生成制品见 [契约入口](../../api/README.md)，`make contracts` / `make contracts-check` 生成与核对当前真实 OpenAPI、JSON Schema 和前端类型。当前分页输入默认 page=1、page_size=20，page_size 上限 100；此为 HTTP 输入边界，不代表 MVP 容量/并发门槛已确认。业务列表、身份登录和下述 API 清单仍按对应主线任务交付。
 
 ## 6. API 清单（MVP）
 

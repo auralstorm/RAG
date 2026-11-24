@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "permission_id": {
+      "format": "uuid",
+      "title": "Permission Id",
+      "type": "string"
+    },
+    "role_id": {
+      "format": "uuid",
+      "title": "Role Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "role_id",
+    "permission_id"
+  ],
+  "title": "RolePermission",
+  "type": "object"
+}

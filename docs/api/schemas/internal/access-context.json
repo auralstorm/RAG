@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
+    "ActorReference": {
+      "pattern": "^actor_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "Environment": {
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ],
+      "type": "string"
+    },
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Internal server-created context, never authenticated by deserializing its fields.\n\nUser-supplied filters, token role claims and model output do not populate this type.\nactor_ref is pseudonymous correlation, not an alternative authorization subject.",
+  "properties": {
+    "actor_ref": {
+      "$ref": "#/$defs/ActorReference"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    },
+    "expires_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "identity_id": {
+      "format": "uuid",
+      "title": "Identity Id",
+      "type": "string"
+    },
+    "issued_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "policy_version": {
+      "$ref": "#/$defs/PolicyVersion"
+    },
+    "purpose": {
+      "$ref": "#/$defs/AccessPurpose"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject_id": {
+      "format": "uuid",
+      "title": "Subject Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "subject_id",
+    "identity_id",
+    "actor_ref",
+    "environment",
+    "purpose",
+    "policy_version",
+    "issued_at",
+    "expires_at"
+  ],
+  "title": "AccessContext",
+  "type": "object"
+}

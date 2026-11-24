@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "KnowledgePermission": {
+      "enum": [
+        "READ",
+        "MANAGE"
+      ],
+      "title": "KnowledgePermission",
+      "type": "string"
+    },
+    "ResourcePrincipalType": {
+      "enum": [
+        "USER",
+        "ROLE",
+        "GROUP",
+        "ADMIN_USER",
+        "EMPLOYEE"
+      ],
+      "title": "ResourcePrincipalType",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Explicit KB capability; source profile types require a verified SubjectBinding.",
+  "properties": {
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "permission": {
+      "$ref": "#/$defs/KnowledgePermission"
+    },
+    "principal_id": {
+      "format": "uuid",
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "principal_type": {
+      "$ref": "#/$defs/ResourcePrincipalType"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kb_id",
+    "principal_type",
+    "principal_id",
+    "permission"
+  ],
+  "title": "ResourceGrant",
+  "type": "object"
+}

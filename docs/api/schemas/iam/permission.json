@@ -1,0 +1,56 @@
+{
+  "$defs": {
+    "PermissionCode": {
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One operation capability; code is the exact resource.action identifier.",
+  "properties": {
+    "action": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Action",
+      "type": "string"
+    },
+    "code": {
+      "$ref": "#/$defs/PermissionCode"
+    },
+    "description": {
+      "default": "",
+      "maxLength": 512,
+      "title": "Description",
+      "type": "string"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "resource": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Resource",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "code",
+    "resource",
+    "action"
+  ],
+  "title": "Permission",
+  "type": "object"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact verified-provider lookup key; this type does not verify authentication.",
+  "properties": {
+    "issuer": {
+      "maxLength": 2048,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Issuer",
+      "type": "string"
+    },
+    "provider_key": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_.-]*$",
+      "title": "Provider Key",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject": {
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Subject",
+      "type": "string"
+    }
+  },
+  "required": [
+    "provider_key",
+    "issuer",
+    "subject"
+  ],
+  "title": "IdentityKey",
+  "type": "object"
+}

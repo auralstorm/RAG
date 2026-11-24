@@ -1,0 +1,68 @@
+{
+  "poc_id": "POC-01",
+  "status": "FUNCTIONAL_PASS",
+  "started_at_utc": "2026-11-24T05:19:35.850575+00:00",
+  "finished_at_utc": "2026-11-24T05:20:52.907868+00:00",
+  "git_head_before_changes": "eb719559e1c1afe1de494b0823a4196168267e00",
+  "image": "docker.elastic.co/elasticsearch/elasticsearch:9.2.0@sha256:5dde04a980faf9105d6380c39469c645579684f1eab571f224989c22253c13e3",
+  "docker_arch_cpu_memory_bytes": "x86_64 12 8321814528",
+  "environment": {
+    "server": {
+      "name": "d6a08482f8ec",
+      "cluster_name": "docker-cluster",
+      "cluster_uuid": "402A1wY7SGuTTi6HFtxKNA",
+      "version": {
+        "number": "9.2.0",
+        "build_flavor": "default",
+        "build_type": "docker",
+        "build_hash": "25d88452371273dd27356c98598287b669a03eae",
+        "build_date": "2025-10-21T10:06:21.288851013Z",
+        "build_snapshot": false,
+        "lucene_version": "10.3.1",
+        "minimum_wire_compatibility_version": "8.19.0",
+        "minimum_index_compatibility_version": "8.0.0"
+      },
+      "tagline": "You Know, for Search"
+    },
+    "license": {
+      "license": {
+        "status": "active",
+        "uid": "33333cbb-3d00-42d9-a1a8-bd00872b3a2d",
+        "type": "basic",
+        "issue_date": "2026-11-24T05:20:09.552Z",
+        "issue_date_in_millis": 1795497609552,
+        "max_nodes": 1000,
+        "max_resource_units": null,
+        "issued_to": "docker-cluster",
+        "issuer": "elasticsearch",
+        "start_date_in_millis": -1
+      }
+    }
+  },
+  "dataset_sha256": "95493b5bd41964cde34f77e3ae5dbac85b27ad715700cb214fec2558a747d96b",
+  "dataset_kind": "synthetic, fixed 3-dimensional vectors; not business Golden Dataset",
+  "configuration": {
+    "dimensions": 3,
+    "rrf_rank_constant": 60,
+    "candidate_k": 40,
+    "top_k": 3
+  },
+  "test_count": 12,
+  "failed": [],
+  "skipped": [],
+  "tests": [
+    "test_bm25_and_dense_can_retrieve_the_authorized_chunk",
+    "test_basic_license_blocks_native_rrf_but_client_fusion_works",
+    "test_keyword_rank_can_promote_an_exact_identifier",
+    "test_dense_retrieval_survives_no_keyword_overlap",
+    "test_metadata_filters_apply_to_both_branches[types0-expected0]",
+    "test_metadata_filters_apply_to_both_branches[types1-expected1]",
+    "test_acl_applies_before_ranking_and_excludes_drafts_and_deleted_documents",
+    "test_revocation_is_effective_while_index_acl_snapshot_is_stale",
+    "test_cross_kb_and_missing_scope_requests_are_rejected",
+    "test_wrong_vector_dimension_is_rejected_by_adapter_and_elasticsearch",
+    "test_atomic_publication_rollback_and_concurrent_reads_use_one_index",
+    "test_service_outage_fails_closed_and_restart_preserves_search_data"
+  ],
+  "qualification": "Real-service functional checks only; business quality, load, identity integration and independent security review pending."
+}

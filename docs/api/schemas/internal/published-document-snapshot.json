@@ -1,0 +1,781 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "Document": {
+      "additionalProperties": false,
+      "description": "Logical resource; a newer failed processing version does not unpublish older content.",
+      "properties": {
+        "acl_policy_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Acl Policy Id"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "created_by": {
+          "format": "uuid",
+          "title": "Created By",
+          "type": "string"
+        },
+        "current_version": {
+          "minimum": 1,
+          "title": "Current Version",
+          "type": "integer"
+        },
+        "deleted_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/DocumentSourceType"
+        },
+        "status": {
+          "$ref": "#/$defs/DocumentStatus"
+        },
+        "title": {
+          "maxLength": 512,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "kb_id",
+        "title",
+        "source_type",
+        "current_version",
+        "status",
+        "acl_policy_id",
+        "created_by",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "Document",
+      "type": "object"
+    },
+    "DocumentMimeType": {
+      "enum": [
+        "text/markdown",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "type": "string"
+    },
+    "DocumentSourceType": {
+      "enum": [
+        "UPLOAD",
+        "CONNECTOR"
+      ],
+      "title": "DocumentSourceType",
+      "type": "string"
+    },
+    "DocumentStatus": {
+      "enum": [
+        "ACTIVE",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "DocumentStatus",
+      "type": "string"
+    },
+    "DocumentVersion": {
+      "additionalProperties": false,
+      "description": "Public version facts exclude private keys, source URLs and parser-specific payloads.",
+      "properties": {
+        "chunking_config_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigurationVersion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "file_hash": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "file_size": {
+          "exclusiveMinimum": 0,
+          "title": "File Size",
+          "type": "integer"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "mime_type": {
+          "$ref": "#/$defs/DocumentMimeType"
+        },
+        "parser_name": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parser Name"
+        },
+        "parser_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigurationVersion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pipeline_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/DocumentVersionStatus"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "document_id",
+        "kb_id",
+        "document_version",
+        "status",
+        "mime_type",
+        "file_size",
+        "file_hash",
+        "pipeline_version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "DocumentVersion",
+      "type": "object"
+    },
+    "DocumentVersionRef": {
+      "additionalProperties": false,
+      "description": "Stable version entity ID plus the numeric version used by retrieval projections.",
+      "properties": {
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "document_id",
+        "kb_id",
+        "document_version"
+      ],
+      "title": "DocumentVersionRef",
+      "type": "object"
+    },
+    "DocumentVersionStatus": {
+      "enum": [
+        "UPLOADED",
+        "PARSING",
+        "PARSED",
+        "CHUNKING",
+        "EMBEDDING",
+        "INDEXING",
+        "INDEXED",
+        "PUBLISHED",
+        "FAILED",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "DocumentVersionStatus",
+      "type": "string"
+    },
+    "EmbeddingBinding": {
+      "additionalProperties": false,
+      "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "dimensions": {
+          "minimum": 1,
+          "title": "Dimensions",
+          "type": "integer"
+        },
+        "embedding_model_id": {
+          "format": "uuid",
+          "title": "Embedding Model Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedding_model_id",
+        "config_version",
+        "dimensions"
+      ],
+      "title": "EmbeddingBinding",
+      "type": "object"
+    },
+    "IndexAlias": {
+      "additionalProperties": false,
+      "description": "Freshly observed internal alias state; both pointers must represent the same target.",
+      "properties": {
+        "active_index_version_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Active Index Version Id"
+        },
+        "alias_name": {
+          "$ref": "#/$defs/IndexName"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "physical_index_name": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndexName"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kb_id",
+        "alias_name",
+        "active_index_version_id",
+        "physical_index_name"
+      ],
+      "title": "IndexAlias",
+      "type": "object"
+    },
+    "IndexManifest": {
+      "additionalProperties": false,
+      "description": "Internal authoritative member list; at most one version per logical document.",
+      "properties": {
+        "documents": {
+          "items": {
+            "$ref": "#/$defs/DocumentVersionRef"
+          },
+          "title": "Documents",
+          "type": "array"
+        },
+        "index_version_id": {
+          "format": "uuid",
+          "title": "Index Version Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "index_version_id",
+        "kb_id",
+        "documents"
+      ],
+      "title": "IndexManifest",
+      "type": "object"
+    },
+    "IndexName": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "type": "string"
+    },
+    "IndexValidationReport": {
+      "additionalProperties": false,
+      "description": "Trusted validation facts; every required check is explicit, including the quality gate.",
+      "properties": {
+        "acl_verified": {
+          "title": "Acl Verified",
+          "type": "boolean"
+        },
+        "actual_chunk_count": {
+          "minimum": 0,
+          "title": "Actual Chunk Count",
+          "type": "integer"
+        },
+        "actual_document_count": {
+          "minimum": 0,
+          "title": "Actual Document Count",
+          "type": "integer"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "expected_chunk_count": {
+          "minimum": 0,
+          "title": "Expected Chunk Count",
+          "type": "integer"
+        },
+        "expected_document_count": {
+          "minimum": 0,
+          "title": "Expected Document Count",
+          "type": "integer"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "index_version_id": {
+          "format": "uuid",
+          "title": "Index Version Id",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "mapping_verified": {
+          "title": "Mapping Verified",
+          "type": "boolean"
+        },
+        "quality_gate_verified": {
+          "title": "Quality Gate Verified",
+          "type": "boolean"
+        },
+        "retrieval_verified": {
+          "title": "Retrieval Verified",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "verdict": {
+          "$ref": "#/$defs/ValidationVerdict"
+        }
+      },
+      "required": [
+        "id",
+        "index_version_id",
+        "manifest_sha256",
+        "binding_sha256",
+        "verdict",
+        "expected_document_count",
+        "actual_document_count",
+        "expected_chunk_count",
+        "actual_chunk_count",
+        "mapping_verified",
+        "acl_verified",
+        "retrieval_verified",
+        "quality_gate_verified",
+        "checked_at"
+      ],
+      "title": "IndexValidationReport",
+      "type": "object"
+    },
+    "IndexVersionStatus": {
+      "enum": [
+        "BUILDING",
+        "VALIDATING",
+        "READY",
+        "ACTIVE",
+        "ROLLED_BACK",
+        "FAILED",
+        "RETIRED"
+      ],
+      "title": "IndexVersionStatus",
+      "type": "string"
+    },
+    "KnowledgeBase": {
+      "additionalProperties": false,
+      "description": "Logical KB metadata; query embedding always uses its active index's pinned binding.",
+      "properties": {
+        "active_index_version_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Active Index Version Id"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "created_by": {
+          "format": "uuid",
+          "title": "Created By",
+          "type": "string"
+        },
+        "deleted_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "description": {
+          "default": "",
+          "maxLength": 4000,
+          "title": "Description",
+          "type": "string"
+        },
+        "embedding": {
+          "$ref": "#/$defs/EmbeddingBinding"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/KnowledgeBaseStatus"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status",
+        "embedding",
+        "active_index_version_id",
+        "created_by",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "KnowledgeBase",
+      "type": "object"
+    },
+    "KnowledgeBaseStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "KnowledgeBaseStatus",
+      "type": "string"
+    },
+    "StoredIndexVersion": {
+      "additionalProperties": false,
+      "description": "Internal physical names and validation evidence do not appear in the frontend model.",
+      "properties": {
+        "alias_name": {
+          "$ref": "#/$defs/IndexName"
+        },
+        "chunking_config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "embedding": {
+          "$ref": "#/$defs/EmbeddingBinding"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentHash"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "physical_index_name": {
+          "$ref": "#/$defs/IndexName"
+        },
+        "pipeline_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UtcTimestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/IndexVersionStatus"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "validation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IndexValidationReport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validation_report_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Validation Report Id"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "kb_id",
+        "version",
+        "status",
+        "embedding",
+        "chunking_config_version",
+        "pipeline_version",
+        "manifest_sha256",
+        "validation_report_id",
+        "created_at",
+        "updated_at",
+        "published_at",
+        "physical_index_name",
+        "alias_name",
+        "validation"
+      ],
+      "title": "StoredIndexVersion",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "ValidationVerdict": {
+      "enum": [
+        "PASSED",
+        "FAILED"
+      ],
+      "title": "ValidationVerdict",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Current read facts preserve KB, logical document, version and index/alias relationships.",
+  "properties": {
+    "alias": {
+      "$ref": "#/$defs/IndexAlias"
+    },
+    "document": {
+      "$ref": "#/$defs/Document"
+    },
+    "index": {
+      "$ref": "#/$defs/StoredIndexVersion"
+    },
+    "kb": {
+      "$ref": "#/$defs/KnowledgeBase"
+    },
+    "manifest": {
+      "$ref": "#/$defs/IndexManifest"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "version": {
+      "$ref": "#/$defs/DocumentVersion"
+    }
+  },
+  "required": [
+    "kb",
+    "document",
+    "version",
+    "index",
+    "alias",
+    "manifest"
+  ],
+  "title": "PublishedDocumentSnapshot",
+  "type": "object"
+}

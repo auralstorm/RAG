@@ -1,0 +1,1 @@
+"""Typed audit event contracts."""

@@ -176,6 +176,8 @@ Agent → Tool Gateway → Policy Engine → Connector Adapter → 外部系统�
 
 ### 6.2 Tool Contract
 
+V1.0 的 Mock 定义、调用与结果以 [Mock Tool 契约](../../api/mock-tool-contracts.md) 为准。下列为完整 Tool Gateway 的设计草案。
+
 ```python
 class ToolDefinition:
     tool_id: str
@@ -247,6 +249,8 @@ MVP 仅维护 Conversation Context：
 Memory 读取也必须经过 Policy Engine；记忆不能成为绕过知识库 ACL 的隐形通道。
 
 ## 9. 模型调用与预算控制
+
+**契约落实（2026-11-24）：** V1.0 的文本 Chat/JSON、Embedding/Rerank、当前模型许可/注册/计量、重试与流结果语义见 [模型网关契约](../../api/model-gateway-contracts.md)。本轮仅交付平台契约与纯规则，不据此启用 Agent 执行、工具调用或后续费用账本；LiteLLM 与实际 Provider 在 P2/POC-04 验证。
 
 所有模型调用经 Model Gateway：
 - Planner / Reasoner / Summarizer / Answer Synthesis 可配置模型能力。

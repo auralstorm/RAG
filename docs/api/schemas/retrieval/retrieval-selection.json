@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "DocumentSourceType": {
+      "enum": [
+        "UPLOAD",
+        "CONNECTOR"
+      ],
+      "title": "DocumentSourceType",
+      "type": "string"
+    },
+    "RetrievalFilters": {
+      "additionalProperties": false,
+      "properties": {
+        "document_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Document Ids",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_types": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DocumentSourceType"
+          },
+          "title": "Source Types",
+          "type": "array"
+        }
+      },
+      "title": "RetrievalFilters",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Client-selectable business intent; identity, trace and resolved configuration are server-owned.",
+  "properties": {
+    "config_version": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "filters": {
+      "$ref": "#/$defs/RetrievalFilters"
+    },
+    "kb_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Kb Ids",
+      "type": "array"
+    },
+    "query": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Query",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "top_k": {
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Top K",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "query",
+    "kb_ids",
+    "top_k"
+  ],
+  "title": "RetrievalSelection",
+  "type": "object"
+}

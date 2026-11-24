@@ -1,0 +1,19 @@
+services:
+  rustfs-volume-init:
+    extends:
+      file: compose.yaml
+      service: rustfs-volume-init
+  rustfs:
+    extends:
+      file: compose.yaml
+      service: rustfs
+    environment:
+      # Test acceleration only; never inherit these into development/production.
+      RUSTFS_SCANNER_SPEED: fastest
+      RUSTFS_SCANNER_CYCLE: '2'
+      RUSTFS_SCANNER_START_DELAY_SECS: '0'
+      RUSTFS_ILM_DEBUG_DAY_SECS: '5'
+
+volumes:
+  rustfs-data:
+  rustfs-logs:

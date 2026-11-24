@@ -1,0 +1,339 @@
+{
+  "$defs": {
+    "AuditAction": {
+      "enum": [
+        "iam.login",
+        "iam.role_change",
+        "iam.permission_change",
+        "provider.change",
+        "model.change",
+        "kb.change",
+        "rag.config_publish",
+        "trace.reveal_identity",
+        "lifecycle.change"
+      ],
+      "title": "AuditAction",
+      "type": "string"
+    },
+    "AuditEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/AuditAction"
+        },
+        "actor_role_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Actor Role Ids",
+          "type": "array"
+        },
+        "actor_system_roles": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SystemRoleCode"
+          },
+          "title": "Actor System Roles",
+          "type": "array"
+        },
+        "actor_user_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actor User Id"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuditSnapshot"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "before": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuditSnapshot"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "ip_address": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "format": "ipv6",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ip Address"
+        },
+        "object_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Object Id"
+        },
+        "occurred_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/AuditResult"
+        },
+        "risk": {
+          "$ref": "#/$defs/AuditRisk"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "target_trace_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TraceId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "trace_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TraceId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "occurred_at",
+        "action",
+        "result",
+        "risk",
+        "request_id"
+      ],
+      "title": "AuditEvent",
+      "type": "object"
+    },
+    "AuditResult": {
+      "enum": [
+        "SUCCEEDED",
+        "DENIED",
+        "FAILED"
+      ],
+      "title": "AuditResult",
+      "type": "string"
+    },
+    "AuditRisk": {
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "title": "AuditRisk",
+      "type": "string"
+    },
+    "AuditSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Configuration Id"
+        },
+        "credential_present": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Credential Present"
+        },
+        "enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enabled"
+        },
+        "permission_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Permission Ids"
+        },
+        "role_ids": {
+          "anyOf": [
+            {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role Ids"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "user_status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UserStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "AuditSnapshot",
+      "type": "object"
+    },
+    "SystemRoleCode": {
+      "enum": [
+        "SUPER_ADMIN",
+        "KB_ADMIN",
+        "AUDIT_READONLY"
+      ],
+      "title": "SystemRoleCode",
+      "type": "string"
+    },
+    "TraceId": {
+      "pattern": "^[0-9a-f]{32}$",
+      "type": "string"
+    },
+    "UserStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED",
+        "LOCKED",
+        "PENDING_DEPARTURE",
+        "DEPARTED"
+      ],
+      "title": "UserStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "event": {
+      "$ref": "#/$defs/AuditEvent"
+    },
+    "protected_reason_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Protected Reason Ref"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event"
+  ],
+  "title": "StoredAuditEvent",
+  "type": "object"
+}

@@ -1,0 +1,267 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "IngestionFailure": {
+      "additionalProperties": false,
+      "description": "Safe adapter-provided classification; uncertain external effects are never retryable.",
+      "properties": {
+        "code": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "outcome_unknown": {
+          "title": "Outcome Unknown",
+          "type": "boolean"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome_unknown"
+      ],
+      "title": "IngestionFailure",
+      "type": "object"
+    },
+    "IngestionJobStatus": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED",
+        "TIMED_OUT"
+      ],
+      "title": "IngestionJobStatus",
+      "type": "string"
+    },
+    "IngestionJobType": {
+      "enum": [
+        "INGEST",
+        "REPROCESS",
+        "REINDEX",
+        "DELETE"
+      ],
+      "title": "IngestionJobType",
+      "type": "string"
+    },
+    "IngestionProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "completed_units": {
+          "minimum": 0,
+          "title": "Completed Units",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "total_units": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Units"
+        }
+      },
+      "required": [
+        "completed_units",
+        "total_units"
+      ],
+      "title": "IngestionProgress",
+      "type": "object"
+    },
+    "IngestionStage": {
+      "enum": [
+        "PARSING",
+        "NORMALIZING",
+        "CHUNKING",
+        "EMBEDDING",
+        "INDEXING",
+        "VALIDATING",
+        "PUBLISHING",
+        "DELETING"
+      ],
+      "title": "IngestionStage",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Version-bound business job; Celery IDs and cached roles do not define its identity.",
+  "properties": {
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "document_version_id": {
+      "format": "uuid",
+      "title": "Document Version Id",
+      "type": "string"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IngestionFailure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "job_type": {
+      "$ref": "#/$defs/IngestionJobType"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "max_retries": {
+      "minimum": 0,
+      "title": "Max Retries",
+      "type": "integer"
+    },
+    "pipeline_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "progress": {
+      "$ref": "#/$defs/IngestionProgress"
+    },
+    "requester_subject_id": {
+      "format": "uuid",
+      "title": "Requester Subject Id",
+      "type": "string"
+    },
+    "retry_count": {
+      "minimum": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stage": {
+      "$ref": "#/$defs/IngestionStage"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "$ref": "#/$defs/IngestionJobStatus"
+    },
+    "terminal_stage": {
+      "$ref": "#/$defs/IngestionStage"
+    },
+    "trace_id": {
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "document_version_id",
+    "document_id",
+    "kb_id",
+    "document_version",
+    "id",
+    "job_type",
+    "pipeline_version",
+    "terminal_stage",
+    "status",
+    "stage",
+    "idempotency_key",
+    "requester_subject_id",
+    "trace_id",
+    "retry_count",
+    "max_retries",
+    "progress",
+    "failure",
+    "created_at",
+    "updated_at",
+    "started_at",
+    "finished_at"
+  ],
+  "title": "IngestionJob",
+  "type": "object"
+}

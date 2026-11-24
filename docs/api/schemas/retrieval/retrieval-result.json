@@ -1,0 +1,471 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "Normalized [0,1] coordinates, origin at the page's top-left, in displayed orientation.",
+      "properties": {
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Left",
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Right",
+          "type": "number"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "ChunkMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "heading_path": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Heading Path",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "title": "ChunkMetadata",
+      "type": "object"
+    },
+    "ChunkSource": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "spans": {
+          "items": {
+            "$ref": "#/$defs/ChunkSourceSpan"
+          },
+          "minItems": 1,
+          "title": "Spans",
+          "type": "array"
+        }
+      },
+      "required": [
+        "spans"
+      ],
+      "title": "ChunkSource",
+      "type": "object"
+    },
+    "ChunkSourceSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "block_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Block Id",
+          "type": "string"
+        },
+        "char_end": {
+          "exclusiveMinimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "location": {
+          "$ref": "#/$defs/SourceLocation"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "block_id",
+        "char_start",
+        "char_end",
+        "location"
+      ],
+      "title": "ChunkSourceSpan",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "DocxSourceLocation": {
+      "additionalProperties": false,
+      "description": "Zero-based body element index, counting paragraphs and tables in original order.",
+      "properties": {
+        "element_index": {
+          "minimum": 0,
+          "title": "Element Index",
+          "type": "integer"
+        },
+        "element_type": {
+          "enum": [
+            "paragraph",
+            "table"
+          ],
+          "title": "Element Type",
+          "type": "string"
+        },
+        "kind": {
+          "const": "docx",
+          "default": "docx",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "element_index",
+        "element_type"
+      ],
+      "title": "DocxSourceLocation",
+      "type": "object"
+    },
+    "MarkdownSourceLocation": {
+      "additionalProperties": false,
+      "description": "Half-open Unicode code-point offsets in the original decoded Markdown source.",
+      "properties": {
+        "char_end": {
+          "exclusiveMinimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "markdown",
+          "default": "markdown",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "char_start",
+        "char_end"
+      ],
+      "title": "MarkdownSourceLocation",
+      "type": "object"
+    },
+    "PdfSourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "const": "pdf",
+          "default": "pdf",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_no"
+      ],
+      "title": "PdfSourceLocation",
+      "type": "object"
+    },
+    "RetrievalDiagnostics": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "elapsed_ms": {
+          "minimum": 0,
+          "title": "Elapsed Ms",
+          "type": "number"
+        },
+        "returned_chunk_count": {
+          "minimum": 0,
+          "title": "Returned Chunk Count",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trace_id",
+        "config_version",
+        "returned_chunk_count",
+        "elapsed_ms"
+      ],
+      "title": "RetrievalDiagnostics",
+      "type": "object"
+    },
+    "RetrievedChunk": {
+      "additionalProperties": false,
+      "properties": {
+        "chunk_id": {
+          "format": "uuid",
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "content": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Content",
+          "type": "string"
+        },
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "index_version_id": {
+          "format": "uuid",
+          "title": "Index Version Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/ChunkMetadata"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        },
+        "score_components": {
+          "$ref": "#/$defs/ScoreComponents"
+        },
+        "source": {
+          "$ref": "#/$defs/ChunkSource"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "document_id",
+        "kb_id",
+        "document_version",
+        "chunk_id",
+        "index_version_id",
+        "content",
+        "score",
+        "score_components",
+        "source",
+        "metadata"
+      ],
+      "title": "RetrievedChunk",
+      "type": "object"
+    },
+    "ScoreComponents": {
+      "additionalProperties": false,
+      "description": "Optional search ranks/scores, never a probability of answer correctness.",
+      "properties": {
+        "bm25_rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bm25 Rank"
+        },
+        "dense_rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dense Rank"
+        },
+        "reranker_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reranker Score"
+        },
+        "rrf_score": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rrf Score"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "title": "ScoreComponents",
+      "type": "object"
+    },
+    "SourceLocation": {
+      "discriminator": {
+        "mapping": {
+          "docx": "#/$defs/DocxSourceLocation",
+          "markdown": "#/$defs/MarkdownSourceLocation",
+          "pdf": "#/$defs/PdfSourceLocation"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PdfSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/MarkdownSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/DocxSourceLocation"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "chunks": {
+      "items": {
+        "$ref": "#/$defs/RetrievedChunk"
+      },
+      "title": "Chunks",
+      "type": "array"
+    },
+    "diagnostics": {
+      "$ref": "#/$defs/RetrievalDiagnostics"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "chunks",
+    "diagnostics"
+  ],
+  "title": "RetrievalResult",
+  "type": "object"
+}

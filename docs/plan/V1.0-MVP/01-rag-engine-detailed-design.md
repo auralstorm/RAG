@@ -41,7 +41,7 @@
 | 异步任务 | RabbitMQ + Celery | 幂等、重试、断点恢复 |
 | DB | PostgreSQL | 业务元数据与状态事实源 |
 | Cache | Redis | 短期缓存、限流辅助、任务协调 |
-| Object Storage | S3 compatible / MinIO | 原件及解析产物 |
+| Object Storage | S3 compatible / RustFS | 原件及解析产物 |
 | Observability | OpenTelemetry + Phoenix | 平台自有 Trace 元数据 |
 | Evaluation | RAGAS + Golden Dataset | 离线回归与版本对比 |
 
@@ -72,7 +72,7 @@ flowchart TB
   EMB --> MG
   EMB --> ES
   JOB --> PG[(PostgreSQL)]
-  PARSER --> OBJ[(S3 / MinIO)]
+  PARSER --> OBJ[(S3 / RustFS)]
   ES --> RET
 ```
 
@@ -92,6 +92,8 @@ flowchart TB
 
 ### 3.1 Document 与 Chunk
 
+**契约落实（2026-11-24）：** 以下字段清单为原逻辑草案，P0-04-03 的规范字段和兼容映射见 [知识契约](../../api/knowledge-contracts.md)。逻辑 Document 管理存在/删除，处理状态绑定 DocumentVersion；私有原件与解析引用固定在版本，不把新版本失败写成旧版失效。现有 ES status=PUBLISHED 投影保留。
+
 Document 表示知识库中的一个逻辑文档及其版本；Chunk 表示可检索片段。建议字段：
 
 - Document：`id, kb_id, title, source_type, source_uri, object_key, mime_type, file_hash, version, status, parser_name, parser_version, metadata_json, acl_policy_id, created_by, created_at, updated_at, deleted_at`
@@ -101,7 +103,7 @@ Document 表示知识库中的一个逻辑文档及其版本；Chunk 表示可�
 
 `acl_snapshot` 仅作为索引过滤所需的权限标签快照，权威权限仍以 Policy Engine / PostgreSQL 为准；权限变更必须触发索引 ACL 更新或重建，并在查询时采用可信的当前权限约束。
 
-### 3.2 文档状态机
+### 3.2 文档版本处理状态机
 
 ```mermaid
 stateDiagram-v2
@@ -128,6 +130,8 @@ stateDiagram-v2
 - 失败任务记录失败阶段和可重试错误；不可重试错误需人工修复输入或配置。
 - 删除是异步幂等流程，成功后文档状态为 `DELETED`。
 
+该状态机描述单个 DocumentVersion，逻辑 Document 的 ACTIVE/DELETING/DELETED 另外控制全部版本的访问。当前代码还允许各未删除处理态进入 DELETING；真实清理完成后才持久化 DELETED。新版本失败时，旧 PUBLISHED 版本仍须通过活动 Index Manifest 与当前 ACL 才能读取。完整重试回到 PARSING，后续阶段的检查点恢复由实际 Worker 校验。
+
 ## 4. 离线 Ingestion 设计
 
 ### 4.1 流程
@@ -136,7 +140,7 @@ stateDiagram-v2
 2. 计算 SHA-256，按 KB + 文件 Hash 做重复检测；是否允许同内容多版本由 KB 配置决定。
 3. 原件写入对象存储，PostgreSQL 写入 Document、DocumentVersion、IngestionJob。
 4. 投递 Celery 任务；API 返回 `document_id`、`job_id` 和初始状态。
-5. Parser Adapter 调用 Docling；复杂 PDF 可按策略路由 MinerU。
+5. Parser Adapter 默认调用 Docling；先完成首期基础解析，实际样本证明 Docling 有明确缺口后，再验证并按已确认策略接入 MinerU。
 6. 统一输出 `ParsedDocument`：页面、段落、表格、标题层级、来源位置、解析告警。
 7. Normalizer 统一空白、编码、页码、标题路径和结构元数据。
 8. Structure-aware Chunker 按标题、段落、表格边界切片；支持 Parent-Child。
@@ -147,6 +151,8 @@ stateDiagram-v2
 13. 发布 Document 与 IndexVersion 状态，记录版本及任务结果。
 
 ### 4.2 ParsedDocument 契约
+
+**契约落实（2026-11-24）：** P0-04-04 的实际 ParsedDocument、SourceLocation、Chunk 来源/父子关系与版本映射见 [解析与检索契约](../../api/parsing-retrieval-contracts.md)。以下为原最小草案；规范模型使用完整 DocumentVersionRef、parser_name、明确的格式位置与元数据，不接收任意 SDK 对象/字典。Markdown/DOCX 不虚构 PDF 页码。
 
 ```python
 class ParsedDocument:
@@ -174,6 +180,8 @@ class ParsedBlock:
 
 Parser 只负责内容解析，不直接写 ES、不决定 ACL、不负责平台 Document 状态。
 
+用户于 2026-11-24 明确将独立 Parser POC 延后，Docling 的 Markdown、DOCX、PDF 实际解析验证合并到 P3-01 正式集成阶段，当前先推进 V1.0 主线契约与工程底座。Parser 验收仍需收集实际样本的内容、表格、阅读顺序、引用定位、错误和耗时证据；缺口经配置/OCR/Adapter 排查仍存在时，再按 [POC-02](04-poc-acceptance-and-adr.md) 使用同一批失败样本验证 MinerU，并保持 ParsedDocument 输出契约。MinerU 继续保留为 PDF 备选。
+
 ### 4.3 Chunking 策略
 
 - 默认使用结构感知切片，不简单按固定字符数截断。
@@ -185,7 +193,7 @@ Parser 只负责内容解析，不直接写 ES、不决定 ACL、不负责平台
 
 ### 4.4 幂等、重试与恢复
 
-- `idempotency_key = hash(document_id + version + pipeline_version + stage)`。
+- P0-04-03 的 Job Key 绑定 DocumentVersionRef、pipeline_version、job_type、terminal_stage，跨阶段/重试不变；Stage Key 独立绑定 DocumentVersionRef、pipeline_version、stage。规范序列化与计算由 [知识契约](../../api/knowledge-contracts.md) 指定，不把旧 stage Key 当作整个 Job 的身份。
 - 每个 stage 写入开始、成功、失败记录；重复消息不得产生重复 Chunk 或重复索引文档。
 - Celery retry 仅用于可恢复错误；指数退避并设置最大重试次数。
 - 解析产物、Chunk 结果和 Embedding 批次可持久化，支持从失败阶段恢复。
@@ -247,11 +255,11 @@ Rewrite 结果必须保留原始 Query，Trace 中记录原始问题、改写问
 ### 5.3 Hybrid Retrieval
 
 默认执行：
-1. 生成 Query Embedding。
-2. Dense 检索 Top-K。
-3. BM25 检索 Top-K。
-4. 统一候选 ID，RRF 融合。
-5. ACL、KB 状态、文档发布状态、Metadata Filter。
+1. 生成 Query Embedding，加载可信当前 ACL、KB/文档发布状态和允许的 Metadata 筛选。
+2. Dense 检索 Top-K，在召回前强制应用上述过滤。
+3. BM25 检索 Top-K，在召回前应用相同过滤。
+4. 统一候选 ID，由 Search Adapter 执行 RRF 融合（Basic 许可下不依赖 ES 原生 RRF，见 [ADR-0016](../../adr/0016-client-side-rrf-under-basic-license.md)）。
+5. 返回候选再次核对当前授权和状态；索引快照不能替代可信当前 Policy。
 6. 去重、必要时 Parent Context Expansion。
 7. Reranker 重排。
 8. 选择满足上下文预算的证据片段。
@@ -306,6 +314,8 @@ Context Budget Manager 输入：
 
 ### 5.7 Citation 生成与验证
 
+正式引用制品与确认规则见 [会话、消息与引用契约](../../api/chat-contracts.md)。正式制品使用格式化 locations 和平台生成的 excerpt。以下列表保留初始设计，来源访问和 SSE 按 P4 集成。
+
 每条引用至少包含：
 `citation_id, document_id, document_version, chunk_id, title, page_no, heading_path, excerpt, score, source_uri`。
 
@@ -330,6 +340,8 @@ Context Budget Manager 输入：
 事件顺序和字段形成 API 契约；断线恢复策略由客户端携带 message / cursor 信息实现，第一期可先支持重新发起，不承诺无损续传。
 
 ## 6. Retriever Contract
+
+**契约落实（2026-11-24）：** 正式名称继续使用 RetrievalRequest/Result，公共业务选择、内部 AccessContext/当前事实、结果来源与前后授权规则见 [解析与检索契约](../../api/parsing-retrieval-contracts.md) 及 [统一契约 2.3](../../architecture/统一契约与跨版本演进规则.md#23-v10-解析chunk-与-retriever-契约)。以下任意字典为原草案，实际源码采用明确的 RetrievalFilters/ScoreComponents/ChunkSource。POC SearchQuery/AuthorizedSearchScope 仍是独立 Adapter 协议，正式联网 Retriever 在 P3/P4 集成。
 
 ```python
 class RetrievalRequest:
@@ -378,6 +390,8 @@ Contract 不包含 Elasticsearch 专有字段。未来可替换搜索引擎，�
 
 ## 8. Trace 与诊断
 
+阶段、诊断字段及受控内容的边界见 [Trace 与 AuditEvent 契约](../../api/trace-audit-contracts.md)。
+
 每次问答一个 Trace；一个 Conversation 可包含多个 Trace。建议 Span：
 - `auth.policy`
 - `query.route`
@@ -424,7 +438,7 @@ Contract 不包含 Elasticsearch 专有字段。未来可替换搜索引擎，�
 ## 11. 待 POC 决策项
 
 - Elasticsearch 版本、Dense 向量字段类型、Hybrid Query 方式和 ACL Filter 性能。
-- Docling 与 MinerU 对目标 PDF 样本的解析质量、表格保真度和耗时。
+- 先验证 Docling 对目标 Markdown、DOCX、PDF 样本的解析质量、表格保真度与耗时；实际缺口触发时再验证 MinerU，不提前要求双 Parser 对比。
 - LlamaIndex 组件使用边界与升级兼容性。
 - Embedding / Reranker 模型选择、维度、批大小、成本和限流。
 - Chunking 参数与 Parent-Child 召回收益。
