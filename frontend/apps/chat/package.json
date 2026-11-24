@@ -10,9 +10,13 @@
     "preview": "vite preview --host 127.0.0.1 --port 5173 --strictPort"
   },
   "dependencies": {
-    "@enterprise-rag/ui": "workspace:*",
+    "@ant-design/icons": "6.3.4",
+    "@ant-design/x": "2.10.0",
+    "@ant-design/x-markdown": "2.10.0",
     "@enterprise-rag/api-client": "workspace:*",
     "@enterprise-rag/shared": "workspace:*",
+    "@enterprise-rag/ui": "workspace:*",
+    "antd": "6.7.2",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   }
