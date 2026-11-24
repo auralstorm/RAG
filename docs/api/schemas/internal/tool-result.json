@@ -1,0 +1,132 @@
+{
+  "$defs": {
+    "MockRequestId": {
+      "enum": [
+        "sample-001",
+        "sample-002",
+        "sample-003"
+      ],
+      "title": "MockRequestId",
+      "type": "string"
+    },
+    "MockStatus": {
+      "enum": [
+        "PENDING",
+        "COMPLETED"
+      ],
+      "title": "MockStatus",
+      "type": "string"
+    },
+    "MockToolId": {
+      "const": "mock.request_status",
+      "type": "string"
+    },
+    "MockToolOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "$ref": "#/$defs/MockRequestId"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/MockStatus"
+        }
+      },
+      "required": [
+        "sample_id",
+        "status"
+      ],
+      "title": "MockToolOutput",
+      "type": "object"
+    },
+    "MockToolVersion": {
+      "const": "v1",
+      "type": "string"
+    },
+    "ToolError": {
+      "enum": [
+        "ACCESS_DENIED",
+        "TOOL_UNAVAILABLE",
+        "DEADLINE_EXCEEDED",
+        "SAMPLE_NOT_FOUND"
+      ],
+      "title": "ToolError",
+      "type": "string"
+    },
+    "ToolOutcome": {
+      "enum": [
+        "SUCCEEDED",
+        "REJECTED"
+      ],
+      "title": "ToolOutcome",
+      "type": "string"
+    },
+    "TraceId": {
+      "pattern": "^[0-9a-f]{32}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "error_code": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ToolError"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "outcome": {
+      "$ref": "#/$defs/ToolOutcome"
+    },
+    "output": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MockToolOutput"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tool_id": {
+      "$ref": "#/$defs/MockToolId"
+    },
+    "tool_version": {
+      "$ref": "#/$defs/MockToolVersion"
+    },
+    "trace_id": {
+      "$ref": "#/$defs/TraceId"
+    }
+  },
+  "required": [
+    "request_id",
+    "trace_id",
+    "tool_id",
+    "tool_version",
+    "outcome"
+  ],
+  "title": "ToolResult",
+  "type": "object"
+}

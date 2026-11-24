@@ -1,0 +1,88 @@
+{
+  "$defs": {
+    "MockRequestId": {
+      "enum": [
+        "sample-001",
+        "sample-002",
+        "sample-003"
+      ],
+      "title": "MockRequestId",
+      "type": "string"
+    },
+    "MockToolId": {
+      "const": "mock.request_status",
+      "type": "string"
+    },
+    "MockToolInput": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "$ref": "#/$defs/MockRequestId"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sample_id"
+      ],
+      "title": "MockToolInput",
+      "type": "object"
+    },
+    "MockToolVersion": {
+      "const": "v1",
+      "type": "string"
+    },
+    "TraceId": {
+      "pattern": "^[0-9a-f]{32}$",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "arguments": {
+      "$ref": "#/$defs/MockToolInput"
+    },
+    "deadline_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tool_id": {
+      "$ref": "#/$defs/MockToolId"
+    },
+    "tool_version": {
+      "$ref": "#/$defs/MockToolVersion"
+    },
+    "trace_id": {
+      "$ref": "#/$defs/TraceId"
+    }
+  },
+  "required": [
+    "request_id",
+    "trace_id",
+    "tool_id",
+    "tool_version",
+    "arguments",
+    "deadline_at"
+  ],
+  "title": "ToolInvocation",
+  "type": "object"
+}

@@ -36,6 +36,17 @@ from app.modules.policy.domain.contracts import (
     ResourceGrant,
     ResourcePrincipalType,
 )
+from app.modules.tool_gateway.application.mock_invocation import invoke_mock_tool
+from app.modules.tool_gateway.domain.contracts import (
+    MOCK_PERMISSION,
+    MockRequestId,
+    MockStatus,
+    MockToolInput,
+    ToolDefinition,
+    ToolError,
+    ToolInvocation,
+    ToolOutcome,
+)
 from pydantic import ValidationError
 
 NOW = datetime(2026, 11, 24, 8, tzinfo=UTC)
@@ -112,6 +123,79 @@ def snapshot(**updates: object) -> AuthorizationSnapshot:
 
 def read_request() -> AuthorizationRequest:
     return AuthorizationRequest(permission_code="kb.read", purpose=AccessPurpose.ADMIN, kb_id=KB_ID)
+
+
+def mock_invocation(sample_id: MockRequestId = MockRequestId.PENDING) -> ToolInvocation:
+    return ToolInvocation(
+        request_id=UUID(int=70),
+        trace_id="a" * 32,
+        tool_id="mock.request_status",
+        tool_version="v1",
+        arguments=MockToolInput(sample_id=sample_id),
+        deadline_at=NOW + timedelta(seconds=20),
+    )
+
+
+def test_mock_tool_returns_only_the_selected_fixture_with_request_correlation() -> None:
+    invocation = mock_invocation(MockRequestId.COMPLETED)
+    current = snapshot(permission_codes={MOCK_PERMISSION})
+    result = invoke_mock_tool(invocation, context(), current, ToolDefinition(enabled=True), now=NOW)
+    assert result.outcome is ToolOutcome.SUCCEEDED
+    assert result.request_id == invocation.request_id and result.trace_id == invocation.trace_id
+    assert result.output is not None and result.output.status is MockStatus.COMPLETED
+    assert (
+        invoke_mock_tool(
+            mock_invocation(MockRequestId.ABSENT), context(), current, ToolDefinition(enabled=True), now=NOW
+        ).error_code
+        is ToolError.SAMPLE_NOT_FOUND
+    )
+
+
+@pytest.mark.parametrize("case", ["missing_context", "revoked", "expired", "chat", "production"])
+def test_mock_tool_rejects_invalid_current_identity_and_environment(case: str) -> None:
+    current = snapshot(permission_codes={MOCK_PERMISSION})
+    actor: AccessContext | None = context()
+    if case == "missing_context":
+        actor = None
+    elif case == "revoked":
+        current = snapshot(permission_codes=())
+    elif case == "expired":
+        actor = context(expires_at=NOW)
+    elif case == "chat":
+        actor = context(purpose=AccessPurpose.CHAT)
+        current = snapshot(permission_codes={MOCK_PERMISSION}, purpose=AccessPurpose.CHAT)
+    elif case == "production":
+        actor = context(environment="production")
+        current = snapshot(permission_codes={MOCK_PERMISSION}, environment="production")
+    result = invoke_mock_tool(mock_invocation(), actor, current, ToolDefinition(enabled=True), now=NOW)
+    assert result.outcome is ToolOutcome.REJECTED and result.error_code is ToolError.ACCESS_DENIED
+    assert result.output is None
+
+
+def test_mock_tool_defaults_to_disabled_and_enforces_the_original_deadline() -> None:
+    invocation = mock_invocation()
+    current = snapshot(permission_codes={MOCK_PERMISSION})
+    assert invoke_mock_tool(invocation, context(), current, None, now=NOW).error_code is ToolError.TOOL_UNAVAILABLE
+    assert (
+        invoke_mock_tool(invocation, context(), current, ToolDefinition(), now=NOW).error_code
+        is ToolError.TOOL_UNAVAILABLE
+    )
+    assert (
+        invoke_mock_tool(
+            invocation, context(), current, ToolDefinition(enabled=True), now=invocation.deadline_at
+        ).error_code
+        is ToolError.DEADLINE_EXCEEDED
+    )
+
+
+def test_mock_contract_rejects_identity_overrides_and_unsupported_tools() -> None:
+    invocation = mock_invocation().model_dump()
+    with pytest.raises(ValidationError, match="Extra inputs"):
+        ToolInvocation.model_validate(invocation | {"principal_ref": "client-claimed-user"})
+    with pytest.raises(ValidationError, match="Extra inputs"):
+        ToolInvocation.model_validate(invocation | {"arguments": {"sample_id": "sample-001", "url": "example"}})
+    with pytest.raises(ValidationError, match="literal_error"):
+        ToolInvocation.model_validate(invocation | {"tool_version": "v2"})
 
 
 def test_verified_external_identity_uses_exact_provider_issuer_and_subject() -> None:

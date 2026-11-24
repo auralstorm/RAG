@@ -510,6 +510,24 @@
       "name": "StoredAuditEvent",
       "path": "schemas/internal/stored-audit-event.json",
       "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolDefinition",
+      "path": "schemas/internal/tool-definition.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolInvocation",
+      "path": "schemas/internal/tool-invocation.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ToolResult",
+      "path": "schemas/internal/tool-result.json",
+      "visibility": "internal"
     }
   ]
 }

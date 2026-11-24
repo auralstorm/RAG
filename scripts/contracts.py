@@ -98,6 +98,7 @@ from app.modules.search.domain.contracts import (
     PublishedDocumentSnapshot,
     StoredIndexVersion,
 )
+from app.modules.tool_gateway.domain.contracts import ToolDefinition, ToolInvocation, ToolResult
 from app.modules.traces.domain.contracts import Trace, TraceIdentityLink, TraceSpan
 from pydantic import JsonValue, RootModel, TypeAdapter
 
@@ -252,6 +253,9 @@ SCHEMAS = (
     SchemaSource("AuditEvent", "observability/audit-event.json", "observability", AuditEvent.model_json_schema),
     SchemaSource("TraceIdentityLink", "internal/trace-identity-link.json", None, TraceIdentityLink.model_json_schema),
     SchemaSource("StoredAuditEvent", "internal/stored-audit-event.json", None, StoredAuditEvent.model_json_schema),
+    SchemaSource("ToolDefinition", "internal/tool-definition.json", None, ToolDefinition.model_json_schema),
+    SchemaSource("ToolInvocation", "internal/tool-invocation.json", None, ToolInvocation.model_json_schema),
+    SchemaSource("ToolResult", "internal/tool-result.json", None, ToolResult.model_json_schema),
 )
 
 

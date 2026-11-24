@@ -176,6 +176,8 @@ Agent → Tool Gateway → Policy Engine → Connector Adapter → 外部系统�
 
 ### 6.2 Tool Contract
 
+V1.0 的 Mock 定义、调用与结果以 [Mock Tool 契约](../../api/mock-tool-contracts.md) 为准。下列为完整 Tool Gateway 的设计草案。
+
 ```python
 class ToolDefinition:
     tool_id: str

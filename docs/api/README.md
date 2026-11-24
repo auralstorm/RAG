@@ -23,6 +23,7 @@
 | [Chat TypeScript 类型](../../frontend/packages/api-client/src/generated/chat.ts) | 会话、消息与引用公开视图 |
 | [Trace 与 AuditEvent 契约](trace-audit-contracts.md) | 阶段、可诊断指标、审计事件与受保护记录 |
 | [Trace 和 AuditEvent TypeScript 类型](../../frontend/packages/api-client/src/generated/observability.ts) | 技术诊断与授权审计视图 |
+| [Mock Tool 契约](mock-tool-contracts.md) | 工具定义、内部调用结果和当前 Policy 校验 |
 
 [生成脚本](../../scripts/contracts.py) 固定非私有应用元数据、不启动服务或访问数据库；[私有构建工具](../../frontend/packages/api-codegen/package.json) 使用 `openapi-typescript==7.13.0` 与其支持的 TypeScript `5.9.3`，应用及客户端类型检查继续使用既有 TypeScript `6.0.3`。构建工具不作为应用运行依赖，也不创建业务 API 占位路由。生成输入仅来自仓库内制品，不抓取远程 Schema。
 
@@ -40,4 +41,4 @@ retryable 不自动触发重试，写入重放仍取决于身份、原 Idempoten
 
 ## 主线后续
 
-当前契约进度及后续 Mock Tool、真实服务集成与独立评审的范围见 [P0-04 记录](../plan/V1.0-MVP/implementation/P0-04.md)。
+当前契约进度及后续真实服务集成与独立评审的范围见 [P0-04 记录](../plan/V1.0-MVP/implementation/P0-04.md)。
