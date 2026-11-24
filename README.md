@@ -74,6 +74,8 @@ make check
 
 该命令依次运行 Ruff、ESLint、格式检查、Pyright、TypeScript、pytest、Vitest、两个前端生产构建、本地文档链接检查及 Git 差异检查。
 
+技术检索 POC 使用 `make poc-search`：启动独立 Elasticsearch、验证客户端 RRF 与权限/索引边界，并保存 `.poc-results/search/` 报告。普通测试不启动 Docker，完整 POC 状态见 [P0-03 进度](docs/plan/V1.0-MVP/implementation/P0-03.md)。
+
 需要针对变更检查时使用 `make lint`、`make format-check`、`make typecheck`、`make test` 或 `make build`。前端格式化使用 `pnpm format`，Python 格式化使用 `uv run --locked ruff format backend scripts`。
 
 仓库检查脚本检查本地链接、误纳入版本控制的环境文件、常见 OpenAI Key 和私钥格式；它不替代专门的凭据扫描、权限测试或安全评审。历史审查原文和规划文档保留原有格式，前端 Prettier 范围不包含这些文档。

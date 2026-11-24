@@ -1,0 +1,8 @@
+services:
+  elasticsearch:
+    extends:
+      file: compose.yaml
+      service: elasticsearch
+
+volumes:
+  elasticsearch-data:

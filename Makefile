@@ -1,4 +1,4 @@
-.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check infra-up infra-down infra-status infra-init infra-reset infra-test
+.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check infra-up infra-down infra-status infra-init infra-reset infra-test poc-search
 
 PROFILE ?= development
 
@@ -56,3 +56,6 @@ infra-reset:
 
 infra-test:
 	uv run --locked pytest -m infrastructure -v
+
+poc-search:
+	uv run --locked python scripts/poc/search.py

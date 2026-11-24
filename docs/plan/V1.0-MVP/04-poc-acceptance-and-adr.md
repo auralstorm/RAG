@@ -72,6 +72,12 @@ POC 的任务是验证既定默认技术方案能否满足项目硬性要求，�
 - 索引发布/回滚可重复且不破坏在线查询。
 - 性能指标达到测试前签署的目标；不得以单次测试结果替代稳定压测。
 
+### 4.5 Basic 许可下的 RRF 实现与执行状态
+
+2026-11-24 实测当前 Elasticsearch `9.2.0` 为有效 Basic 许可，原生 RRF 返回 HTTP 403，原因是 `current license is non-compliant for [Reciprocal Rank Fusion (RRF)]`。用户已批准保持 ES 基线，在 Search Adapter 内执行排名融合，依据 [ADR-0016](../../adr/0016-client-side-rrf-under-basic-license.md)。Dense 与 BM25 都在召回前执行可信当前授权和状态过滤，alias 每次解析到唯一物理索引，失败/部分响应拒绝返回。
+
+[POC-01 实施记录](implementation/POC-01-search.md) 与 `make poc-search` 提供独立真实服务、合成向量与权限夹具的功能证据；完整业务质量、容量、实际权限集成和非作者安全评审仍待完成，不能据此关闭 POC-01。全部 P0-03 输入和状态见 [实施进度](implementation/P0-03.md)。
+
 ## 5. POC-02 Docling / MinerU Parser
 
 ### 5.1 样本

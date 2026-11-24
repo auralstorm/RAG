@@ -247,11 +247,11 @@ Rewrite 结果必须保留原始 Query，Trace 中记录原始问题、改写问
 ### 5.3 Hybrid Retrieval
 
 默认执行：
-1. 生成 Query Embedding。
-2. Dense 检索 Top-K。
-3. BM25 检索 Top-K。
-4. 统一候选 ID，RRF 融合。
-5. ACL、KB 状态、文档发布状态、Metadata Filter。
+1. 生成 Query Embedding，加载可信当前 ACL、KB/文档发布状态和允许的 Metadata 筛选。
+2. Dense 检索 Top-K，在召回前强制应用上述过滤。
+3. BM25 检索 Top-K，在召回前应用相同过滤。
+4. 统一候选 ID，由 Search Adapter 执行 RRF 融合（Basic 许可下不依赖 ES 原生 RRF，见 [ADR-0016](../../adr/0016-client-side-rrf-under-basic-license.md)）。
+5. 返回候选再次核对当前授权和状态；索引快照不能替代可信当前 Policy。
 6. 去重、必要时 Parent Context Expansion。
 7. Reranker 重排。
 8. 选择满足上下文预算的证据片段。

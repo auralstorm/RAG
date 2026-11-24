@@ -14,3 +14,4 @@ __pycache__/
 !.env.example
 *.tsbuildinfo
 *.log
+.poc-results/
