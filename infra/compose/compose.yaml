@@ -94,55 +94,14 @@ services:
     restart: unless-stopped
 
   rustfs-volume-init:
-    image: ${RUSTFS_IMAGE:?}
-    user: '0:0'
-    entrypoint: [sh, -ec]
-    command: ['chown 10001:10001 /data /logs']
-    volumes:
-      - rustfs-data:/data
-      - rustfs-logs:/logs
-    network_mode: none
-    security_opt:
-      - no-new-privileges:true
-    restart: 'no'
+    extends:
+      file: rustfs.yaml
+      service: rustfs-volume-init
 
   rustfs:
-    image: ${RUSTFS_IMAGE:?}
-    user: '10001:10001'
-    depends_on:
-      rustfs-volume-init:
-        condition: service_completed_successfully
-    environment:
-      RUSTFS_VOLUMES: /data
-      RUSTFS_ADDRESS: 0.0.0.0:9000
-      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
-      RUSTFS_CONSOLE_ENABLE: 'true'
-      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: http://127.0.0.1:${OBJECT_STORAGE_CONSOLE_PORT:?}
-      RUSTFS_ACCESS_KEY: ${ENTERPRISE_RAG_OBJECT_STORAGE_ACCESS_KEY:?}
-      RUSTFS_SECRET_KEY: ${ENTERPRISE_RAG_OBJECT_STORAGE_SECRET_KEY:?}
-      RUSTFS_OBS_LOGGER_LEVEL: warn
-      RUSTFS_OBS_LOG_DIRECTORY: /logs
-      RUSTFS_OBS_ENVIRONMENT: ${ENTERPRISE_RAG_ENVIRONMENT:?}
-    ports:
-      - '127.0.0.1:${OBJECT_STORAGE_PORT:?}:9000'
-      - '127.0.0.1:${OBJECT_STORAGE_CONSOLE_PORT:?}:9001'
-    volumes:
-      - rustfs-data:/data
-      - rustfs-logs:/logs
-    healthcheck:
-      test:
-        [
-          CMD-SHELL,
-          'curl -fsS http://127.0.0.1:9000/health >/dev/null && curl -fsS http://127.0.0.1:9001/rustfs/console/health >/dev/null',
-        ]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
-    mem_limit: 2048m
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    extends:
+      file: rustfs.yaml
+      service: rustfs
 
   phoenix:
     image: ${PHOENIX_IMAGE:?}

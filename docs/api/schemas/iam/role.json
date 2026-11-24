@@ -2,6 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "description": "Role metadata does not grant permissions; assignments and grants are separate facts.",
+  "else": {
+    "properties": {
+      "is_system": {
+        "const": false
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "code": {
+        "enum": [
+          "SUPER_ADMIN",
+          "KB_ADMIN",
+          "AUDIT_READONLY"
+        ]
+      }
+    },
+    "required": [
+      "code"
+    ]
+  },
   "properties": {
     "code": {
       "maxLength": 64,
@@ -44,6 +65,16 @@
     "is_system",
     "protected"
   ],
+  "then": {
+    "properties": {
+      "is_system": {
+        "const": true
+      },
+      "protected": {
+        "const": true
+      }
+    }
+  },
   "title": "Role",
   "type": "object"
 }

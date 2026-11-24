@@ -1,8 +1,10 @@
 """Validate stage ordering, terminal states and bounded retries without writing external state."""
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import StrEnum
 
-from app.modules.documents.domain.contracts import DocumentVersion, DocumentVersionStatus
+from app.modules.documents.domain.contracts import DocumentVersion, DocumentVersionRef, DocumentVersionStatus
 from app.modules.ingestion.domain.contracts import IngestionFailure, IngestionJob, IngestionJobStatus, IngestionStage
 
 VERSION_TRANSITIONS = {
@@ -42,8 +44,26 @@ def _time(now: datetime, previous: datetime) -> datetime:
     return now.astimezone(UTC)
 
 
+class DeletionTarget(StrEnum):
+    ORIGINAL = "original"
+    PARSED_ARTIFACTS = "parsed_artifacts"
+    CHUNKS = "chunks"
+    SEARCH = "search"
+    CACHE = "cache"
+    ASSOCIATED_DATA = "associated_data"
+
+
+@dataclass(frozen=True, slots=True)
+class VerifiedDeletionCleanup:
+    """Trusted cleanup evidence that each recorded target is absent for this version."""
+
+    version: DocumentVersionRef
+    absent_targets: frozenset[DeletionTarget]
+    verified_at: datetime
+
+
 def advance_document_version[VersionT: DocumentVersion](
-    version: VersionT, target: DocumentVersionStatus, *, now: datetime
+    version: VersionT, target: DocumentVersionStatus, *, now: datetime, cleanup: VerifiedDeletionCleanup | None = None
 ) -> VersionT:
     """Advance one version; published content cannot become a new processing attempt.
 
@@ -54,6 +74,12 @@ def advance_document_version[VersionT: DocumentVersion](
     if target not in VERSION_TRANSITIONS[version.status]:
         raise ValueError("Illegal document-version state transition")
     at = _time(now, version.updated_at)
+    if target is DocumentVersionStatus.DELETED:
+        reference = DocumentVersionRef.model_validate(version.model_dump(include=set(DocumentVersionRef.model_fields)))
+        if cleanup is None or cleanup.version != reference or cleanup.absent_targets != frozenset(DeletionTarget):
+            raise ValueError("Deletion requires verified cleanup of every target for this document version")
+        _time(cleanup.verified_at, version.updated_at)
+        _time(at, cleanup.verified_at)
     data = {**version.model_dump(), "status": target, "updated_at": at}
     if version.status is DocumentVersionStatus.FAILED and target is DocumentVersionStatus.PARSING:
         data.update(parser_name=None, parser_version=None, chunking_config_version=None)

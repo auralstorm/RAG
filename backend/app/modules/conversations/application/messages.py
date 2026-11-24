@@ -1,6 +1,7 @@
 """Prepare sourced answers and recheck saved messages using trusted server reads."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid5
 
@@ -8,6 +9,7 @@ from app.modules.conversations.domain.contracts import (
     Citation,
     Conversation,
     Message,
+    MessageRole,
     MessageStatus,
     StoredConversation,
     StoredMessage,
@@ -23,7 +25,18 @@ from app.modules.rag.domain.contracts import (
     RetrievalDocumentFacts,
     RetrievalFacts,
     RetrievalResult,
+    RetrievedChunk,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class SourcedGeneration:
+    """Server-owned generation input with the ordered evidence supplied to the prompt."""
+
+    pending: Message
+    scope: AuthorizedRetrievalScope
+    retrieval: RetrievalResult
+    prompt_evidence: tuple[RetrievedChunk, ...]
 
 
 def require_owned_conversation(
@@ -54,22 +67,22 @@ def _documents_by_id(documents: Iterable[RetrievalDocumentFacts]) -> dict[UUID, 
     return by_id
 
 
-def complete_sourced_answer(
+def prepare_sourced_generation(
     stored: StoredConversation | None,
     pending: Message,
-    answer: str,
     *,
     scope: AuthorizedRetrievalScope,
     retrieval: RetrievalResult,
     context_chunk_ids: tuple[UUID, ...],
     fresh_facts: RetrievalFacts,
     now: datetime,
-) -> StoredMessage:
-    """Bind model markers to the authoritative chunks sent as evidence, in prompt order."""
+) -> SourcedGeneration:
+    """Select the authoritative ordered evidence for the model prompt."""
     context = scope.request.access_context
     conversation = require_owned_conversation(stored, context, fresh_facts.authorization, now=now)
     if (
         pending.conversation_id != conversation.id
+        or pending.role is not MessageRole.ASSISTANT
         or pending.status is not MessageStatus.GENERATING
         or pending.trace_id != scope.request.trace_id
         or not conversation.created_at <= pending.created_at <= now
@@ -77,15 +90,37 @@ def complete_sourced_answer(
         raise ValueError("Pending answer does not belong to this generation")
     validate_retrieval_result(scope, retrieval, fresh_facts, now=now)
     retrieved = {chunk.chunk_id: chunk for chunk in retrieval.chunks}
-    if len(set(context_chunk_ids)) != len(context_chunk_ids) or not set(context_chunk_ids) <= retrieved.keys():
+    if (
+        not context_chunk_ids
+        or len(set(context_chunk_ids)) != len(context_chunk_ids)
+        or not set(context_chunk_ids) <= retrieved.keys()
+    ):
         raise ValueError("Prompt evidence must be a unique selection from this retrieval")
+    return SourcedGeneration(pending, scope, retrieval, tuple(retrieved[chunk_id] for chunk_id in context_chunk_ids))
+
+
+def complete_sourced_answer(
+    stored: StoredConversation | None,
+    generation: SourcedGeneration,
+    answer: str,
+    *,
+    fresh_facts: RetrievalFacts,
+    now: datetime,
+) -> StoredMessage:
+    """Bind citations and dependencies to the generation's prompt evidence."""
+    pending = generation.pending
+    context = generation.scope.request.access_context
+    conversation = require_owned_conversation(stored, context, fresh_facts.authorization, now=now)
+    if conversation.id != pending.conversation_id:
+        raise ValueError("Pending answer does not belong to this conversation")
+    validate_retrieval_result(generation.scope, generation.retrieval, fresh_facts, now=now)
     markers = citation_markers(answer)
-    if not markers or max(markers) > len(context_chunk_ids):
+    if not markers or max(markers) > len(generation.prompt_evidence):
         raise ValueError("Answer citations must refer to this generation's prompt evidence")
     documents = _documents_by_id(fresh_facts.documents)
     citations: list[Citation] = []
     for order in sorted(markers):
-        chunk = retrieved[context_chunk_ids[order - 1]]
+        chunk = generation.prompt_evidence[order - 1]
         citations.append(
             Citation(
                 citation_id=uuid5(pending.id, str(order)),
@@ -101,7 +136,7 @@ def complete_sourced_answer(
                 excerpt=chunk.content.lstrip()[:320],
             )
         )
-    evidence = tuple(dict.fromkeys(evidence_version(retrieved[chunk_id]) for chunk_id in context_chunk_ids))
+    evidence = tuple(dict.fromkeys(evidence_version(chunk) for chunk in generation.prompt_evidence))
     return StoredMessage(
         message=Message.model_validate(
             pending.model_dump() | {"status": MessageStatus.COMPLETED, "content": answer, "citations": citations}

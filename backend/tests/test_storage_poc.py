@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import secrets
 import subprocess
 import time
@@ -16,7 +17,7 @@ from pathlib import Path
 import pytest
 import urllib3
 from app.adapters.object_storage import open_s3_client
-from app.core.config import Settings, load_settings
+from app.core.config import Settings
 from minio import Minio
 from minio.commonconfig import ENABLED, Filter
 from minio.credentials.providers import AssumeRoleProvider, StaticProvider
@@ -27,29 +28,55 @@ from minio.minioadmin import MinioAdmin
 from pydantic import BaseModel, JsonValue, RootModel, SecretStr
 from tests.storage_admin_cli import service_account
 
-from scripts.infrastructure import initialize_config
-
 pytestmark = pytest.mark.poc
 ROOT = Path(__file__).resolve().parents[2]
-PROJECT = "enterprise-rag-poc-storage"
 BUCKET = "poc-permissions"
 USER = "poc-scoped-user"
 
 
-def poc_command(*arguments: str, restore: bool = False) -> list[str]:
-    return [
-        "docker",
-        "compose",
-        "--project-name",
-        f"{PROJECT}-restore" if restore else PROJECT,
-        "--file",
-        str(ROOT / "infra/compose/storage-poc.yaml"),
-        "--env-file",
-        str(ROOT / "infra/compose/images.env"),
-        "--env-file",
-        str(ROOT / "infra/compose/.env.test"),
-        *arguments,
-    ]
+@dataclass(frozen=True)
+class StorageStack:
+    project: str
+    settings: Settings
+
+    @property
+    def container(self) -> str:
+        return f"{self.project}-rustfs-1"
+
+    def compose(self, *arguments: str, restore: bool = False) -> str:
+        environment = {
+            key: value
+            for key, value in os.environ.items()
+            if key in {"PATH", "HOME", "USER", "LOGNAME", "XDG_RUNTIME_DIR"} or key.startswith("DOCKER_")
+        }
+        environment.update(
+            ENTERPRISE_RAG_ENVIRONMENT="test",
+            ENTERPRISE_RAG_OBJECT_STORAGE_ACCESS_KEY=self.settings.object_storage_access_key.get_secret_value(),
+            ENTERPRISE_RAG_OBJECT_STORAGE_SECRET_KEY=self.settings.object_storage_secret_key.get_secret_value(),
+            OBJECT_STORAGE_PORT=self.settings.object_storage_endpoint.rsplit(":", 1)[1],
+            OBJECT_STORAGE_CONSOLE_PORT="29001",
+        )
+        return subprocess.check_output(
+            [
+                "docker",
+                "compose",
+                "--project-name",
+                f"{self.project}-restore" if restore else self.project,
+                "--file",
+                str(ROOT / "infra/compose/storage-poc.yaml"),
+                "--env-file",
+                str(ROOT / "infra/compose/images.env"),
+                *arguments,
+            ],
+            env=environment,
+            text=True,
+        ).strip()
+
+    def start(self, *, restore: bool = False) -> None:
+        self.compose("up", "--detach", "--wait", "--wait-timeout", "240", restore=restore)
+        endpoint = self.compose("port", "rustfs", "9000", restore=restore)
+        if endpoint != self.settings.object_storage_endpoint:
+            raise RuntimeError("RustFS POC did not publish its expected loopback endpoint")
 
 
 def admin(settings: Settings, pool: urllib3.PoolManager) -> MinioAdmin:
@@ -66,6 +93,7 @@ def admin(settings: Settings, pool: urllib3.PoolManager) -> MinioAdmin:
 
 @dataclass
 class StorageEnvironment:
+    stack: StorageStack
     settings: Settings
     root: Minio
     administrator: MinioAdmin
@@ -76,9 +104,14 @@ class StorageEnvironment:
 
 @pytest.fixture(scope="module")
 def storage_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[StorageEnvironment]:
-    initialize_config("test")
     directory = tmp_path_factory.mktemp("rustfs-poc")
-    settings = load_settings("test")
+    settings = Settings.model_construct(
+        environment="test",
+        object_storage_endpoint="127.0.0.1:29000",
+        object_storage_access_key=SecretStr(f"poc-root-{secrets.token_hex(8)}"),
+        object_storage_secret_key=SecretStr(secrets.token_urlsafe(32)),
+    )
+    storage_stack = StorageStack(f"enterprise-rag-poc-storage-{secrets.token_hex(6)}", settings)
     scoped_settings = settings.model_copy(
         update={
             "object_storage_access_key": SecretStr(USER),
@@ -87,7 +120,7 @@ def storage_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[S
     )
     pool = urllib3.PoolManager(timeout=urllib3.Timeout(connect=5, read=5), retries=False)
     try:
-        subprocess.run(poc_command("up", "--detach", "--wait", "--wait-timeout", "240"), check=True)
+        storage_stack.start()
         with ExitStack() as stack:
             root = stack.enter_context(open_s3_client(settings))
             scoped = stack.enter_context(open_s3_client(scoped_settings))
@@ -117,19 +150,19 @@ def storage_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[S
             evidence.mkdir(parents=True, exist_ok=True, mode=0o700)
             runtime = {
                 "server_version": subprocess.check_output(
-                    ["docker", "exec", f"{PROJECT}-rustfs-1", "rustfs", "--version"], text=True
+                    ["docker", "exec", storage_stack.container, "rustfs", "--version"], text=True
                 ).strip(),
                 "client_version": f"minio=={version('minio')}",
                 "server_image_id": subprocess.check_output(
-                    ["docker", "inspect", "--format", "{{.Image}}", f"{PROJECT}-rustfs-1"], text=True
+                    ["docker", "inspect", "--format", "{{.Image}}", storage_stack.container], text=True
                 ).strip(),
                 "topology": "single node, single data volume, 2 GiB container limit",
             }
             (evidence / "environment.json").write_text(json.dumps(runtime, indent=2) + "\n")
-            yield StorageEnvironment(settings, root, administrator, scoped_settings, scoped, directory)
+            yield StorageEnvironment(storage_stack, settings, root, administrator, scoped_settings, scoped, directory)
     finally:
         pool.clear()
-        subprocess.run(poc_command("down", "--volumes"), check=True)
+        storage_stack.compose("down", "--volumes")
 
 
 def read_object(client: Minio, key: str, *, bucket: str = BUCKET) -> bytes:
@@ -274,12 +307,18 @@ def test_service_account_policy_is_intersected_with_parent_and_cross_owner_updat
             )
         read_policy = RootModel[dict[str, JsonValue]].model_validate_json(policy_file.read_text()).root
         created = service_account(
-            manager_settings, operation="create", target_key=child_key, target_secret=child_secret, policy=read_policy
+            manager_settings,
+            container=environment.stack.container,
+            operation="create",
+            target_key=child_key,
+            target_secret=child_secret,
+            policy=read_policy,
         )
         assert created.returncode == 0, created.summary
         root_child_secret = SecretStr(secrets.token_urlsafe(32))
         root_created = service_account(
             environment.settings,
+            container=environment.stack.container,
             operation="create",
             target_key=root_child_key,
             target_secret=root_child_secret,
@@ -288,6 +327,7 @@ def test_service_account_policy_is_intersected_with_parent_and_cross_owner_updat
         assert root_created.returncode == 0, root_created.summary
         cross_created = service_account(
             manager_settings,
+            container=environment.stack.container,
             operation="create",
             target_key="poc-cross-root-service",
             target_secret=SecretStr(secrets.token_urlsafe(32)),
@@ -325,6 +365,7 @@ def test_service_account_policy_is_intersected_with_parent_and_cross_owner_updat
                 broad_policy = RootModel[dict[str, JsonValue]].model_validate_json(policy_file.read_text()).root
                 updated = service_account(
                     manager_settings,
+                    container=environment.stack.container,
                     operation="update",
                     target_key=child_key,
                     target_secret=child_secret,
@@ -343,6 +384,7 @@ def test_service_account_policy_is_intersected_with_parent_and_cross_owner_updat
                     environment.administrator.user_enable("poc-service-manager")
             cross_updated = service_account(
                 manager_settings,
+                container=environment.stack.container,
                 operation="update",
                 target_key=root_child_key,
                 target_secret=root_child_secret,
@@ -453,13 +495,13 @@ def test_sts_read_only_session_restricts_parent_write_permission(storage_environ
         assert denied.value.code == "AccessDenied"
 
 
-def physical_parts() -> set[str]:
+def physical_parts(container: str) -> set[str]:
     """Inspect hashes of synthetic payload files, including RustFS trash, without exposing contents."""
     result = subprocess.check_output(
         [
             "docker",
             "exec",
-            f"{PROJECT}-rustfs-1",
+            container,
             "find",
             "/data",
             "-type",
@@ -483,15 +525,14 @@ def test_lifecycle_expiration_removes_target_payload_and_preserves_unmatched_obj
     bucket = "poc-lifecycle"
     environment.root.make_bucket(bucket)
     environment.root.put_object(bucket, "keep/document.txt", BytesIO(b"keep"), 4)
-    before_parts = physical_parts()
+    container = environment.stack.container
+    before_parts = physical_parts(container)
     payload = b"rustfs-poc-lifecycle-payload\0" * 65536
     environment.root.put_object(bucket, "expire/payload.bin", BytesIO(payload), len(payload))
     assert read_object(environment.root, "expire/payload.bin", bucket=bucket) == payload
-    allocated = physical_parts() - before_parts
+    allocated = physical_parts(container) - before_parts
     assert allocated, "The test must observe a physical payload before proving its cleanup"
-    before_kib = int(
-        subprocess.check_output(["docker", "exec", f"{PROJECT}-rustfs-1", "du", "-sk", "/data"], text=True).split()[0]
-    )
+    before_kib = int(subprocess.check_output(["docker", "exec", container, "du", "-sk", "/data"], text=True).split()[0])
     started = time.monotonic()
     environment.root.set_bucket_lifecycle(
         bucket,
@@ -517,12 +558,10 @@ def test_lifecycle_expiration_removes_target_payload_and_preserves_unmatched_obj
         time.sleep(2)
     assert expiry_seconds is not None, "Configured lifecycle must produce actual expiration in the accelerated POC"
     # Allow for delayed trash cleanup; logical expiration alone cannot prove reclaim.
-    while time.monotonic() - started < 390 and allocated & physical_parts():
+    while time.monotonic() - started < 390 and allocated & physical_parts(container):
         time.sleep(5)
-    assert not allocated & physical_parts(), "Expired object payload still occupies active/trash storage"
-    after_kib = int(
-        subprocess.check_output(["docker", "exec", f"{PROJECT}-rustfs-1", "du", "-sk", "/data"], text=True).split()[0]
-    )
+    assert not allocated & physical_parts(container), "Expired object payload still occupies active/trash storage"
+    after_kib = int(subprocess.check_output(["docker", "exec", container, "du", "-sk", "/data"], text=True).split()[0])
     assert after_kib < before_kib
     assert read_object(environment.root, "keep/document.txt", bucket=bucket) == b"keep"
     measurements = ROOT / ".poc-results/storage"
@@ -593,9 +632,9 @@ def test_s3_backup_restores_objects_metadata_and_scoped_policy_to_a_fresh_volume
         )
     manifest = environment.directory / "backup-manifest.json"
     manifest.write_text(RootModel[list[BackupObject]](records).model_dump_json(indent=2))
-    subprocess.run(poc_command("stop", "rustfs"), check=True)
+    environment.stack.compose("stop", "rustfs")
     try:
-        subprocess.run(poc_command("up", "--detach", "--wait", "--wait-timeout", "240", restore=True), check=True)
+        environment.stack.start(restore=True)
         with open_s3_client(environment.settings) as restored:
             assert restored.list_buckets() == [], "Restore must begin with an empty independent volume"
             restored.make_bucket(BUCKET)
@@ -654,7 +693,7 @@ def test_s3_backup_restores_objects_metadata_and_scoped_policy_to_a_fresh_volume
         )
     finally:
         try:
-            subprocess.run(poc_command("down", "--volumes", restore=True), check=True)
+            environment.stack.compose("down", "--volumes", restore=True)
         finally:
-            subprocess.run(poc_command("up", "--detach", "--wait", "--wait-timeout", "240"), check=True)
+            environment.stack.start()
     assert read_object(environment.root, "allowed/document.txt") == b"synthetic allowed document"

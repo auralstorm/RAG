@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from app.core.config import Settings
 from pydantic import JsonValue, SecretStr
 
-CONTAINER = "enterprise-rag-poc-storage-rustfs-1"
 SCRIPT = r"""
 set -eu
 umask 077
@@ -52,6 +51,7 @@ class AdminResult:
 def service_account(
     settings: Settings,
     *,
+    container: str,
     operation: str,
     target_key: str,
     policy: dict[str, JsonValue],
@@ -63,7 +63,7 @@ def service_account(
     caller_secret = settings.object_storage_secret_key.get_secret_value()
     secret = target_secret.get_secret_value() if target_secret is not None else ""
     result = subprocess.run(
-        ["docker", "exec", "-i", CONTAINER, "sh", "-ec", SCRIPT],
+        ["docker", "exec", "-i", container, "sh", "-ec", SCRIPT],
         input=json.dumps(
             {
                 "caller_key": caller_key,

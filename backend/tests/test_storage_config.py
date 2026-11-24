@@ -8,7 +8,7 @@ from dotenv import dotenv_values
 from pydantic import SecretStr, ValidationError
 from pydantic_settings import SettingsConfigDict
 
-from scripts.infrastructure import migrate_storage_config
+from scripts.infrastructure import StorageService, migrate_storage_config, validate_storage_alignment
 
 
 def test_legacy_profile_migration_preserves_credentials_and_is_idempotent(tmp_path: Path) -> None:
@@ -63,6 +63,37 @@ def test_empty_legacy_credential_does_not_rewrite_profile(tmp_path: Path) -> Non
     with pytest.raises(ValueError, match="ENTERPRISE_RAG_MINIO_SECRET_KEY"):
         migrate_storage_config(path)
     assert path.read_text() == original
+
+
+def test_compose_rejects_conflicting_legacy_credentials_without_disclosing_them(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profile = tmp_path / ".env.test"
+    profile.write_text(
+        "ENTERPRISE_RAG_OBJECT_STORAGE_ENDPOINT=127.0.0.1:29000\n"
+        "ENTERPRISE_RAG_OBJECT_STORAGE_ACCESS_KEY=synthetic-user\n"
+        "ENTERPRISE_RAG_OBJECT_STORAGE_SECRET_KEY=synthetic-compose-secret\n"
+    )
+
+    class ProfileSettings(Settings):
+        model_config = SettingsConfigDict(env_file=profile)
+
+    service = StorageService.model_validate(
+        {
+            "ports": [{"host_ip": "127.0.0.1", "published": "29000", "target": 9000}],
+            "environment": {"RUSTFS_ACCESS_KEY": "synthetic-user", "RUSTFS_SECRET_KEY": "synthetic-compose-secret"},
+        }
+    )
+    validate_storage_alignment(ProfileSettings(), service)
+    monkeypatch.setenv("ENTERPRISE_RAG_MINIO_SECRET_KEY", "synthetic-legacy-secret")
+    with pytest.raises(ValueError, match="disagree with local Compose") as failure:
+        validate_storage_alignment(ProfileSettings(), service)
+    assert "synthetic-" not in str(failure.value)
+    monkeypatch.setenv("ENTERPRISE_RAG_OBJECT_STORAGE_SECRET_KEY", "synthetic-compose-secret")
+    validate_storage_alignment(ProfileSettings(), service)
+    monkeypatch.setenv("ENTERPRISE_RAG_OBJECT_STORAGE_ENDPOINT", "127.0.0.1:29100")
+    with pytest.raises(ValueError, match="disagree with local Compose"):
+        validate_storage_alignment(ProfileSettings(), service)
 
 
 def test_missing_storage_secret_fails_closed_without_exposing_other_secrets() -> None:

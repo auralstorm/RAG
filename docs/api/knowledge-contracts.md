@@ -40,7 +40,7 @@
 
 ## 版本与任务状态
 
-[入库生命周期模块](../../backend/app/modules/ingestion/application/lifecycle.py) 实现已定义版本迁移和 Job 的排队/运行/终态/重试规则。UPLOADED→PARSING→PARSED→CHUNKING→EMBEDDING→INDEXING→INDEXED→PUBLISHED 表达单个版本进度；处理失败进入 FAILED，完整重试回到 PARSING，清除旧 Parser/Chunking 事实和解析产物引用，重新解析后才能进入 PARSED。已发布版本不能回到处理态，新配置/内容创建新版本。任意可处理版本可进入删除，DELETING→DELETED 的持久化仍要求实际清理完成。
+[入库生命周期模块](../../backend/app/modules/ingestion/application/lifecycle.py) 实现已定义版本迁移和 Job 的排队/运行/终态/重试规则。UPLOADED→PARSING→PARSED→CHUNKING→EMBEDDING→INDEXING→INDEXED→PUBLISHED 表达单个版本进度。处理失败进入 FAILED，完整重试回到 PARSING，清除旧 Parser/Chunking 事实和解析产物引用，重新解析后才能进入 PARSED。更新已发布内容或配置须创建新版本。任意可处理版本可进入删除。DELETING→DELETED 要求可信清理方在本次删除期间核实该版本的原件、解析产物、Chunk、搜索、缓存和关联数据均已不存在。实际清理与持久化由 P3-08 交付。
 
 Job 的 SUCCEEDED 只表示其声明 terminal_stage 完成，例如完成 VALIDATING 不代表已经发布。时间不倒退，运行阶段不向后移动，重试只针对明确 retryable 的 FAILED 任务，保持 ID、版本、Key、主体和总预算；达到上限、取消、超时或未知外部效果不会自动重放。per-stage 去重、Event sequence 唯一性、租约/fencing、恢复检查点、实际持久化与消息确认由 Worker/数据库实现验收。
 

@@ -116,11 +116,13 @@ def validate_retrieval_result(
         raise ValueError("Current candidate evidence contains duplicate chunk IDs")
     indices = {binding.kb_id: binding for binding in fresh.index_bindings}
     original_indices = {binding.kb_id: binding for binding in scope.index_bindings}
+    if any(indices.get(kb_id) != binding for kb_id, binding in original_indices.items()):
+        raise PermissionError("An active index changed during retrieval")
     readable_versions = frozenset(scope.document_versions).intersection(fresh.document_versions)
     for candidate in result.chunks:
         chunk = chunks.get(candidate.chunk_id)
         binding = indices.get(candidate.kb_id)
-        if chunk is None or binding is None or binding != original_indices.get(candidate.kb_id):
+        if chunk is None or binding is None or candidate.kb_id not in original_indices:
             raise PermissionError("Candidate chunk or active index is outside the current retrieval scope")
         if candidate.index_version_id != binding.index_version_id:
             raise PermissionError("Candidate came from a different index version")

@@ -18,6 +18,8 @@ from app.modules.documents.domain.contracts import (
 )
 from app.modules.iam.domain.contracts import ExternalIdentity, IdentityStatus, User, UserStatus
 from app.modules.ingestion.application.lifecycle import (
+    DeletionTarget,
+    VerifiedDeletionCleanup,
     advance_document_version,
     advance_ingestion_job,
     retry_ingestion_job,
@@ -323,10 +325,29 @@ def test_document_version_transitions_do_not_reprocess_published_content() -> No
         advance_document_version(uploaded, DocumentVersionStatus.PUBLISHED, now=NOW)
     with pytest.raises(ValueError, match="Illegal"):
         advance_document_version(version(), DocumentVersionStatus.PARSING, now=NOW)
+
+
+def test_deleted_requires_complete_current_cleanup_of_this_version() -> None:
+    deleting = advance_document_version(version(), DocumentVersionStatus.DELETING, now=NOW)
+    reference = DocumentVersionRef.model_validate(deleting.model_dump(include=set(DocumentVersionRef.model_fields)))
+    targets = frozenset(DeletionTarget)
+    for invalid in (
+        None,
+        VerifiedDeletionCleanup(reference, targets - {DeletionTarget.CACHE}, NOW),
+        VerifiedDeletionCleanup(reference.model_copy(update={"document_version_id": UUID(int=99)}), targets, NOW),
+    ):
+        with pytest.raises(ValueError, match="verified cleanup"):
+            advance_document_version(deleting, DocumentVersionStatus.DELETED, now=NOW, cleanup=invalid)
+    for timestamp in (NOW - timedelta(seconds=1), NOW + timedelta(seconds=1), NOW.replace(tzinfo=None)):
+        with pytest.raises(ValueError, match="clock"):
+            advance_document_version(
+                deleting,
+                DocumentVersionStatus.DELETED,
+                now=NOW,
+                cleanup=VerifiedDeletionCleanup(reference, targets, timestamp),
+            )
     deleted = advance_document_version(
-        advance_document_version(version(), DocumentVersionStatus.DELETING, now=NOW),
-        DocumentVersionStatus.DELETED,
-        now=NOW,
+        deleting, DocumentVersionStatus.DELETED, now=NOW, cleanup=VerifiedDeletionCleanup(reference, targets, NOW)
     )
     assert deleted.published_at == version().published_at
 

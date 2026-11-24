@@ -48,7 +48,7 @@ def main() -> None:
         "backend/tests/test_storage_poc.py",
         "backend/tests/storage_admin_cli.py",
         "infra/compose/storage-poc.yaml",
-        "infra/compose/compose.yaml",
+        "infra/compose/rustfs.yaml",
         "scripts/poc/storage.py",
         "uv.lock",
     )
