@@ -1,0 +1,157 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "Environment": {
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ],
+      "type": "string"
+    },
+    "RegistryStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "RegistryStatus",
+      "type": "string"
+    },
+    "SecretReference": {
+      "additionalProperties": false,
+      "description": "Opaque versioned reference; validation neither resolves nor grants secret access.",
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "secret_id": {
+          "format": "uuid",
+          "title": "Secret Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "secret_id",
+        "version",
+        "environment"
+      ],
+      "title": "SecretReference",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_url": {
+      "format": "uri",
+      "maxLength": 2083,
+      "minLength": 1,
+      "title": "Base Url",
+      "type": "string"
+    },
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "credential_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SecretReference"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "has_credential": {
+      "title": "Has Credential",
+      "type": "boolean"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Name",
+      "type": "string"
+    },
+    "provider_type": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Provider Type",
+      "type": "string"
+    },
+    "proxy_ref": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proxy Ref"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RegistryStatus"
+    },
+    "timeout_seconds": {
+      "exclusiveMinimum": 0,
+      "title": "Timeout Seconds",
+      "type": "integer"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "provider_type",
+    "config_version",
+    "status",
+    "has_credential",
+    "created_at",
+    "updated_at",
+    "base_url",
+    "credential_ref",
+    "timeout_seconds"
+  ],
+  "title": "StoredProvider",
+  "type": "object"
+}

@@ -3,6 +3,7 @@ import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';
 import type { components as RetrievalComponents } from './generated/retrieval';
+import type { components as ModelComponents } from './generated/models';
 
 export type {
   paths as ApiPaths,
@@ -47,6 +48,11 @@ export type ChunkSource = RetrievalComponents['schemas']['ChunkSource'];
 export type ChunkSourceSpan = RetrievalComponents['schemas']['ChunkSourceSpan'];
 export type ChunkMetadata = RetrievalComponents['schemas']['ChunkMetadata'];
 export type ScoreComponents = RetrievalComponents['schemas']['ScoreComponents'];
+export type ModelProvider = ModelComponents['schemas']['Provider'];
+export type ModelConfig = ModelComponents['schemas']['ModelConfig'];
+export type ModelUsage = ModelComponents['schemas']['ModelUsage'];
+export type ModelCost = ModelComponents['schemas']['ModelCost'];
+export type ModelFailure = ModelComponents['schemas']['ModelFailure'];
 export type PageResponse<Item> = Omit<
   CommonComponents['schemas']['PageResponse'],
   'items'

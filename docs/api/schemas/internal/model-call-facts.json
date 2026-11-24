@@ -1,0 +1,801 @@
+{
+  "$defs": {
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
+    "ActorReference": {
+      "pattern": "^actor_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "AuthorizationSnapshot": {
+      "additionalProperties": false,
+      "description": "Current facts independently loaded by the trusted server, not copied from context.\n\nSnapshot validity is an input guard, not proof that a cached grant survived revocation.\nProducers reload current identity/roles/groups/ACL for every authorization operation.",
+      "properties": {
+        "actor_ref": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "group_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Group Ids",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "identity": {
+          "$ref": "#/$defs/ExternalIdentity"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "permission_codes": {
+          "items": {
+            "$ref": "#/$defs/PermissionCode"
+          },
+          "title": "Permission Codes",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "policy_version": {
+          "$ref": "#/$defs/PolicyVersion"
+        },
+        "purpose": {
+          "$ref": "#/$defs/AccessPurpose"
+        },
+        "resource_grants": {
+          "items": {
+            "$ref": "#/$defs/ResourceGrant"
+          },
+          "title": "Resource Grants",
+          "type": "array"
+        },
+        "role_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Role Ids",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "subject_bindings": {
+          "items": {
+            "$ref": "#/$defs/SubjectBinding"
+          },
+          "title": "Subject Bindings",
+          "type": "array"
+        },
+        "user": {
+          "$ref": "#/$defs/User"
+        }
+      },
+      "required": [
+        "user",
+        "identity",
+        "actor_ref",
+        "environment",
+        "purpose",
+        "policy_version",
+        "role_ids",
+        "group_ids",
+        "permission_codes",
+        "resource_grants",
+        "subject_bindings",
+        "observed_at",
+        "expires_at"
+      ],
+      "title": "AuthorizationSnapshot",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "Environment": {
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ],
+      "type": "string"
+    },
+    "ExternalIdentity": {
+      "additionalProperties": false,
+      "description": "Restricted mapping facts; raw issuer/subject never belong in public User or Trace DTOs.",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "issuer": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "provider_key": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "title": "Provider Key",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/IdentityStatus"
+        },
+        "subject": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Subject",
+          "type": "string"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_key",
+        "issuer",
+        "subject",
+        "id",
+        "user_id",
+        "status"
+      ],
+      "title": "ExternalIdentity",
+      "type": "object"
+    },
+    "IdentityStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "IdentityStatus",
+      "type": "string"
+    },
+    "KnowledgePermission": {
+      "enum": [
+        "READ",
+        "MANAGE"
+      ],
+      "title": "KnowledgePermission",
+      "type": "string"
+    },
+    "LegacyPrincipalType": {
+      "enum": [
+        "ADMIN_USER",
+        "EMPLOYEE"
+      ],
+      "title": "LegacyPrincipalType",
+      "type": "string"
+    },
+    "ModelCapability": {
+      "enum": [
+        "chat",
+        "streaming",
+        "embedding",
+        "reranker",
+        "tool_call",
+        "json_mode"
+      ],
+      "title": "ModelCapability",
+      "type": "string"
+    },
+    "ModelOperation": {
+      "enum": [
+        "chat",
+        "embedding",
+        "rerank"
+      ],
+      "title": "ModelOperation",
+      "type": "string"
+    },
+    "PermissionCode": {
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+      "type": "string"
+    },
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    },
+    "RegistryStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "RegistryStatus",
+      "type": "string"
+    },
+    "ResourceGrant": {
+      "additionalProperties": false,
+      "description": "Explicit KB capability; source profile types require a verified SubjectBinding.",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "permission": {
+          "$ref": "#/$defs/KnowledgePermission"
+        },
+        "principal_id": {
+          "format": "uuid",
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "principal_type": {
+          "$ref": "#/$defs/ResourcePrincipalType"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kb_id",
+        "principal_type",
+        "principal_id",
+        "permission"
+      ],
+      "title": "ResourceGrant",
+      "type": "object"
+    },
+    "ResourcePrincipalType": {
+      "enum": [
+        "USER",
+        "ROLE",
+        "GROUP",
+        "ADMIN_USER",
+        "EMPLOYEE"
+      ],
+      "title": "ResourcePrincipalType",
+      "type": "string"
+    },
+    "SecretReference": {
+      "additionalProperties": false,
+      "description": "Opaque versioned reference; validation neither resolves nor grants secret access.",
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "secret_id": {
+          "format": "uuid",
+          "title": "Secret Id",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "secret_id",
+        "version",
+        "environment"
+      ],
+      "title": "SecretReference",
+      "type": "object"
+    },
+    "StoredModelConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/ModelCapability"
+          },
+          "minItems": 1,
+          "title": "Capabilities",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "context_window": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context Window"
+        },
+        "display_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Display Name",
+          "type": "string"
+        },
+        "embedding_dimension": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Embedding Dimension"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "is_default": {
+          "default": false,
+          "title": "Is Default",
+          "type": "boolean"
+        },
+        "max_batch_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Batch Size"
+        },
+        "max_concurrency": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Concurrency"
+        },
+        "max_input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Input Tokens",
+          "type": "integer"
+        },
+        "max_output_tokens": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Output Tokens"
+        },
+        "provider_id": {
+          "format": "uuid",
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "rpm_limit": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rpm Limit"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RegistryStatus"
+        },
+        "tokenizer_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "tpm_limit": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tpm Limit"
+        },
+        "vendor_model_key": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Vendor Model Key",
+          "type": "string"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "1",
+          "title": "Weight"
+        }
+      },
+      "required": [
+        "id",
+        "provider_id",
+        "config_version",
+        "display_name",
+        "status",
+        "capabilities",
+        "tokenizer_version",
+        "max_input_tokens",
+        "vendor_model_key"
+      ],
+      "title": "StoredModelConfig",
+      "type": "object"
+    },
+    "StoredProvider": {
+      "additionalProperties": false,
+      "properties": {
+        "base_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Base Url",
+          "type": "string"
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "credential_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecretReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "has_credential": {
+          "title": "Has Credential",
+          "type": "boolean"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "provider_type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Provider Type",
+          "type": "string"
+        },
+        "proxy_ref": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proxy Ref"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RegistryStatus"
+        },
+        "timeout_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "provider_type",
+        "config_version",
+        "status",
+        "has_credential",
+        "created_at",
+        "updated_at",
+        "base_url",
+        "credential_ref",
+        "timeout_seconds"
+      ],
+      "title": "StoredProvider",
+      "type": "object"
+    },
+    "SubjectBinding": {
+      "additionalProperties": false,
+      "description": "Explicit source-profile to canonical-User association, loaded by the trusted server.",
+      "properties": {
+        "principal_id": {
+          "format": "uuid",
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "principal_type": {
+          "$ref": "#/$defs/LegacyPrincipalType"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "principal_type",
+        "principal_id",
+        "user_id"
+      ],
+      "title": "SubjectBinding",
+      "type": "object"
+    },
+    "TokenMeasurement": {
+      "additionalProperties": false,
+      "description": "Trusted tokenizer result bound to exactly one request, not client-declared token counts.",
+      "properties": {
+        "input_tokens": {
+          "items": {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Input Tokens",
+          "type": "array"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "tokenizer_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        }
+      },
+      "required": [
+        "request_sha256",
+        "tokenizer_version",
+        "input_tokens"
+      ],
+      "title": "TokenMeasurement",
+      "type": "object"
+    },
+    "User": {
+      "additionalProperties": false,
+      "description": "Canonical platform subject; status is current server state, not a token claim.",
+      "properties": {
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "display_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Display Name",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/UserStatus"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "display_name",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "User",
+      "type": "object"
+    },
+    "UserStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED",
+        "LOCKED",
+        "PENDING_DEPARTURE",
+        "DEPARTED"
+      ],
+      "title": "UserStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "admission_allowed": {
+      "title": "Admission Allowed",
+      "type": "boolean"
+    },
+    "allowed_model_ids": {
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "Allowed Model Ids",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "allowed_operations": {
+      "items": {
+        "$ref": "#/$defs/ModelOperation"
+      },
+      "title": "Allowed Operations",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "authorization": {
+      "$ref": "#/$defs/AuthorizationSnapshot"
+    },
+    "capabilities_verified": {
+      "title": "Capabilities Verified",
+      "type": "boolean"
+    },
+    "endpoint_approved": {
+      "title": "Endpoint Approved",
+      "type": "boolean"
+    },
+    "max_attempts": {
+      "minimum": 1,
+      "title": "Max Attempts",
+      "type": "integer"
+    },
+    "measurement": {
+      "$ref": "#/$defs/TokenMeasurement"
+    },
+    "model": {
+      "$ref": "#/$defs/StoredModelConfig"
+    },
+    "provider": {
+      "$ref": "#/$defs/StoredProvider"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "authorization",
+    "provider",
+    "model",
+    "allowed_model_ids",
+    "allowed_operations",
+    "measurement",
+    "capabilities_verified",
+    "endpoint_approved",
+    "admission_allowed",
+    "max_attempts"
+  ],
+  "title": "ModelCallFacts",
+  "type": "object"
+}

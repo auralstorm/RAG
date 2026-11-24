@@ -1,0 +1,202 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ModelCapability": {
+      "enum": [
+        "chat",
+        "streaming",
+        "embedding",
+        "reranker",
+        "tool_call",
+        "json_mode"
+      ],
+      "title": "ModelCapability",
+      "type": "string"
+    },
+    "RegistryStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "RegistryStatus",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Stable model ID and immutable config version; vendor routing names remain private.",
+  "properties": {
+    "capabilities": {
+      "items": {
+        "$ref": "#/$defs/ModelCapability"
+      },
+      "minItems": 1,
+      "title": "Capabilities",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "context_window": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Context Window"
+    },
+    "display_name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Display Name",
+      "type": "string"
+    },
+    "embedding_dimension": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Embedding Dimension"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "is_default": {
+      "default": false,
+      "title": "Is Default",
+      "type": "boolean"
+    },
+    "max_batch_size": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Batch Size"
+    },
+    "max_concurrency": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Concurrency"
+    },
+    "max_input_tokens": {
+      "exclusiveMinimum": 0,
+      "title": "Max Input Tokens",
+      "type": "integer"
+    },
+    "max_output_tokens": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Output Tokens"
+    },
+    "provider_id": {
+      "format": "uuid",
+      "title": "Provider Id",
+      "type": "string"
+    },
+    "rpm_limit": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rpm Limit"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RegistryStatus"
+    },
+    "tokenizer_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "tpm_limit": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tpm Limit"
+    },
+    "weight": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "default": "1",
+      "title": "Weight"
+    }
+  },
+  "required": [
+    "id",
+    "provider_id",
+    "config_version",
+    "display_name",
+    "status",
+    "capabilities",
+    "tokenizer_version",
+    "max_input_tokens"
+  ],
+  "title": "ModelConfig",
+  "type": "object"
+}

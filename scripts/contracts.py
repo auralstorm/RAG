@@ -34,6 +34,22 @@ from app.modules.iam.domain.contracts import (
 )
 from app.modules.ingestion.domain.contracts import IngestionEvent, IngestionFailure, IngestionJob, IngestionProgress
 from app.modules.knowledge_base.domain.contracts import EmbeddingBinding, KnowledgeBase
+from app.modules.model_gateway.domain.contracts import (
+    ModelCallFacts,
+    ModelConfig,
+    ModelCost,
+    ModelFailure,
+    ModelRequest,
+    ModelResponse,
+    ModelStreamEvent,
+    ModelUsage,
+    PreparedModelCall,
+    Provider,
+    SecretReference,
+    StoredModelConfig,
+    StoredProvider,
+    TokenMeasurement,
+)
 from app.modules.parsing.domain.contracts import (
     ParsedBlock,
     ParsedDocument,
@@ -85,7 +101,7 @@ class SchemaSource:
 
     name: str
     path: str
-    frontend_group: Literal["common", "iam", "knowledge", "retrieval"] | None
+    frontend_group: Literal["common", "iam", "knowledge", "retrieval", "models"] | None
     generate: Callable[[], object]
 
 
@@ -203,6 +219,20 @@ SCHEMAS = (
     SchemaSource("ChunkSource", "retrieval/chunk-source.json", "retrieval", ChunkSource.model_json_schema),
     SchemaSource("ChunkSourceSpan", "retrieval/chunk-source-span.json", "retrieval", ChunkSourceSpan.model_json_schema),
     SchemaSource("ChunkMetadata", "retrieval/chunk-metadata.json", "retrieval", ChunkMetadata.model_json_schema),
+    SchemaSource("Provider", "models/provider.json", "models", Provider.model_json_schema),
+    SchemaSource("ModelConfig", "models/model-config.json", "models", ModelConfig.model_json_schema),
+    SchemaSource("ModelCost", "models/model-cost.json", "models", ModelCost.model_json_schema),
+    SchemaSource("ModelUsage", "models/model-usage.json", "models", ModelUsage.model_json_schema),
+    SchemaSource("ModelFailure", "models/model-failure.json", "models", ModelFailure.model_json_schema),
+    SchemaSource("SecretReference", "internal/secret-reference.json", None, SecretReference.model_json_schema),
+    SchemaSource("StoredProvider", "internal/stored-provider.json", None, StoredProvider.model_json_schema),
+    SchemaSource("StoredModelConfig", "internal/stored-model-config.json", None, StoredModelConfig.model_json_schema),
+    SchemaSource("ModelRequest", "internal/model-request.json", None, TypeAdapter(ModelRequest).json_schema),
+    SchemaSource("ModelResponse", "internal/model-response.json", None, ModelResponse.model_json_schema),
+    SchemaSource("ModelStreamEvent", "internal/model-stream-event.json", None, ModelStreamEvent.model_json_schema),
+    SchemaSource("TokenMeasurement", "internal/token-measurement.json", None, TokenMeasurement.model_json_schema),
+    SchemaSource("ModelCallFacts", "internal/model-call-facts.json", None, ModelCallFacts.model_json_schema),
+    SchemaSource("PreparedModelCall", "internal/prepared-model-call.json", None, PreparedModelCall.model_json_schema),
 )
 
 

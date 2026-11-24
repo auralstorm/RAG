@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "RegistryStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED"
+      ],
+      "title": "RegistryStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "has_credential": {
+      "title": "Has Credential",
+      "type": "boolean"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Name",
+      "type": "string"
+    },
+    "provider_type": {
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "title": "Provider Type",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RegistryStatus"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "provider_type",
+    "config_version",
+    "status",
+    "has_credential",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "Provider",
+  "type": "object"
+}

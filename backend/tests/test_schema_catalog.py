@@ -57,3 +57,23 @@ def test_retrieval_types_exclude_private_parser_inputs_and_authorization_facts()
     for field in ("object_key", "physical_index_name", "alias_name", "access_context", "permission_codes", "actor_ref"):
         assert f"readonly {field}:" not in generated
     assert "readonly RetrievedChunk:" in generated and "readonly RetrievalSelection:" in generated
+
+
+def test_model_registry_types_exclude_credentials_vendor_routes_and_prompt_protocols() -> None:
+    generated = (ROOT / "frontend/packages/api-client/src/generated/models.ts").read_text()
+    for source in SCHEMAS:
+        if source.path.startswith("internal/"):
+            assert f"readonly {source.name}:" not in generated
+    for field in (
+        "api_key",
+        "credential_ref",
+        "secret_id",
+        "base_url",
+        "vendor_model_key",
+        "messages",
+        "texts",
+        "access_context",
+        "authorization",
+    ):
+        assert f"readonly {field}:" not in generated
+    assert "readonly Provider:" in generated and "readonly ModelUsage:" in generated

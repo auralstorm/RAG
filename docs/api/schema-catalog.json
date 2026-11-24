@@ -366,6 +366,90 @@
       "name": "ChunkMetadata",
       "path": "schemas/retrieval/chunk-metadata.json",
       "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "Provider",
+      "path": "schemas/models/provider.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelConfig",
+      "path": "schemas/models/model-config.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelCost",
+      "path": "schemas/models/model-cost.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelUsage",
+      "path": "schemas/models/model-usage.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "models",
+      "name": "ModelFailure",
+      "path": "schemas/models/model-failure.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "SecretReference",
+      "path": "schemas/internal/secret-reference.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredProvider",
+      "path": "schemas/internal/stored-provider.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredModelConfig",
+      "path": "schemas/internal/stored-model-config.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelRequest",
+      "path": "schemas/internal/model-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelResponse",
+      "path": "schemas/internal/model-response.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelStreamEvent",
+      "path": "schemas/internal/model-stream-event.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "TokenMeasurement",
+      "path": "schemas/internal/token-measurement.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ModelCallFacts",
+      "path": "schemas/internal/model-call-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PreparedModelCall",
+      "path": "schemas/internal/prepared-model-call.json",
+      "visibility": "internal"
     }
   ]
 }

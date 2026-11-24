@@ -1,0 +1,504 @@
+{
+  "$defs": {
+    "ChatOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "finish_reason": {
+          "enum": [
+            "stop",
+            "length",
+            "content_filter"
+          ],
+          "title": "Finish Reason",
+          "type": "string"
+        },
+        "operation": {
+          "const": "chat",
+          "default": "chat",
+          "title": "Operation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "finish_reason"
+      ],
+      "title": "ChatOutput",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "EmbeddingOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "embedding",
+          "default": "embedding",
+          "title": "Operation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "vectors": {
+          "items": {
+            "$ref": "#/$defs/EmbeddingVector"
+          },
+          "minItems": 1,
+          "title": "Vectors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "vectors"
+      ],
+      "title": "EmbeddingOutput",
+      "type": "object"
+    },
+    "EmbeddingVector": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/$defs/VectorValue"
+          },
+          "minItems": 1,
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "index",
+        "values"
+      ],
+      "title": "EmbeddingVector",
+      "type": "object"
+    },
+    "ModelCost": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "REPORTED",
+            "ESTIMATED"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency",
+        "source"
+      ],
+      "title": "ModelCost",
+      "type": "object"
+    },
+    "ModelErrorCode": {
+      "enum": [
+        "ACCESS_DENIED",
+        "PROVIDER_DISABLED",
+        "MODEL_DISABLED",
+        "CONFIG_MISMATCH",
+        "CAPABILITY_UNSUPPORTED",
+        "INVALID_REQUEST",
+        "INVALID_RESPONSE",
+        "AUTHENTICATION_FAILED",
+        "DEADLINE_EXCEEDED",
+        "RATE_LIMITED",
+        "UNAVAILABLE",
+        "OUTCOME_UNKNOWN"
+      ],
+      "title": "ModelErrorCode",
+      "type": "string"
+    },
+    "ModelFailure": {
+      "additionalProperties": false,
+      "description": "Stable safe classification; raw provider messages and HTTP bodies are absent.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/ModelErrorCode"
+        },
+        "outcome_unknown": {
+          "title": "Outcome Unknown",
+          "type": "boolean"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelUsage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "code",
+        "retryable",
+        "outcome_unknown"
+      ],
+      "title": "ModelFailure",
+      "type": "object"
+    },
+    "ModelOutput": {
+      "discriminator": {
+        "mapping": {
+          "chat": "#/$defs/ChatOutput",
+          "embedding": "#/$defs/EmbeddingOutput",
+          "rerank": "#/$defs/RerankOutput"
+        },
+        "propertyName": "operation"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ChatOutput"
+        },
+        {
+          "$ref": "#/$defs/EmbeddingOutput"
+        },
+        {
+          "$ref": "#/$defs/RerankOutput"
+        }
+      ]
+    },
+    "ModelResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "elapsed_ms": {
+          "minimum": 0,
+          "title": "Elapsed Ms",
+          "type": "number"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "output": {
+          "$ref": "#/$defs/ModelOutput"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "usage": {
+          "$ref": "#/$defs/ModelUsage"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "output",
+        "usage",
+        "elapsed_ms"
+      ],
+      "title": "ModelResponse",
+      "type": "object"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelCost"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Output Tokens"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/UsageSource"
+        },
+        "total_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Tokens"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "source"
+      ],
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "RerankOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "rerank",
+          "default": "rerank",
+          "title": "Operation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scores": {
+          "items": {
+            "$ref": "#/$defs/RerankScore"
+          },
+          "minItems": 1,
+          "title": "Scores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scores"
+      ],
+      "title": "RerankOutput",
+      "type": "object"
+    },
+    "RerankScore": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "index",
+        "score"
+      ],
+      "title": "RerankScore",
+      "type": "object"
+    },
+    "UsageSource": {
+      "enum": [
+        "REPORTED",
+        "ESTIMATED",
+        "UNAVAILABLE"
+      ],
+      "title": "UsageSource",
+      "type": "string"
+    },
+    "VectorValue": {
+      "type": "number"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "delta": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Delta"
+    },
+    "event_type": {
+      "enum": [
+        "delta",
+        "completed",
+        "failed"
+      ],
+      "title": "Event Type",
+      "type": "string"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelFailure"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "model_id": {
+      "format": "uuid",
+      "title": "Model Id",
+      "type": "string"
+    },
+    "request_id": {
+      "format": "uuid",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "response": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelResponse"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sequence_no": {
+      "minimum": 1,
+      "title": "Sequence No",
+      "type": "integer"
+    },
+    "trace_id": {
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "trace_id",
+    "model_id",
+    "config_version",
+    "sequence_no",
+    "event_type"
+  ],
+  "title": "ModelStreamEvent",
+  "type": "object"
+}

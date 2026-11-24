@@ -1,0 +1,319 @@
+{
+  "$defs": {
+    "ChatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Content",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "ChatRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "max_output_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens",
+          "type": "integer"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/ChatMessage"
+          },
+          "minItems": 1,
+          "title": "Messages",
+          "type": "array"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "chat",
+          "default": "chat",
+          "title": "Operation",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "response_format": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json_object"
+          ],
+          "title": "Response Format",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stream": {
+          "default": false,
+          "title": "Stream",
+          "type": "boolean"
+        },
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "messages",
+        "max_output_tokens"
+      ],
+      "title": "ChatRequest",
+      "type": "object"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "EmbeddingBinding": {
+      "additionalProperties": false,
+      "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "dimensions": {
+          "minimum": 1,
+          "title": "Dimensions",
+          "type": "integer"
+        },
+        "embedding_model_id": {
+          "format": "uuid",
+          "title": "Embedding Model Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedding_model_id",
+        "config_version",
+        "dimensions"
+      ],
+      "title": "EmbeddingBinding",
+      "type": "object"
+    },
+    "EmbeddingRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "$ref": "#/$defs/EmbeddingBinding"
+        },
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "input_type": {
+          "enum": [
+            "query",
+            "document"
+          ],
+          "title": "Input Type",
+          "type": "string"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "embedding",
+          "default": "embedding",
+          "title": "Operation",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "texts": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Texts",
+          "type": "array"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "texts",
+        "binding",
+        "input_type"
+      ],
+      "title": "EmbeddingRequest",
+      "type": "object"
+    },
+    "RerankRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "documents": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Documents",
+          "type": "array"
+        },
+        "model_id": {
+          "format": "uuid",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "operation": {
+          "const": "rerank",
+          "default": "rerank",
+          "title": "Operation",
+          "type": "string"
+        },
+        "query": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Query",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top_n": {
+          "exclusiveMinimum": 0,
+          "title": "Top N",
+          "type": "integer"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "trace_id",
+        "model_id",
+        "config_version",
+        "deadline_at",
+        "query",
+        "documents",
+        "top_n"
+      ],
+      "title": "RerankRequest",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "discriminator": {
+    "mapping": {
+      "chat": "#/$defs/ChatRequest",
+      "embedding": "#/$defs/EmbeddingRequest",
+      "rerank": "#/$defs/RerankRequest"
+    },
+    "propertyName": "operation"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ChatRequest"
+    },
+    {
+      "$ref": "#/$defs/EmbeddingRequest"
+    },
+    {
+      "$ref": "#/$defs/RerankRequest"
+    }
+  ]
+}

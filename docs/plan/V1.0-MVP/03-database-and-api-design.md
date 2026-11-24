@@ -203,6 +203,8 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 
 ### 3.4 Model Gateway
 
+**契约落实（2026-11-24）：** P0-04-05 的 Provider/ModelConfig、私有 Secret/供应商引用、ModelRequest/Response/Usage 与调用规则见 [模型网关契约](../../api/model-gateway-contracts.md)。以下表字段仍为物理设计输入，密文列/Key 版本、路由标识和固定配置映射在 P2 调查实际存量后明确实施；本轮无表/列迁移，公开 DTO 不返回私有 Stored 模型。
+
 #### `providers`
 - `id UUID PK`
 - `name VARCHAR(128)`

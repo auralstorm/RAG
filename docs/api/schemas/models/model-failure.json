@@ -1,0 +1,183 @@
+{
+  "$defs": {
+    "ModelCost": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "REPORTED",
+            "ESTIMATED"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency",
+        "source"
+      ],
+      "title": "ModelCost",
+      "type": "object"
+    },
+    "ModelErrorCode": {
+      "enum": [
+        "ACCESS_DENIED",
+        "PROVIDER_DISABLED",
+        "MODEL_DISABLED",
+        "CONFIG_MISMATCH",
+        "CAPABILITY_UNSUPPORTED",
+        "INVALID_REQUEST",
+        "INVALID_RESPONSE",
+        "AUTHENTICATION_FAILED",
+        "DEADLINE_EXCEEDED",
+        "RATE_LIMITED",
+        "UNAVAILABLE",
+        "OUTCOME_UNKNOWN"
+      ],
+      "title": "ModelErrorCode",
+      "type": "string"
+    },
+    "ModelUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "cost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModelCost"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Output Tokens"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/UsageSource"
+        },
+        "total_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Tokens"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "source"
+      ],
+      "title": "ModelUsage",
+      "type": "object"
+    },
+    "UsageSource": {
+      "enum": [
+        "REPORTED",
+        "ESTIMATED",
+        "UNAVAILABLE"
+      ],
+      "title": "UsageSource",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Stable safe classification; raw provider messages and HTTP bodies are absent.",
+  "properties": {
+    "code": {
+      "$ref": "#/$defs/ModelErrorCode"
+    },
+    "outcome_unknown": {
+      "title": "Outcome Unknown",
+      "type": "boolean"
+    },
+    "retryable": {
+      "title": "Retryable",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "usage": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ModelUsage"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "code",
+    "retryable",
+    "outcome_unknown"
+  ],
+  "title": "ModelFailure",
+  "type": "object"
+}

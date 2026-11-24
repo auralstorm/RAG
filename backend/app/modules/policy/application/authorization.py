@@ -8,6 +8,7 @@ from uuid import UUID
 from app.modules.iam.domain.contracts import IdentityStatus
 from app.modules.policy.domain.contracts import (
     AccessContext,
+    AccessPurpose,
     AuthorizationRequest,
     AuthorizationSnapshot,
     DecisionEffect,
@@ -41,9 +42,16 @@ def _principal_matches(grant: ResourceGrant, snapshot: AuthorizationSnapshot) ->
     )
 
 
-def _refusal(
-    request: AuthorizationRequest, context: AccessContext | None, snapshot: AuthorizationSnapshot, now: datetime
+def validate_access_context(
+    context: AccessContext | None,
+    snapshot: AuthorizationSnapshot,
+    *,
+    now: datetime,
+    purpose: AccessPurpose | None = None,
 ) -> DecisionReason | None:
+    """Check current identity/context binding without granting any operation or resource access."""
+    if now.tzinfo is None or now.utcoffset() is None:
+        raise ValueError("Authorization requires a timezone-aware server clock")
     if context is None:
         return DecisionReason.MISSING_CONTEXT
     if context.subject_id != snapshot.user.id:
@@ -60,12 +68,21 @@ def _refusal(
         return DecisionReason.SNAPSHOT_EXPIRED
     if context.environment != snapshot.environment:
         return DecisionReason.ENVIRONMENT_MISMATCH
-    if context.purpose != snapshot.purpose or request.purpose != snapshot.purpose:
+    if context.purpose != snapshot.purpose or (purpose is not None and purpose != snapshot.purpose):
         return DecisionReason.PURPOSE_MISMATCH
     if context.actor_ref != snapshot.actor_ref:
         return DecisionReason.ACTOR_MISMATCH
     if context.policy_version != snapshot.policy_version:
         return DecisionReason.POLICY_VERSION_MISMATCH
+    return None
+
+
+def _refusal(
+    request: AuthorizationRequest, context: AccessContext | None, snapshot: AuthorizationSnapshot, now: datetime
+) -> DecisionReason | None:
+    reason = validate_access_context(context, snapshot, now=now, purpose=request.purpose)
+    if reason is not None:
+        return reason
     if request.permission_code not in snapshot.permission_codes:
         return DecisionReason.PERMISSION_DENIED
     if request.kb_id is not None:

@@ -52,7 +52,7 @@ for (const entry of catalog.schemas) {
   if (entry.frontend_group === null) continue;
   if (
     entry.visibility !== 'public' ||
-    !['common', 'iam', 'knowledge', 'retrieval'].includes(
+    !['common', 'iam', 'knowledge', 'retrieval', 'models'].includes(
       entry.frontend_group,
     ) ||
     !/^schemas\/[a-z0-9/-]+\.json$/.test(entry.path) ||
