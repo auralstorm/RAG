@@ -46,6 +46,8 @@ erDiagram
 
 ### 3.1 IAM 与权限
 
+**逻辑契约落实（2026-11-24）：** P0-04-02 以 User、ExternalIdentity 与 SubjectBinding 明确规范平台主体及既有管理员/员工来源映射，字段、状态、权限与 Schema 见 [身份与授权契约](../../api/iam-policy-contracts.md) 和 [统一契约 2.1](../../architecture/统一契约与跨版本演进规则.md#21-v10-平台主体与身份授权契约)。下列 admin_users/employees 仍保留为原逻辑设计；实际 users/identities、来源关联和 FK/唯一约束由 P1-03 在调查实际消费者后冻结，本轮没有物理表迁移。
+
 #### `admin_users`
 - `id UUID PK`
 - `username VARCHAR(128) UNIQUE`
@@ -105,7 +107,7 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 #### `kb_permissions`
 - `id UUID PK`
 - `kb_id UUID FK`
-- `principal_type VARCHAR(24)`：ADMIN_USER / ROLE / EMPLOYEE / GROUP
+- `principal_type VARCHAR(24)`：ADMIN_USER / ROLE / EMPLOYEE / GROUP；规范契约增加 USER 表达平台 User.id，原来源类型/ID 继续按显式映射兼容
 - `principal_id UUID`
 - `permission VARCHAR(24)`：READ / MANAGE
 - `created_at`

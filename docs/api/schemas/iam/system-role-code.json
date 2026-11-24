@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "enum": [
+    "SUPER_ADMIN",
+    "KB_ADMIN",
+    "AUDIT_READONLY"
+  ],
+  "title": "SystemRoleCode",
+  "type": "string"
+}

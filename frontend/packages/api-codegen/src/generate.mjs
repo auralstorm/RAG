@@ -30,41 +30,56 @@ function convertReferences(value) {
   return value;
 }
 
-const commonSchemas = {};
-for (const [name, path] of [
-  ['PaginationQuery', 'docs/api/schemas/pagination-query.json'],
-  ['PageResponse', 'docs/api/schemas/page-response.json'],
-]) {
-  const { $defs = {}, ...schema } = await readJson(path);
+const catalog = await readJson('docs/api/schema-catalog.json');
+if (catalog.schema_version !== '1.0' || !Array.isArray(catalog.schemas)) {
+  throw new Error('Unsupported schema catalog version');
+}
+const groups = new Map();
+for (const entry of catalog.schemas) {
+  if (entry.frontend_group === null) continue;
+  if (
+    entry.visibility !== 'public' ||
+    !['common', 'iam'].includes(entry.frontend_group) ||
+    !/^schemas\/[a-z0-9/-]+\.json$/.test(entry.path) ||
+    !/^[A-Za-z][A-Za-z0-9]+$/.test(entry.name)
+  ) {
+    throw new Error('Invalid public schema registration');
+  }
+  const schemas = groups.get(entry.frontend_group) ?? Object.create(null);
+  groups.set(entry.frontend_group, schemas);
+  const { $defs = {}, ...schema } = await readJson(`docs/api/${entry.path}`);
   for (const [definition, value] of Object.entries({
     ...$defs,
-    [name]: schema,
+    [entry.name]: schema,
   })) {
     const converted = convertReferences(value);
     if (
-      definition in commonSchemas &&
-      JSON.stringify(commonSchemas[definition]) !== JSON.stringify(converted)
+      definition in schemas &&
+      JSON.stringify(schemas[definition]) !== JSON.stringify(converted)
     ) {
-      throw new Error(`Conflicting common schema: ${definition}`);
+      throw new Error(`Conflicting public schema: ${definition}`);
     }
-    commonSchemas[definition] = converted;
+    schemas[definition] = converted;
   }
 }
 
 // This in-memory document only adapts reusable JSON Schema to the generator.
 // API operations always come from the application's actual OpenAPI document.
-const sources = [
-  ['openapi.ts', await readJson('docs/api/openapi.json')],
-  [
-    'common.ts',
+const sources = [['openapi.ts', await readJson('docs/api/openapi.json')]];
+for (const [group, schemas] of groups) {
+  sources.push([
+    `${group}.ts`,
     {
       openapi: '3.1.0',
-      info: { title: 'Reusable HTTP schemas', version: '1.0' },
+      info: {
+        title: `Reusable ${group} schemas`,
+        version: catalog.schema_version,
+      },
       paths: {},
-      components: { schemas: commonSchemas },
+      components: { schemas },
     },
-  ],
-];
+  ]);
+}
 
 const formatOptions = await readJson('.prettierrc.json');
 for (const [filename, source] of sources) {

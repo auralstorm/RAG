@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "schemas": [
+    {
+      "frontend_group": null,
+      "name": "ApiErrorEnvelope",
+      "path": "schemas/api-error.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "common",
+      "name": "PaginationQuery",
+      "path": "schemas/pagination-query.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "common",
+      "name": "PageResponse",
+      "path": "schemas/page-response.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "User",
+      "path": "schemas/iam/user.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "Role",
+      "path": "schemas/iam/role.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "Permission",
+      "path": "schemas/iam/permission.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "UserRole",
+      "path": "schemas/iam/user-role.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "RolePermission",
+      "path": "schemas/iam/role-permission.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "SystemRoleCode",
+      "path": "schemas/iam/system-role-code.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "iam",
+      "name": "ResourceGrant",
+      "path": "schemas/iam/resource-grant.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "IdentityKey",
+      "path": "schemas/internal/identity-key.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ExternalIdentity",
+      "path": "schemas/internal/external-identity.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "LegacyPrincipalKey",
+      "path": "schemas/internal/legacy-principal-key.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "SubjectBinding",
+      "path": "schemas/internal/subject-binding.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AccessContext",
+      "path": "schemas/internal/access-context.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizationRequest",
+      "path": "schemas/internal/authorization-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizationSnapshot",
+      "path": "schemas/internal/authorization-snapshot.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PolicyDecision",
+      "path": "schemas/internal/policy-decision.json",
+      "visibility": "internal"
+    }
+  ]
+}

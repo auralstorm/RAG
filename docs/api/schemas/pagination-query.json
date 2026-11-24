@@ -10,6 +10,7 @@
       "type": "integer"
     }
   },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "description": "Bound page selection at the HTTP boundary; the limit is not a capacity SLO.",
   "properties": {

@@ -1,0 +1,60 @@
+{
+  "$defs": {
+    "UserStatus": {
+      "enum": [
+        "ACTIVE",
+        "DISABLED",
+        "LOCKED",
+        "PENDING_DEPARTURE",
+        "DEPARTED"
+      ],
+      "title": "UserStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Canonical platform subject; status is current server state, not a token claim.",
+  "properties": {
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "display_name": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Display Name",
+      "type": "string"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/UserStatus"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "id",
+    "display_name",
+    "status",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "User",
+  "type": "object"
+}

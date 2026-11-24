@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "DecisionEffect": {
+      "enum": [
+        "ALLOW",
+        "DENY"
+      ],
+      "title": "DecisionEffect",
+      "type": "string"
+    },
+    "DecisionReason": {
+      "enum": [
+        "ALLOWED",
+        "MISSING_CONTEXT",
+        "SUBJECT_MISMATCH",
+        "INACTIVE_SUBJECT",
+        "IDENTITY_MISMATCH",
+        "INACTIVE_IDENTITY",
+        "CONTEXT_EXPIRED",
+        "SNAPSHOT_EXPIRED",
+        "ENVIRONMENT_MISMATCH",
+        "PURPOSE_MISMATCH",
+        "ACTOR_MISMATCH",
+        "POLICY_VERSION_MISMATCH",
+        "PERMISSION_DENIED",
+        "RESOURCE_DENIED"
+      ],
+      "title": "DecisionReason",
+      "type": "string"
+    },
+    "PermissionCode": {
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+      "type": "string"
+    },
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Decision binds the operation, subject, KB and current policy version; it is not a token.",
+  "properties": {
+    "decided_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "effect": {
+      "$ref": "#/$defs/DecisionEffect"
+    },
+    "kb_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Kb Id"
+    },
+    "permission_code": {
+      "$ref": "#/$defs/PermissionCode"
+    },
+    "policy_version": {
+      "$ref": "#/$defs/PolicyVersion"
+    },
+    "reason_code": {
+      "$ref": "#/$defs/DecisionReason"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "subject_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Subject Id"
+    }
+  },
+  "required": [
+    "effect",
+    "reason_code",
+    "subject_id",
+    "permission_code",
+    "kb_id",
+    "policy_version",
+    "decided_at"
+  ],
+  "title": "PolicyDecision",
+  "type": "object"
+}

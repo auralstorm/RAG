@@ -1,5 +1,6 @@
 import type { components as ApiComponents } from './generated/openapi';
 import type { components as CommonComponents } from './generated/common';
+import type { components as IamComponents } from './generated/iam';
 
 export type {
   paths as ApiPaths,
@@ -9,6 +10,13 @@ export type LivenessResponse = ApiComponents['schemas']['LivenessResponse'];
 export type ApiError = ApiComponents['schemas']['ApiError'];
 export type ApiErrorEnvelope = ApiComponents['schemas']['ApiErrorEnvelope'];
 export type PaginationQuery = CommonComponents['schemas']['PaginationQuery'];
+export type User = IamComponents['schemas']['User'];
+export type Role = IamComponents['schemas']['Role'];
+export type Permission = IamComponents['schemas']['Permission'];
+export type UserRole = IamComponents['schemas']['UserRole'];
+export type RolePermission = IamComponents['schemas']['RolePermission'];
+export type SystemRoleCode = IamComponents['schemas']['SystemRoleCode'];
+export type ResourceGrant = IamComponents['schemas']['ResourceGrant'];
 export type PageResponse<Item> = Omit<
   CommonComponents['schemas']['PageResponse'],
   'items'

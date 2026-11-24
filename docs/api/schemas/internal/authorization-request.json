@@ -1,0 +1,53 @@
+{
+  "$defs": {
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
+    "PermissionCode": {
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Server-selected operation and purpose; a KB ID expresses selection, not permission.",
+  "properties": {
+    "kb_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kb Id"
+    },
+    "permission_code": {
+      "$ref": "#/$defs/PermissionCode"
+    },
+    "purpose": {
+      "$ref": "#/$defs/AccessPurpose"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "permission_code",
+    "purpose"
+  ],
+  "title": "AuthorizationRequest",
+  "type": "object"
+}

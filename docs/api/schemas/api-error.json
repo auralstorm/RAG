@@ -45,6 +45,7 @@
     },
     "JsonValue": {}
   },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "description": "The V1 API's stable error response, independent of the failing implementation.",
   "properties": {
