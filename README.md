@@ -1,6 +1,6 @@
 # EnterpriseRag
 
-单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、公共包和工程检查入口。业务功能、身份登录与基础设施依赖按后续任务交付。
+单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、公共包和工程检查入口。业务功能和身份登录按后续任务交付，基础设施使用本项目的 Docker 编排。
 
 ## 工具链
 
@@ -45,7 +45,7 @@ make dev-admin
 | Chat | <http://127.0.0.1:5173> |
 | Admin | <http://127.0.0.1:5174> |
 
-`/health/live` 仅表示 API 进程能够响应请求。P0-02 落地项目自己的基础设施编排与就绪检查。两个前端当前是独立启动壳；应用层后续通过公共客户端和各自 `VITE_API_BASE_URL` 接入业务 API。
+`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。两个前端当前是独立启动壳；应用层后续通过公共客户端和各自 `VITE_API_BASE_URL` 接入业务 API。
 
 ## 目录与依赖
 
@@ -57,7 +57,7 @@ frontend/apps/admin/        # 管理端，独立启动和构建
 frontend/packages/ui/       # 公共展示组件与主题
 frontend/packages/api-client/ # HTTP 协议适配
 frontend/packages/shared/   # 不依赖应用的公共类型与工具
-infra/                     # P0-02 基础设施配置入口
+infra/                     # Docker 编排、固定镜像与初始化配置
 scripts/                   # 仓库检查脚本
 docs/                      # 设计、计划、规范与实施证据
 ```
@@ -84,4 +84,4 @@ CI 配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)，执行相同
 
 遵循 [AGENTS.md](AGENTS.md)、[Git 提交规范](docs/standards/git-提交规范.md) 和 [分支与评审规范](docs/standards/git-协作规范.md)。每项独立任务验证通过后创建本地提交；远程推送按用户明确授权执行。
 
-完整文档见 [文档索引](docs/README.md)。P0-01 的进度与实际证据见 [实施记录](docs/plan/V1.0-MVP/implementation/P0-01.md)。
+完整文档见 [文档索引](docs/README.md)。实际进度与证据见 [P0-01 工程记录](docs/plan/V1.0-MVP/implementation/P0-01.md) 和 [P0-02 基础设施记录](docs/plan/V1.0-MVP/implementation/P0-02.md)。

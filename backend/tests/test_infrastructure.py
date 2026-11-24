@@ -1,0 +1,142 @@
+"""Exercise real disposable Docker services, their failure paths and volume lifecycle."""
+
+import asyncio
+from io import BytesIO
+from uuid import uuid4
+
+import aio_pika
+import httpx2
+import pytest
+import redis.asyncio as redis
+from app.core.config import Settings, load_settings
+from app.main import create_app
+from fastapi.testclient import TestClient
+from minio import Minio
+from psycopg import AsyncConnection
+from psycopg.conninfo import make_conninfo
+
+from scripts.infrastructure import compose, initialize_config, reset, up
+
+pytestmark = [pytest.mark.infrastructure, pytest.mark.anyio]
+
+
+def postgres_dsn(settings: Settings) -> str:
+    return make_conninfo(
+        host=settings.postgres_host,
+        port=str(settings.postgres_port),
+        user=settings.postgres_user,
+        password=settings.postgres_password.get_secret_value(),
+        dbname=settings.postgres_database,
+    )
+
+
+async def rabbit_connection(settings: Settings) -> aio_pika.abc.AbstractConnection:
+    return await aio_pika.connect(
+        host=settings.rabbitmq_host,
+        port=settings.rabbitmq_port,
+        login=settings.rabbitmq_user,
+        password=settings.rabbitmq_password.get_secret_value(),
+    )
+
+
+async def test_environment_persistence_outages_and_reset() -> None:
+    initialize_config("test")
+    settings = load_settings("test")
+    marker = uuid4().hex
+    queue_name = f"p0_verify_{marker}"
+    index_name = f"p0-verify-{marker}"
+    object_name = f"p0-verify/{marker}.txt"
+    cache = redis.Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        password=settings.redis_password.get_secret_value(),
+        decode_responses=True,
+    )
+    store = Minio(
+        settings.minio_endpoint,
+        access_key=settings.minio_access_key.get_secret_value(),
+        secret_key=settings.minio_secret_key.get_secret_value(),
+        secure=False,
+        region="us-east-1",
+    )
+    try:
+        up("test")
+        with TestClient(create_app(settings)) as api:
+            report = api.get("/health/ready")
+            assert report.status_code == 200, report.text
+            assert all(report.json()["dependencies"].values())
+
+        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+            await connection.execute("CREATE TABLE IF NOT EXISTS p0_probe (id text PRIMARY KEY)")
+            await connection.execute("INSERT INTO p0_probe VALUES (%s)", (marker,))
+        await cache.set(f"p0:verify:{marker}", marker)
+        connection = await rabbit_connection(settings)
+        async with connection:
+            channel = await connection.channel(publisher_confirms=True)
+            await channel.declare_queue(queue_name, durable=True)
+            await channel.default_exchange.publish(
+                aio_pika.Message(body=marker.encode(), delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
+                routing_key=queue_name,
+            )
+        async with httpx2.AsyncClient(trust_env=False) as http:
+            response = await http.put(
+                f"{str(settings.elasticsearch_url).rstrip('/')}/{index_name}",
+                json={"settings": {"number_of_shards": 1, "number_of_replicas": 0}},
+            )
+            response.raise_for_status()
+            response = await http.put(
+                f"{str(settings.elasticsearch_url).rstrip('/')}/{index_name}/_doc/probe?refresh=true",
+                json={"value": marker},
+            )
+            response.raise_for_status()
+        await asyncio.to_thread(
+            store.put_object, settings.minio_bucket, object_name, BytesIO(marker.encode()), len(marker)
+        )
+
+        compose("test", "down")
+        up("test")
+
+        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+            cursor = await connection.execute("SELECT id FROM p0_probe WHERE id=%s", (marker,))
+            assert await cursor.fetchone() == (marker,)
+        assert await cache.get(f"p0:verify:{marker}") == marker
+        connection = await rabbit_connection(settings)
+        async with connection:
+            channel = await connection.channel()
+            queue = await channel.declare_queue(queue_name, durable=True)
+            message = await queue.get(timeout=5)
+            assert message is not None
+            async with message.process():
+                assert message.body.decode() == marker
+        async with httpx2.AsyncClient(trust_env=False) as http:
+            response = await http.get(f"{str(settings.elasticsearch_url).rstrip('/')}/{index_name}/_doc/probe")
+            response.raise_for_status()
+            assert response.json()["_source"]["value"] == marker
+        response = await asyncio.to_thread(store.get_object, settings.minio_bucket, object_name)
+        try:
+            assert response.read().decode() == marker
+        finally:
+            response.close()
+            response.release_conn()
+
+        with TestClient(create_app(settings)) as api:
+            for service in ("postgres", "redis", "rabbitmq", "elasticsearch", "minio", "phoenix"):
+                compose("test", "stop", service)
+                report = api.get("/health/ready")
+                assert report.status_code == 503, (service, report.text)
+                assert report.json()["dependencies"][service] is False
+                assert settings.postgres_password.get_secret_value() not in report.text
+                assert api.get("/health/live").status_code == 200
+                up("test")
+                assert api.get("/health/ready").status_code == 200
+
+        reset("test", confirmed=True)
+        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+            cursor = await connection.execute("SELECT to_regclass('public.p0_probe')")
+            assert await cursor.fetchone() == (None,)
+        assert await cache.get(f"p0:verify:{marker}") is None
+        with TestClient(create_app(settings)) as api:
+            assert api.get("/health/ready").status_code == 200
+    finally:
+        await cache.aclose()
+        compose("test", "down", "--volumes")

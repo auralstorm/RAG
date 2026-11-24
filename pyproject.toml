@@ -30,7 +30,9 @@ venv = ".venv"
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
-addopts = "-ra"
+pythonpath = ["."]
+addopts = "-ra -m 'not infrastructure'"
+markers = ["infrastructure: starts this project's isolated Docker test environment"]
 
 [dependency-groups]
 dev = [

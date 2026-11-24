@@ -39,3 +39,4 @@
 ## 实施记录
 
 - [P0-01 工程初始化与本地验收](implementation/P0-01.md)：记录实际命令、结果和待执行的远程检查，不代替阶段 Exit Criteria。
+- [P0-02 Docker 开发环境与就绪检查](implementation/P0-02.md)：记录依赖启动、持久化、故障恢复和重置验证。

@@ -1,11 +1,25 @@
-"""Process liveness; infrastructure readiness is implemented in P0-02."""
+"""Process liveness and dependency readiness HTTP adapters."""
 
-from fastapi import APIRouter
+from collections.abc import Awaitable, Callable
 
-router = APIRouter()
+from fastapi import APIRouter, Response
+
+from app.core.readiness import ReadinessReport
 
 
-@router.get("/health/live", tags=["health"])
 async def liveness() -> dict[str, str]:
     """Report that the API process can serve HTTP requests."""
     return {"status": "ok"}
+
+
+def create_health_router(check: Callable[[], Awaitable[ReadinessReport]]) -> APIRouter:
+    router = APIRouter(tags=["health"])
+    router.add_api_route("/health/live", liveness, methods=["GET"])
+
+    @router.get("/health/ready", responses={503: {"model": ReadinessReport}})
+    async def readiness(response: Response) -> ReadinessReport:
+        report = await check()
+        response.status_code = 200 if report.status == "ready" else 503
+        return report
+
+    return router

@@ -27,6 +27,7 @@ jobs:
           enable-cache: true
       - run: make install
       - run: make check
+      - run: make infra-test
       - name: Validate new commit messages
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
