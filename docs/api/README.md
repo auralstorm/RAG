@@ -1,6 +1,6 @@
 # 可执行 HTTP 契约制品
 
-当前交付 P0-04 的公共 HTTP 与身份/授权契约。后端 DTO 与真实路由是生成来源，JSON/OpenAPI/TypeScript 文件为生成制品；修改源定义后运行 `make contracts`，使用 `make contracts-check` 检查一致性，该检查已纳入 `make check` 和现有 CI 入口。
+当前交付 P0-04 的公共 HTTP、身份/授权与知识资产/入库/索引契约。后端 DTO 与真实路由是生成来源，JSON/OpenAPI/TypeScript 文件为生成制品；修改源定义后运行 `make contracts`，使用 `make contracts-check` 检查一致性，该检查已纳入 `make check` 和现有 CI 入口。
 
 | 制品 | 来源与用途 |
 |---|---|
@@ -13,6 +13,8 @@
 | [Schema Catalog](schema-catalog.json) | 唯一生成清单，登记名称、路径、公共/内部属性及前端分组；内部登记不能进入前端生成组 |
 | [身份与授权契约](iam-policy-contracts.md) | User、Role、Permission、关系与 ResourceGrant 的公共模型，身份键/关联/AccessContext/Policy 的内部模型与纯规则 |
 | [IAM TypeScript 类型](../../frontend/packages/api-client/src/generated/iam.ts) | 公共 IAM 类型从独立 Schema 生成；原始身份键和授权快照不进入前端接口 |
+| [知识资产/入库/索引契约](knowledge-contracts.md) | 文档与版本分离、稳定 Job/Stage Key、当前 ACL、Manifest 和发布/回滚前提 |
+| [知识 TypeScript 类型](../../frontend/packages/api-client/src/generated/knowledge.ts) | 公共 KB/DocumentVersion/Job/Index 类型从独立 Schema 生成；对象 Key、物理索引、内部发布计划与快照不进入前端模型 |
 
 [生成脚本](../../scripts/contracts.py) 固定非私有应用元数据、不启动服务或访问数据库；[私有构建工具](../../frontend/packages/api-codegen/package.json) 使用 `openapi-typescript==7.13.0` 与其支持的 TypeScript `5.9.3`，应用及客户端类型检查继续使用既有 TypeScript `6.0.3`。构建工具不作为应用运行依赖，也不创建业务 API 占位路由。生成输入仅来自仓库内制品，不抓取远程 Schema。
 
@@ -30,4 +32,4 @@ retryable 不自动触发重试，写入重放仍取决于身份、原 Idempoten
 
 ## 主线后续
 
-身份/授权分项的本地契约与纯规则验收通过；完整 P0-04 的文档/索引状态、解析/检索、Model Gateway、消息/引用、Trace/Audit 等模型和模块契约继续按 [P0-04 进度](../plan/V1.0-MVP/implementation/P0-04.md) 交付。数据库 DDL/迁移、OIDC 登录、完整角色默认矩阵、Trace 传播和独立评审尚未完成，不从本目录生成制品推断对应业务能力已经实现。
+身份/授权与知识资产/入库/索引分项的本地契约及纯规则验收通过；完整 P0-04 的解析/切片/检索、Model Gateway、消息/引用、Trace/Audit 等模型和模块契约继续按 [P0-04 进度](../plan/V1.0-MVP/implementation/P0-04.md) 交付。数据库 DDL/迁移、OIDC 登录、完整角色默认矩阵、实际上传/Worker/索引切换、Trace 传播和独立评审尚未完成，不从本目录生成制品推断对应业务能力已经实现。

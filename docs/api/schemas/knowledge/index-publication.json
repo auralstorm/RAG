@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "PublicationAction": {
+      "enum": [
+        "PUBLISH",
+        "ROLLBACK"
+      ],
+      "title": "PublicationAction",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Confirmed historical operation; only the real execution layer records this receipt.",
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PublicationAction"
+    },
+    "actor_subject_id": {
+      "format": "uuid",
+      "title": "Actor Subject Id",
+      "type": "string"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "occurred_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "previous_index_version_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Previous Index Version Id"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target_index_version_id": {
+      "format": "uuid",
+      "title": "Target Index Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kb_id",
+    "action",
+    "previous_index_version_id",
+    "target_index_version_id",
+    "idempotency_key",
+    "actor_subject_id",
+    "occurred_at"
+  ],
+  "title": "IndexPublication",
+  "type": "object"
+}

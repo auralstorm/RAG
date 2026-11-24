@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+  "properties": {
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "dimensions": {
+      "minimum": 1,
+      "title": "Dimensions",
+      "type": "integer"
+    },
+    "embedding_model_id": {
+      "format": "uuid",
+      "title": "Embedding Model Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "embedding_model_id",
+    "config_version",
+    "dimensions"
+  ],
+  "title": "EmbeddingBinding",
+  "type": "object"
+}

@@ -93,6 +93,8 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 
 ### 3.2 Knowledge Base 与文档
 
+**契约落实（2026-11-24）：** 原表字段以下保留为逻辑设计输入；P0-04-03 明确 Document 生命周期/DocumentVersion 处理状态、按版本固定原件/解析引用、稳定 Job/Stage Key，以及 IndexVersion READY/Manifest/验证/发布前提，见 [知识契约](../../api/knowledge-contracts.md) 与 [统一契约 2.2](../../architecture/统一契约与跨版本演进规则.md#22-v10-知识资产入库与索引版本契约)。本轮没有物理表/列迁移，id/version、object_key 等存量映射须在实际 DDL 与消费者调查后实施。
+
 #### `knowledge_bases`
 - `id UUID PK`
 - `name VARCHAR(200)`
@@ -168,7 +170,7 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 - `alias_name VARCHAR(255)`
 - `embedding_model_id UUID`
 - `chunking_config_version VARCHAR(64)`
-- `status VARCHAR(24)`：BUILDING / VALIDATING / ACTIVE / ROLLED_BACK / FAILED / RETIRED
+- `status VARCHAR(24)`：BUILDING / VALIDATING / READY / ACTIVE / ROLLED_BACK / FAILED / RETIRED；READY 表达验证完成、尚未在线
 - `validation_report JSONB`
 - `created_at, published_at`
 - Unique(`kb_id`, `version`)

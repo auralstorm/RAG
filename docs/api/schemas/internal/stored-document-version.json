@@ -1,0 +1,216 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "DocumentMimeType": {
+      "enum": [
+        "text/markdown",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "type": "string"
+    },
+    "DocumentVersionStatus": {
+      "enum": [
+        "UPLOADED",
+        "PARSING",
+        "PARSED",
+        "CHUNKING",
+        "EMBEDDING",
+        "INDEXING",
+        "INDEXED",
+        "PUBLISHED",
+        "FAILED",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "DocumentVersionStatus",
+      "type": "string"
+    },
+    "StoredObjectRef": {
+      "additionalProperties": false,
+      "description": "Server-resolved S3 reference, never a URL or permission to download its contents.",
+      "properties": {
+        "bucket": {
+          "maxLength": 63,
+          "minLength": 3,
+          "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$",
+          "title": "Bucket",
+          "type": "string"
+        },
+        "object_key": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Object Key",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/ContentHash"
+        },
+        "size_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "object_key",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "StoredObjectRef",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Internal version record pins the original and optional parsed artifact independently.",
+  "properties": {
+    "chunking_config_version": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "document_version_id": {
+      "format": "uuid",
+      "title": "Document Version Id",
+      "type": "string"
+    },
+    "file_hash": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "file_size": {
+      "exclusiveMinimum": 0,
+      "title": "File Size",
+      "type": "integer"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "mime_type": {
+      "$ref": "#/$defs/DocumentMimeType"
+    },
+    "original": {
+      "$ref": "#/$defs/StoredObjectRef"
+    },
+    "parsed_artifact": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StoredObjectRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "parser_name": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parser Name"
+    },
+    "parser_version": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "pipeline_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/DocumentVersionStatus"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "document_version_id",
+    "document_id",
+    "kb_id",
+    "document_version",
+    "status",
+    "mime_type",
+    "file_size",
+    "file_hash",
+    "pipeline_version",
+    "created_at",
+    "updated_at",
+    "original"
+  ],
+  "title": "StoredDocumentVersion",
+  "type": "object"
+}

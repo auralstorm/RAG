@@ -39,7 +39,7 @@ for (const entry of catalog.schemas) {
   if (entry.frontend_group === null) continue;
   if (
     entry.visibility !== 'public' ||
-    !['common', 'iam'].includes(entry.frontend_group) ||
+    !['common', 'iam', 'knowledge'].includes(entry.frontend_group) ||
     !/^schemas\/[a-z0-9/-]+\.json$/.test(entry.path) ||
     !/^[A-Za-z][A-Za-z0-9]+$/.test(entry.name)
   ) {
@@ -48,6 +48,8 @@ for (const entry of catalog.schemas) {
   const schemas = groups.get(entry.frontend_group) ?? Object.create(null);
   groups.set(entry.frontend_group, schemas);
   const { $defs = {}, ...schema } = await readJson(`docs/api/${entry.path}`);
+  // Standalone files declare their dialect; embedded definitions inherit OpenAPI 3.1's dialect.
+  delete schema.$schema;
   for (const [definition, value] of Object.entries({
     ...$defs,
     [entry.name]: schema,

@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "IngestionEventType": {
+      "enum": [
+        "STARTED",
+        "PROGRESS",
+        "STAGE_SUCCEEDED",
+        "FAILED",
+        "RETRY_SCHEDULED",
+        "SUCCEEDED",
+        "CANCELLED",
+        "TIMED_OUT"
+      ],
+      "title": "IngestionEventType",
+      "type": "string"
+    },
+    "IngestionFailure": {
+      "additionalProperties": false,
+      "description": "Safe adapter-provided classification; uncertain external effects are never retryable.",
+      "properties": {
+        "code": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "outcome_unknown": {
+          "title": "Outcome Unknown",
+          "type": "boolean"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "outcome_unknown"
+      ],
+      "title": "IngestionFailure",
+      "type": "object"
+    },
+    "IngestionProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "completed_units": {
+          "minimum": 0,
+          "title": "Completed Units",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "total_units": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Units"
+        }
+      },
+      "required": [
+        "completed_units",
+        "total_units"
+      ],
+      "title": "IngestionProgress",
+      "type": "object"
+    },
+    "IngestionStage": {
+      "enum": [
+        "PARSING",
+        "NORMALIZING",
+        "CHUNKING",
+        "EMBEDDING",
+        "INDEXING",
+        "VALIDATING",
+        "PUBLISHING",
+        "DELETING"
+      ],
+      "title": "IngestionStage",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Monotonic per-job event reference; arbitrary document text and MQ headers are absent.",
+  "properties": {
+    "attempt": {
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "event_type": {
+      "$ref": "#/$defs/IngestionEventType"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IngestionFailure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "job_id": {
+      "format": "uuid",
+      "title": "Job Id",
+      "type": "string"
+    },
+    "occurred_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "progress": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/IngestionProgress"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sequence_no": {
+      "minimum": 1,
+      "title": "Sequence No",
+      "type": "integer"
+    },
+    "stage": {
+      "$ref": "#/$defs/IngestionStage"
+    }
+  },
+  "required": [
+    "id",
+    "job_id",
+    "sequence_no",
+    "stage",
+    "event_type",
+    "attempt",
+    "progress",
+    "failure",
+    "occurred_at"
+  ],
+  "title": "IngestionEvent",
+  "type": "object"
+}

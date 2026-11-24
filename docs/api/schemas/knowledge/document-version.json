@@ -1,0 +1,159 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "DocumentMimeType": {
+      "enum": [
+        "text/markdown",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      "type": "string"
+    },
+    "DocumentVersionStatus": {
+      "enum": [
+        "UPLOADED",
+        "PARSING",
+        "PARSED",
+        "CHUNKING",
+        "EMBEDDING",
+        "INDEXING",
+        "INDEXED",
+        "PUBLISHED",
+        "FAILED",
+        "DELETING",
+        "DELETED"
+      ],
+      "title": "DocumentVersionStatus",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Public version facts exclude private keys, source URLs and parser-specific payloads.",
+  "properties": {
+    "chunking_config_version": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "created_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "document_id": {
+      "format": "uuid",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "document_version_id": {
+      "format": "uuid",
+      "title": "Document Version Id",
+      "type": "string"
+    },
+    "file_hash": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "file_size": {
+      "exclusiveMinimum": 0,
+      "title": "File Size",
+      "type": "integer"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "mime_type": {
+      "$ref": "#/$defs/DocumentMimeType"
+    },
+    "parser_name": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parser Name"
+    },
+    "parser_version": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "pipeline_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/DocumentVersionStatus"
+    },
+    "updated_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    }
+  },
+  "required": [
+    "document_version_id",
+    "document_id",
+    "kb_id",
+    "document_version",
+    "status",
+    "mime_type",
+    "file_size",
+    "file_hash",
+    "pipeline_version",
+    "created_at",
+    "updated_at"
+  ],
+  "title": "DocumentVersion",
+  "type": "object"
+}

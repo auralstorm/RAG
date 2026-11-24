@@ -108,6 +108,138 @@
       "name": "PolicyDecision",
       "path": "schemas/internal/policy-decision.json",
       "visibility": "internal"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "KnowledgeBase",
+      "path": "schemas/knowledge/knowledge-base.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "EmbeddingBinding",
+      "path": "schemas/knowledge/embedding-binding.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "Document",
+      "path": "schemas/knowledge/document.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "DocumentVersion",
+      "path": "schemas/knowledge/document-version.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "DocumentVersionRef",
+      "path": "schemas/knowledge/document-version-ref.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionJob",
+      "path": "schemas/knowledge/ingestion-job.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionEvent",
+      "path": "schemas/knowledge/ingestion-event.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionFailure",
+      "path": "schemas/knowledge/ingestion-failure.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IngestionProgress",
+      "path": "schemas/knowledge/ingestion-progress.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IndexVersion",
+      "path": "schemas/knowledge/index-version.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "knowledge",
+      "name": "IndexPublication",
+      "path": "schemas/knowledge/index-publication.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredObjectRef",
+      "path": "schemas/internal/stored-object-ref.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredDocumentVersion",
+      "path": "schemas/internal/stored-document-version.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "DocumentAccessPolicy",
+      "path": "schemas/internal/document-access-policy.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexManifest",
+      "path": "schemas/internal/index-manifest.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexValidationReport",
+      "path": "schemas/internal/index-validation-report.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredIndexVersion",
+      "path": "schemas/internal/stored-index-version.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "IndexAlias",
+      "path": "schemas/internal/index-alias.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationRequest",
+      "path": "schemas/internal/publication-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationSnapshot",
+      "path": "schemas/internal/publication-snapshot.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublicationPlan",
+      "path": "schemas/internal/publication-plan.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "PublishedDocumentSnapshot",
+      "path": "schemas/internal/published-document-snapshot.json",
+      "visibility": "internal"
     }
   ]
 }

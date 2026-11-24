@@ -92,6 +92,8 @@ flowchart TB
 
 ### 3.1 Document 与 Chunk
 
+**契约落实（2026-11-24）：** 以下字段清单为原逻辑草案，P0-04-03 的规范字段和兼容映射见 [知识契约](../../api/knowledge-contracts.md)。逻辑 Document 管理存在/删除，处理状态绑定 DocumentVersion；私有原件与解析引用固定在版本，不把新版本失败写成旧版失效。现有 ES status=PUBLISHED 投影保留。
+
 Document 表示知识库中的一个逻辑文档及其版本；Chunk 表示可检索片段。建议字段：
 
 - Document：`id, kb_id, title, source_type, source_uri, object_key, mime_type, file_hash, version, status, parser_name, parser_version, metadata_json, acl_policy_id, created_by, created_at, updated_at, deleted_at`
@@ -101,7 +103,7 @@ Document 表示知识库中的一个逻辑文档及其版本；Chunk 表示可�
 
 `acl_snapshot` 仅作为索引过滤所需的权限标签快照，权威权限仍以 Policy Engine / PostgreSQL 为准；权限变更必须触发索引 ACL 更新或重建，并在查询时采用可信的当前权限约束。
 
-### 3.2 文档状态机
+### 3.2 文档版本处理状态机
 
 ```mermaid
 stateDiagram-v2
@@ -127,6 +129,8 @@ stateDiagram-v2
 - 只有发布到当前活动 IndexVersion 的文档才可被在线检索。
 - 失败任务记录失败阶段和可重试错误；不可重试错误需人工修复输入或配置。
 - 删除是异步幂等流程，成功后文档状态为 `DELETED`。
+
+该状态机描述单个 DocumentVersion，逻辑 Document 的 ACTIVE/DELETING/DELETED 另外控制全部版本的访问。当前代码还允许各未删除处理态进入 DELETING；真实清理完成后才持久化 DELETED。新版本失败时，旧 PUBLISHED 版本仍须通过活动 Index Manifest 与当前 ACL 才能读取。完整重试回到 PARSING，后续阶段的检查点恢复由实际 Worker 校验。
 
 ## 4. 离线 Ingestion 设计
 
@@ -187,7 +191,7 @@ Parser 只负责内容解析，不直接写 ES、不决定 ACL、不负责平台
 
 ### 4.4 幂等、重试与恢复
 
-- `idempotency_key = hash(document_id + version + pipeline_version + stage)`。
+- P0-04-03 的 Job Key 绑定 DocumentVersionRef、pipeline_version、job_type、terminal_stage，跨阶段/重试不变；Stage Key 独立绑定 DocumentVersionRef、pipeline_version、stage。规范序列化与计算由 [知识契约](../../api/knowledge-contracts.md) 指定，不把旧 stage Key 当作整个 Job 的身份。
 - 每个 stage 写入开始、成功、失败记录；重复消息不得产生重复 Chunk 或重复索引文档。
 - Celery retry 仅用于可恢复错误；指数退避并设置最大重试次数。
 - 解析产物、Chunk 结果和 Embedding 批次可持久化，支持从失败阶段恢复。

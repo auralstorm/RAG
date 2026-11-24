@@ -1,4 +1,4 @@
-"""Check that authentication facts stay outside the generated frontend contract surface."""
+"""Check that private identity, authorization and storage facts stay outside frontend types."""
 
 import json
 from pathlib import Path
@@ -30,3 +30,20 @@ def test_internal_identity_and_policy_schemas_are_not_exported_to_frontend() -> 
     assert catalog["schema_version"] == "1.0"
     paths: dict[str, object] = create_app(Settings(infrastructure_enabled=False)).openapi()["paths"]
     assert set(paths) == {"/health/live", "/health/ready"}
+
+
+def test_internal_knowledge_facts_are_not_exported_in_public_types_or_schemas() -> None:
+    generated = (ROOT / "frontend/packages/api-client/src/generated/knowledge.ts").read_text()
+    public_sources = [source for source in SCHEMAS if source.frontend_group == "knowledge"]
+    assert public_sources
+    for source in SCHEMAS:
+        if source.path.startswith("internal/"):
+            assert f"readonly {source.name}:" not in generated
+    for field in ("object_key", "bucket", "physical_index_name", "alias_name", "allowed_subject_ids", "validation"):
+        assert f"readonly {field}:" not in generated
+        for source in public_sources:
+            schema = (ROOT / "docs/api/schemas" / source.path).read_text()
+            assert f'"{field}"' not in schema
+    # This change must keep the application's existing HTTP surface unchanged.
+    components = create_app(Settings(infrastructure_enabled=False)).openapi()["components"]["schemas"]
+    assert "KnowledgeBase" not in components and "StoredObjectRef" not in components

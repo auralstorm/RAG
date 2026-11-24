@@ -1,6 +1,7 @@
 import type { components as ApiComponents } from './generated/openapi';
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
+import type { components as KnowledgeComponents } from './generated/knowledge';
 
 export type {
   paths as ApiPaths,
@@ -17,6 +18,22 @@ export type UserRole = IamComponents['schemas']['UserRole'];
 export type RolePermission = IamComponents['schemas']['RolePermission'];
 export type SystemRoleCode = IamComponents['schemas']['SystemRoleCode'];
 export type ResourceGrant = IamComponents['schemas']['ResourceGrant'];
+export type KnowledgeBase = KnowledgeComponents['schemas']['KnowledgeBase'];
+export type EmbeddingBinding =
+  KnowledgeComponents['schemas']['EmbeddingBinding'];
+export type KnowledgeDocument = KnowledgeComponents['schemas']['Document'];
+export type DocumentVersion = KnowledgeComponents['schemas']['DocumentVersion'];
+export type DocumentVersionRef =
+  KnowledgeComponents['schemas']['DocumentVersionRef'];
+export type IngestionJob = KnowledgeComponents['schemas']['IngestionJob'];
+export type IngestionEvent = KnowledgeComponents['schemas']['IngestionEvent'];
+export type IngestionFailure =
+  KnowledgeComponents['schemas']['IngestionFailure'];
+export type IngestionProgress =
+  KnowledgeComponents['schemas']['IngestionProgress'];
+export type IndexVersion = KnowledgeComponents['schemas']['IndexVersion'];
+export type IndexPublication =
+  KnowledgeComponents['schemas']['IndexPublication'];
 export type PageResponse<Item> = Omit<
   CommonComponents['schemas']['PageResponse'],
   'items'

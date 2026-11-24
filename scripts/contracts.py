@@ -11,6 +11,14 @@ from typing import Literal
 from app.api.schemas.common import ApiErrorEnvelope, PageResponse, PaginationQuery
 from app.core.config import Settings
 from app.main import create_app
+from app.modules.documents.domain.contracts import (
+    Document,
+    DocumentAccessPolicy,
+    DocumentVersion,
+    DocumentVersionRef,
+    StoredDocumentVersion,
+    StoredObjectRef,
+)
 from app.modules.iam.domain.contracts import (
     ExternalIdentity,
     IdentityKey,
@@ -23,12 +31,26 @@ from app.modules.iam.domain.contracts import (
     User,
     UserRole,
 )
+from app.modules.ingestion.domain.contracts import IngestionEvent, IngestionFailure, IngestionJob, IngestionProgress
+from app.modules.knowledge_base.domain.contracts import EmbeddingBinding, KnowledgeBase
 from app.modules.policy.domain.contracts import (
     AccessContext,
     AuthorizationRequest,
     AuthorizationSnapshot,
     PolicyDecision,
     ResourceGrant,
+)
+from app.modules.search.domain.contracts import (
+    IndexAlias,
+    IndexManifest,
+    IndexPublication,
+    IndexValidationReport,
+    IndexVersion,
+    PublicationPlan,
+    PublicationRequest,
+    PublicationSnapshot,
+    PublishedDocumentSnapshot,
+    StoredIndexVersion,
 )
 from pydantic import JsonValue, RootModel, TypeAdapter
 
@@ -41,7 +63,7 @@ class SchemaSource:
 
     name: str
     path: str
-    frontend_group: Literal["common", "iam"] | None
+    frontend_group: Literal["common", "iam", "knowledge"] | None
     generate: Callable[[], object]
 
 
@@ -70,6 +92,53 @@ SCHEMAS = (
         "AuthorizationSnapshot", "internal/authorization-snapshot.json", None, AuthorizationSnapshot.model_json_schema
     ),
     SchemaSource("PolicyDecision", "internal/policy-decision.json", None, PolicyDecision.model_json_schema),
+    SchemaSource("KnowledgeBase", "knowledge/knowledge-base.json", "knowledge", KnowledgeBase.model_json_schema),
+    SchemaSource(
+        "EmbeddingBinding", "knowledge/embedding-binding.json", "knowledge", EmbeddingBinding.model_json_schema
+    ),
+    SchemaSource("Document", "knowledge/document.json", "knowledge", Document.model_json_schema),
+    SchemaSource("DocumentVersion", "knowledge/document-version.json", "knowledge", DocumentVersion.model_json_schema),
+    SchemaSource(
+        "DocumentVersionRef", "knowledge/document-version-ref.json", "knowledge", DocumentVersionRef.model_json_schema
+    ),
+    SchemaSource("IngestionJob", "knowledge/ingestion-job.json", "knowledge", IngestionJob.model_json_schema),
+    SchemaSource("IngestionEvent", "knowledge/ingestion-event.json", "knowledge", IngestionEvent.model_json_schema),
+    SchemaSource(
+        "IngestionFailure", "knowledge/ingestion-failure.json", "knowledge", IngestionFailure.model_json_schema
+    ),
+    SchemaSource(
+        "IngestionProgress", "knowledge/ingestion-progress.json", "knowledge", IngestionProgress.model_json_schema
+    ),
+    SchemaSource("IndexVersion", "knowledge/index-version.json", "knowledge", IndexVersion.model_json_schema),
+    SchemaSource(
+        "IndexPublication", "knowledge/index-publication.json", "knowledge", IndexPublication.model_json_schema
+    ),
+    SchemaSource("StoredObjectRef", "internal/stored-object-ref.json", None, StoredObjectRef.model_json_schema),
+    SchemaSource(
+        "StoredDocumentVersion", "internal/stored-document-version.json", None, StoredDocumentVersion.model_json_schema
+    ),
+    SchemaSource(
+        "DocumentAccessPolicy", "internal/document-access-policy.json", None, DocumentAccessPolicy.model_json_schema
+    ),
+    SchemaSource("IndexManifest", "internal/index-manifest.json", None, IndexManifest.model_json_schema),
+    SchemaSource(
+        "IndexValidationReport", "internal/index-validation-report.json", None, IndexValidationReport.model_json_schema
+    ),
+    SchemaSource(
+        "StoredIndexVersion", "internal/stored-index-version.json", None, StoredIndexVersion.model_json_schema
+    ),
+    SchemaSource("IndexAlias", "internal/index-alias.json", None, IndexAlias.model_json_schema),
+    SchemaSource("PublicationRequest", "internal/publication-request.json", None, PublicationRequest.model_json_schema),
+    SchemaSource(
+        "PublicationSnapshot", "internal/publication-snapshot.json", None, PublicationSnapshot.model_json_schema
+    ),
+    SchemaSource("PublicationPlan", "internal/publication-plan.json", None, PublicationPlan.model_json_schema),
+    SchemaSource(
+        "PublishedDocumentSnapshot",
+        "internal/published-document-snapshot.json",
+        None,
+        PublishedDocumentSnapshot.model_json_schema,
+    ),
 )
 
 

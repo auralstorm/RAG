@@ -1,26 +1,20 @@
 """V1 IAM contracts; legacy profile identifiers remain explicit mapping sources."""
 
-from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Self
 from uuid import UUID
 
-from pydantic import AfterValidator, AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import Field, model_validator
 
+from app.core.contracts import UtcTimestamp as UtcTimestamp
+from app.core.contracts import VersionedContract
+from app.core.contracts import utc_timestamp as utc_timestamp
 
-def utc_timestamp(value: datetime) -> datetime:
-    return value.astimezone(UTC)
-
-
-type UtcTimestamp = Annotated[AwareDatetime, AfterValidator(utc_timestamp)]
 type PermissionCode = Annotated[str, Field(max_length=128, pattern=r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")]
 
 
-class IamContract(BaseModel):
+class IamContract(VersionedContract):
     """Versioned immutable contract; unknown fields and unsupported versions are rejected."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True, hide_input_in_errors=True)
-    schema_version: Literal["1.0"] = "1.0"
 
 
 class UserStatus(StrEnum):

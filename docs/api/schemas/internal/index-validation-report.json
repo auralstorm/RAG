@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "ValidationVerdict": {
+      "enum": [
+        "PASSED",
+        "FAILED"
+      ],
+      "title": "ValidationVerdict",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Trusted validation facts; every required check is explicit, including the quality gate.",
+  "properties": {
+    "acl_verified": {
+      "title": "Acl Verified",
+      "type": "boolean"
+    },
+    "actual_chunk_count": {
+      "minimum": 0,
+      "title": "Actual Chunk Count",
+      "type": "integer"
+    },
+    "actual_document_count": {
+      "minimum": 0,
+      "title": "Actual Document Count",
+      "type": "integer"
+    },
+    "binding_sha256": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "checked_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "expected_chunk_count": {
+      "minimum": 0,
+      "title": "Expected Chunk Count",
+      "type": "integer"
+    },
+    "expected_document_count": {
+      "minimum": 0,
+      "title": "Expected Document Count",
+      "type": "integer"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "index_version_id": {
+      "format": "uuid",
+      "title": "Index Version Id",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "mapping_verified": {
+      "title": "Mapping Verified",
+      "type": "boolean"
+    },
+    "quality_gate_verified": {
+      "title": "Quality Gate Verified",
+      "type": "boolean"
+    },
+    "retrieval_verified": {
+      "title": "Retrieval Verified",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "verdict": {
+      "$ref": "#/$defs/ValidationVerdict"
+    }
+  },
+  "required": [
+    "id",
+    "index_version_id",
+    "manifest_sha256",
+    "binding_sha256",
+    "verdict",
+    "expected_document_count",
+    "actual_document_count",
+    "expected_chunk_count",
+    "actual_chunk_count",
+    "mapping_verified",
+    "acl_verified",
+    "retrieval_verified",
+    "quality_gate_verified",
+    "checked_at"
+  ],
+  "title": "IndexValidationReport",
+  "type": "object"
+}

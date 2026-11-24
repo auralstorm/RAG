@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "PublicationAction": {
+      "enum": [
+        "PUBLISH",
+        "ROLLBACK"
+      ],
+      "title": "PublicationAction",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "$ref": "#/$defs/PublicationAction"
+    },
+    "expected_active_index_version_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expected Active Index Version Id"
+    },
+    "idempotency_key": {
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "kb_id": {
+      "format": "uuid",
+      "title": "Kb Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target_index_version_id": {
+      "format": "uuid",
+      "title": "Target Index Version Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kb_id",
+    "action",
+    "target_index_version_id",
+    "expected_active_index_version_id",
+    "idempotency_key"
+  ],
+  "title": "PublicationRequest",
+  "type": "object"
+}

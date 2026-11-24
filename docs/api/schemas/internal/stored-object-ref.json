@@ -1,0 +1,49 @@
+{
+  "$defs": {
+    "ContentHash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Server-resolved S3 reference, never a URL or permission to download its contents.",
+  "properties": {
+    "bucket": {
+      "maxLength": 63,
+      "minLength": 3,
+      "pattern": "^[a-z0-9][a-z0-9.-]*[a-z0-9]$",
+      "title": "Bucket",
+      "type": "string"
+    },
+    "object_key": {
+      "maxLength": 1024,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Object Key",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sha256": {
+      "$ref": "#/$defs/ContentHash"
+    },
+    "size_bytes": {
+      "exclusiveMinimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "bucket",
+    "object_key",
+    "sha256",
+    "size_bytes"
+  ],
+  "title": "StoredObjectRef",
+  "type": "object"
+}
