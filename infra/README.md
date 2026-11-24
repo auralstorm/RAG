@@ -47,6 +47,8 @@ Phoenix 使用 PostgreSQL 的独立 `phoenix` 数据库；Redis 开启 AOF，Rab
 
 ## 镜像与源码固定
 
+MinIO 社区服务端停止维护及当前固定版本早于已知安全修复的问题，见 [POC-08 对象存储复核](../docs/plan/V1.0-MVP/04-poc-acceptance-and-adr.md#11-poc-08-对象存储维护安全与选型复核)。对象存储版本冻结与长期方案按该 POC 处理，当前源码构建记录不作为安全/维护准入结论。
+
 公开镜像按 [images.env](compose/images.env) 的 SHA-256 摘要固定。MinIO 官方镜像地址在本次环境中无法拉取，改由 [Dockerfile](docker/minio/Dockerfile) 构建相同供应商的固定发行源码。
 
 MinIO 源码为官方 `RELEASE.2025-09-07T16-13-09Z`，归档 SHA-256 为 `c9598dcce3440977e79f787f2ba0e7e4d92c8d556bd51e7cef3785bafd6635f3`。Go、Alpine 基础镜像同样按摘要固定，构建会验证源码校验值。首次编译需要网络获取校验过的 Go 依赖，已有本地镜像时启动不会重新编译。
