@@ -41,7 +41,7 @@
 | 异步任务 | RabbitMQ + Celery | 幂等、重试、断点恢复 |
 | DB | PostgreSQL | 业务元数据与状态事实源 |
 | Cache | Redis | 短期缓存、限流辅助、任务协调 |
-| Object Storage | S3 compatible / MinIO | 原件及解析产物 |
+| Object Storage | S3 compatible / RustFS | 原件及解析产物 |
 | Observability | OpenTelemetry + Phoenix | 平台自有 Trace 元数据 |
 | Evaluation | RAGAS + Golden Dataset | 离线回归与版本对比 |
 
@@ -72,7 +72,7 @@ flowchart TB
   EMB --> MG
   EMB --> ES
   JOB --> PG[(PostgreSQL)]
-  PARSER --> OBJ[(S3 / MinIO)]
+  PARSER --> OBJ[(S3 / RustFS)]
   ES --> RET
 ```
 

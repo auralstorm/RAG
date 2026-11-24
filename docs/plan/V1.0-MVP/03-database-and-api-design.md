@@ -5,7 +5,7 @@
 
 - 文档版本：V1.0
 - 日期：2026-11-23
-- 数据库：PostgreSQL（业务事实源）+ Elasticsearch（检索索引）+ Redis（短期状态/缓存）+ S3/MinIO（对象）
+- 数据库：PostgreSQL（业务事实源）+ Elasticsearch（检索索引）+ Redis（短期状态/缓存）+ S3/RustFS（对象）
 - 状态：MVP 逻辑设计；物理 DDL 以 Migration 为准
 
 ## 1. 设计原则

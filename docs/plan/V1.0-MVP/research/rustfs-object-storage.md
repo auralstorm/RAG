@@ -1,5 +1,7 @@
 # RustFS 对象存储选型研究
 
+> 本文保留选型决定前的一手研究与当时验证状态。用户后续已确认替换，当前决策见 [ADR-0015](../../../adr/0015-rustfs-object-storage.md)，运行证据见 [替换实施记录](../implementation/rustfs-object-storage.md)。
+
 - 核验日期：2026-11-24（Asia/Shanghai）。
 - 任务范围：评估 RustFS 是否适合作为 V1.0 对象存储候选；未授权替换现有服务或改变技术基线。
 - 状态：一手资料研究完成；RustFS 运行、性能、安全回归、迁移与恢复 POC 均未执行；选型决策待确认。

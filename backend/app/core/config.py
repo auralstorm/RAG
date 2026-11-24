@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import AnyHttpUrl, Field, SecretStr, field_validator, model_validator
+from pydantic import AliasChoices, AnyHttpUrl, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +12,11 @@ class Settings(BaseSettings):
     """Load the application configuration without connecting external services."""
 
     model_config = SettingsConfigDict(
-        env_prefix="ENTERPRISE_RAG_", env_file=".env", extra="ignore", hide_input_in_errors=True
+        env_prefix="ENTERPRISE_RAG_",
+        env_file=".env",
+        extra="ignore",
+        hide_input_in_errors=True,
+        populate_by_name=True,
     )
 
     app_name: str = "EnterpriseRag"
@@ -33,10 +37,22 @@ class Settings(BaseSettings):
     rabbitmq_user: str = "enterprise_rag"
     rabbitmq_password: SecretStr = SecretStr("")
     elasticsearch_url: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:19200")
-    minio_endpoint: str = "127.0.0.1:19000"
-    minio_access_key: SecretStr = SecretStr("")
-    minio_secret_key: SecretStr = SecretStr("")
-    minio_bucket: str = "enterprise-rag"
+    object_storage_endpoint: str = Field(
+        default="127.0.0.1:19000",
+        validation_alias=AliasChoices("ENTERPRISE_RAG_OBJECT_STORAGE_ENDPOINT", "ENTERPRISE_RAG_MINIO_ENDPOINT"),
+    )
+    object_storage_access_key: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias=AliasChoices("ENTERPRISE_RAG_OBJECT_STORAGE_ACCESS_KEY", "ENTERPRISE_RAG_MINIO_ACCESS_KEY"),
+    )
+    object_storage_secret_key: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias=AliasChoices("ENTERPRISE_RAG_OBJECT_STORAGE_SECRET_KEY", "ENTERPRISE_RAG_MINIO_SECRET_KEY"),
+    )
+    object_storage_bucket: str = Field(
+        default="enterprise-rag",
+        validation_alias=AliasChoices("ENTERPRISE_RAG_OBJECT_STORAGE_BUCKET", "ENTERPRISE_RAG_MINIO_BUCKET"),
+    )
     phoenix_url: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:16006")
 
     @model_validator(mode="after")
@@ -46,8 +62,8 @@ class Settings(BaseSettings):
                 "postgres_password",
                 "redis_password",
                 "rabbitmq_password",
-                "minio_access_key",
-                "minio_secret_key",
+                "object_storage_access_key",
+                "object_storage_secret_key",
             ):
                 secret: SecretStr = getattr(self, name)
                 if not secret.get_secret_value():

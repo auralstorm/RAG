@@ -19,7 +19,7 @@ docs/
 | 计划与版本包 | [总体版本路线图与架构演进规划](plan/总体版本路线图与架构演进规划.md) | 确认交付范围、版本依赖与进入/退出条件，再查对应版本包 |
 | 架构与契约 | [技术架构文档](architecture/技术架构文档.md)、[统一契约与跨版本演进规则](architecture/统一契约与跨版本演进规则.md)、[术语表](architecture/GLOSSARY.md) | 确认分层、技术基线、公共实体与兼容规则 |
 | 开发规范 | [前端代码规范](standards/前端代码规范.md)、[后端代码规范](standards/后端代码规范.md)、[Git 提交规范](standards/git-提交规范.md)、[Git 协作规范](standards/git-协作规范.md) | 初始化或修改前后端、提交、创建分支/PR 或评审时查阅对应规范 |
-| 架构决策 | [单一企业内部部署范围](adr/0013-single-enterprise-deployment-scope.md)、[Monorepo 与独立前端应用](adr/0014-monorepo-and-independent-frontend-apps.md) | 查阅已确认方案；其余 ADR 按任务读取，并核对各自状态 |
+| 架构决策 | [单一企业内部部署范围](adr/0013-single-enterprise-deployment-scope.md)、[Monorepo 与独立前端应用](adr/0014-monorepo-and-independent-frontend-apps.md)、[RustFS 对象存储](adr/0015-rustfs-object-storage.md) | 查阅已确认方案；其余 ADR 按任务读取，并核对各自状态 |
 | 修订与审查 | [文档修订与收敛记录](reviews/文档修订与收敛记录.md)、[历史审查索引](reviews/README.md) | 前者跟踪当前处理结果与剩余验收；后者用于追溯历史争议和原文证据 |
 
 ## 版本包

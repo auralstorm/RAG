@@ -40,7 +40,7 @@ V1.2 在 V1.1 Agent Platform Foundation 之上，交付 Agent 开发与管理平
 - Async：RabbitMQ + Celery
 - Cache：Redis
 - Business DB：PostgreSQL
-- Object Storage：S3 Compatible / MinIO
+- Object Storage：S3 Compatible / RustFS
 - Observability：OpenTelemetry + Phoenix
 - Evaluation：RAGAS + Golden Dataset（V1.2 增加 Agent 任务与治理指标）
 - Dependency：uv

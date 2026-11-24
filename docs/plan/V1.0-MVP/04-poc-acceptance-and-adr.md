@@ -4,7 +4,7 @@
 # POC 技术验收与 ADR 冻结
 
 - 文档版本：V1.0
-- 日期：2026-11-24（补充 MinIO 维护与安全准入问题）
+- 日期：2026-11-24（记录 RustFS 替换决策与分阶段验证）
 - 状态：POC 计划与决策记录基线（尚未表示 POC 已通过）
 
 ## 1. POC 目的
@@ -27,7 +27,7 @@ POC 的任务是验证既定默认技术方案能否满足项目硬性要求，�
 | Async | RabbitMQ + Celery | 幂等、重试、恢复、监控 | 需 ADR 才调整 |
 | DB | PostgreSQL | 事务、迁移、JSONB、并发写 | 不预设 |
 | Cache | Redis | 缓存、限流辅助、短期状态 | 不预设 |
-| Object | S3 compatible / MinIO（维护与安全准入待重审） | 大文件、生命周期、并发上传及 POC-08 的维护/安全问题 | 经验证的兼容 S3 服务 |
+| Object | RustFS / S3 compatible（ADR-0015，生产准入待 POC） | 大文件、生命周期、并发上传及 POC-08 的维护/安全问题 | 经验证的兼容 S3 服务 |
 | Observability | OTel + Phoenix | Trace/Span、脱敏、检索诊断 | OTel Collector + 其他 UI |
 | Evaluation | RAGAS + Golden Dataset | 指标可解释性、重复性 | 自定义评测器补充 |
 
@@ -153,19 +153,19 @@ POC 的任务是验证既定默认技术方案能否满足项目硬性要求，�
 
 ### 11.1 已确认问题与证据
 
-2026-11-24 核验发现以下问题。**问题状态：已确认；POC 状态：待执行；选型决策：待形成方案与确认。** P0-02 的功能与持久化测试结果保留，不能据此认定对象存储通过安全和长期维护准入。
+2026-11-24 核验发现以下问题。**问题状态：已确认；选型决策：用户已批准 RustFS 替换，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md)；POC 状态：部分执行，未关闭。** P0-02 的功能与持久化测试结果保留，不能据此认定对象存储通过安全和长期维护准入。
 
 | 问题 | 已核验事实与来源 | 对当前项目的影响 |
 |---|---|---|
 | 社区服务端停止维护 | [官方 README](https://github.com/minio/minio#readme) 明确声明 `THIS REPOSITORY IS NO LONGER MAINTAINED`；[仓库元数据](https://api.github.com/repos/minio/minio) 的 `archived` 为 true | 不能继续假定社区服务端会获得官方公开安全修复、版本更新和维护支持；需复核长期维护路径 |
 | 镜像获取失败与分发变化 | P0-02 中 Docker Hub 返回 `pull access denied`，Quay 返回 `401 Unauthorized`；官方 README 说明社区版本采用源码分发，停止提供预编译版本 | 错误直接证明当时镜像地址无法获取，不能单凭报错断言归档是唯一原因；源码构建恢复了获取能力，后续修复和构建维护仍需明确责任 |
-| 当前版本早于安全修复 | 当前固定 `RELEASE.2025-09-07T16-13-09Z`；[官方安全公告](https://github.com/minio/minio/security/advisories/GHSA-jjjj-jwhf-8rgr) 披露高风险 `CVE-2025-62506`，Service Account / STS Session Policy 存在权限提升问题，[修复版本](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z) 为 `RELEASE.2025-10-15T17-29-55Z` | 当前版本需要修复/升级评估与安全回归，不能直接冻结为生产使用版本；采用最后修复版本也不能恢复官方长期维护 |
+| 原版本早于安全修复 | P0-02 原固定 `RELEASE.2025-09-07T16-13-09Z`；[官方安全公告](https://github.com/minio/minio/security/advisories/GHSA-jjjj-jwhf-8rgr) 披露高风险 `CVE-2025-62506`，Service Account / STS Session Policy 存在权限提升问题，[修复版本](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z) 为 `RELEASE.2025-10-15T17-29-55Z` | 当前版本需要修复/升级评估与安全回归，不能直接冻结为生产使用版本；采用最后修复版本也不能恢复官方长期维护 |
 
-现有实现见 [MinIO Dockerfile](../../../infra/docker/minio/Dockerfile)、[镜像配置](../../../infra/compose/images.env) 与 [P0-02 实施记录](implementation/P0-02.md)。当前镜像由固定官方源码、源码 SHA-256、固定 Go/Alpine 基础镜像构建；这些措施保证构建输入可核验，源码构建本身不修复旧版本漏洞。
+原 P0-02 实现见 [MinIO Dockerfile](../../../infra/docker/minio/Dockerfile)、[镜像配置](../../../infra/compose/images.env) 与 [P0-02 实施记录](implementation/P0-02.md)。原镜像由固定官方源码、源码 SHA-256、固定 Go/Alpine 基础镜像构建；这些措施保证构建输入可核验，源码构建本身不修复旧版本漏洞。
 
-### 11.2 待比较方案
+### 11.2 方案比较与已批准决定
 
-- **优先验证 RustFS：** 按 [2026-11-24 一手资料研究](research/rustfs-object-storage.md) 核对固定稳定版、S3/IAM 兼容、安全修复、生命周期与迁移限制；完成本项目实际 POC 后再形成切换方案。研究完成不代表已替换服务或通过运行验收。
+- **已选择 RustFS：** 用户在 [2026-11-24 一手资料研究](research/rustfs-object-storage.md) 后明确批准替换，采用 `1.0.6` 固定镜像摘要与独立新卷，保持 S3 Adapter 与平台资源 ACL 边界；[ADR-0015](../../adr/0015-rustfs-object-storage.md) 记录取舍，[实施记录](implementation/rustfs-object-storage.md) 记录本次运行、兼容和回退证据。选型确认不代表生产准入通过。
 - **短期更新社区源码版本：** 至少评估已知 CVE 的修复版本与适用回归。若继续自维护社区源码，记录源码/依赖修复责任、响应方式、成本和有期限的风险接受条件。
 - **评估官方 AIStor Free / Enterprise：** 官方推荐的后续方案，须核实实际授权、部署方式、功能限制、升级路径、支持和成本；不将“免费”视为开源或已批准的生产授权。
 - **评估其他持续维护的 S3 兼容实现：** 验证其维护情况和真实协议行为，部署范围仍遵循已确认的单企业模式。候选名称和方案比较不代表基线已经变更。
@@ -187,7 +187,13 @@ Tech Lead / Platform 在 **P0-03 对象存储版本与 M0 技术基线冻结前*
 - 当前旧版本的已知漏洞及长期维护问题均有明确处置；仅能启动、上传/下载或通过 P0-02 测试不能关闭本问题。
 - 必需安全用例与适用兼容/生命周期验证通过；缺少证据时保持待验证，有条件通过须记录负责人、期限和风险接受。
 - 保留、更新或替换方案有具体维护路径、迁移/回滚依据与决策记录；基线变更按 ADR 流程和用户已确认范围执行。
-- 同步源码/镜像、SDK、配置、测试和相关文档后，才冻结对象存储交付基线。此问题记录不代表已升级镜像、替换方案或通过 POC。
+- 同步源码/镜像、SDK、配置、测试和相关文档后，才冻结对象存储交付基线。对象存储选型已确认；下述开发验收不替代完整 POC 关闭条件。
+
+### 11.5 RustFS 开发基线替换与待验收项
+
+开发/测试采用官方 RustFS `1.0.6`（固定 digest），S3 客户端仍为维护中的 `minio==7.2.20` Python SDK。此次盘点源桶无对象、无版本历史、未启用版本、无桶策略，使用新卷启动；原 MinIO 卷与 0600 凭据备份保留。全部实际检查结果和回退边界见 [替换实施记录](implementation/rustfs-object-storage.md)，研究原文作为选型时证据保留。
+
+本次检查覆盖配置兼容、基础 S3、预签名与多段上传的部分 OBJ-03/04、容器故障/重建和空桶切换回退的部分 OBJ-05/07。OBJ-02 的受限身份/STS 权限与非作者安全评审、OBJ-04 的实际浏览器 CORS 和规模并发、OBJ-05 的真实生命周期回收与备份恢复、OBJ-06 的制品扫描/签名和升级演练仍待 P0-03 执行，负责人按 Tech Lead / Platform 分工，在 M0 冻结前完成；未设定或未实测的门槛不得填写为 PASS。
 
 ## 12. POC 结果记录模板
 

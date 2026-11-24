@@ -26,7 +26,7 @@ V1.3 在 V1.1 Agent Runtime 和 V1.2 Agent Development Platform 之上，建设�
 
 ## 技术基线沿用
 
-Python + FastAPI、React + TypeScript、LlamaIndex、LangGraph、Elasticsearch（Search Adapter 隔离）、PostgreSQL、Redis、RabbitMQ + Celery、S3 compatible / MinIO、Model Gateway Facade + LiteLLM、OpenTelemetry + Phoenix、RAGAS + Golden Dataset、uv、Docker。
+Python + FastAPI、React + TypeScript、LlamaIndex、LangGraph、Elasticsearch（Search Adapter 隔离）、PostgreSQL、Redis、RabbitMQ + Celery、S3 compatible / RustFS、Model Gateway Facade + LiteLLM、OpenTelemetry + Phoenix、RAGAS + Golden Dataset、uv、Docker。
 
 ## 关键架构约束
 

@@ -1,17 +1,18 @@
 """Local dependency probes; this module owns SDK clients and their lifetime."""
 
 import asyncio
+from contextlib import ExitStack
 from typing import Literal
 
 import aio_pika
 import httpx2
 import redis.asyncio as redis
-import urllib3
 from minio import Minio
 from psycopg import AsyncConnection
 from psycopg.conninfo import make_conninfo
 from pydantic import BaseModel
 
+from app.adapters.object_storage import open_s3_client
 from app.core.config import Settings
 from app.core.readiness import ReadinessReport, check_dependencies
 
@@ -28,8 +29,8 @@ class InfrastructureMonitor:
         self.settings = settings
         self.http: httpx2.AsyncClient | None = None
         self.redis: redis.Redis | None = None
-        self.minio_http: urllib3.PoolManager | None = None
-        self.minio: Minio | None = None
+        self.storage_context = ExitStack()
+        self.object_storage: Minio | None = None
 
     async def start(self) -> None:
         settings = self.settings
@@ -44,26 +45,14 @@ class InfrastructureMonitor:
             socket_connect_timeout=settings.dependency_timeout,
             decode_responses=True,
         )
-        self.minio_http = urllib3.PoolManager(
-            timeout=urllib3.Timeout(connect=settings.dependency_timeout, read=settings.dependency_timeout),
-            retries=False,
-        )
-        self.minio = Minio(
-            settings.minio_endpoint,
-            access_key=settings.minio_access_key.get_secret_value() or None,
-            secret_key=settings.minio_secret_key.get_secret_value() or None,
-            secure=False,
-            region="us-east-1",
-            http_client=self.minio_http,
-        )
+        self.object_storage = self.storage_context.enter_context(open_s3_client(settings))
 
     async def close(self) -> None:
         if self.http is not None:
             await self.http.aclose()
         if self.redis is not None:
             await self.redis.aclose()
-        if self.minio_http is not None:
-            self.minio_http.clear()
+        self.storage_context.close()
 
     async def check(self) -> ReadinessReport:
         checks = (
@@ -72,7 +61,7 @@ class InfrastructureMonitor:
                 "redis": self.check_redis,
                 "rabbitmq": self.check_rabbitmq,
                 "elasticsearch": self.check_elasticsearch,
-                "minio": self.check_minio,
+                "object_storage": self.check_object_storage,
                 "phoenix": self.check_phoenix,
             }
             if self.settings.infrastructure_enabled
@@ -127,11 +116,11 @@ class InfrastructureMonitor:
         if health.status == "red" or health.timed_out:
             raise RuntimeError("Elasticsearch is not ready")
 
-    async def check_minio(self) -> None:
-        if self.minio is None:
-            raise RuntimeError("MinIO probe client has not started")
-        if not await asyncio.to_thread(self.minio.bucket_exists, self.settings.minio_bucket):
-            raise RuntimeError("MinIO initialization is incomplete")
+    async def check_object_storage(self) -> None:
+        if self.object_storage is None:
+            raise RuntimeError("Object storage probe client has not started")
+        if not await asyncio.to_thread(self.object_storage.bucket_exists, self.settings.object_storage_bucket):
+            raise RuntimeError("Object storage initialization is incomplete")
 
     async def check_phoenix(self) -> None:
         if self.http is None:

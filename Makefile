@@ -22,7 +22,7 @@ lint:
 format-check:
 	uv run --locked ruff format --check backend scripts
 	pnpm format:check
-	pnpm exec prettier --check infra/compose/compose.yaml
+	pnpm exec prettier --check infra/compose/*.yaml
 
 typecheck:
 	uv run --locked pyright

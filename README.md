@@ -1,6 +1,6 @@
 # EnterpriseRag
 
-单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、公共包和工程检查入口。业务功能和身份登录按后续任务交付，基础设施使用本项目的 Docker 编排。
+单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、公共包和工程检查入口。业务功能和身份登录按后续任务交付，基础设施使用本项目的 Docker 编排，对象存储已按 [ADR-0015](docs/adr/0015-rustfs-object-storage.md) 采用 RustFS（S3 协议）。
 
 ## 工具链
 
@@ -84,4 +84,4 @@ CI 配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)，执行相同
 
 遵循 [AGENTS.md](AGENTS.md)、[Git 提交规范](docs/standards/git-提交规范.md) 和 [分支与评审规范](docs/standards/git-协作规范.md)。每项独立任务验证通过后创建本地提交；远程推送按用户明确授权执行。
 
-完整文档见 [文档索引](docs/README.md)。实际进度与证据见 [P0-01 工程记录](docs/plan/V1.0-MVP/implementation/P0-01.md) 和 [P0-02 基础设施记录](docs/plan/V1.0-MVP/implementation/P0-02.md)。
+完整文档见 [文档索引](docs/README.md)。实际进度与证据见 [P0-01 工程记录](docs/plan/V1.0-MVP/implementation/P0-01.md) 和 [P0-02 基础设施记录](docs/plan/V1.0-MVP/implementation/P0-02.md)，当前对象存储验证见 [RustFS 替换记录](docs/plan/V1.0-MVP/implementation/rustfs-object-storage.md)。

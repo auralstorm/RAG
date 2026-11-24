@@ -1,6 +1,7 @@
 """Exercise real disposable Docker services, their failure paths and volume lifecycle."""
 
 import asyncio
+from contextlib import ExitStack
 from io import BytesIO
 from uuid import uuid4
 
@@ -8,12 +9,13 @@ import aio_pika
 import httpx2
 import pytest
 import redis.asyncio as redis
+from app.adapters.object_storage import open_s3_client
 from app.core.config import Settings, load_settings
 from app.main import create_app
 from fastapi.testclient import TestClient
-from minio import Minio
 from psycopg import AsyncConnection
 from psycopg.conninfo import make_conninfo
+from tests.storage_protocol import verify_storage_protocol
 
 from scripts.infrastructure import compose, initialize_config, reset, up
 
@@ -52,15 +54,11 @@ async def test_environment_persistence_outages_and_reset() -> None:
         password=settings.redis_password.get_secret_value(),
         decode_responses=True,
     )
-    store = Minio(
-        settings.minio_endpoint,
-        access_key=settings.minio_access_key.get_secret_value(),
-        secret_key=settings.minio_secret_key.get_secret_value(),
-        secure=False,
-        region="us-east-1",
-    )
+    storage_context = ExitStack()
+    store = storage_context.enter_context(open_s3_client(settings))
     try:
         up("test")
+        await verify_storage_protocol(store, settings, marker)
         with TestClient(create_app(settings)) as api:
             report = api.get("/health/ready")
             assert report.status_code == 200, report.text
@@ -90,7 +88,7 @@ async def test_environment_persistence_outages_and_reset() -> None:
             )
             response.raise_for_status()
         await asyncio.to_thread(
-            store.put_object, settings.minio_bucket, object_name, BytesIO(marker.encode()), len(marker)
+            store.put_object, settings.object_storage_bucket, object_name, BytesIO(marker.encode()), len(marker)
         )
 
         compose("test", "down")
@@ -112,7 +110,7 @@ async def test_environment_persistence_outages_and_reset() -> None:
             response = await http.get(f"{str(settings.elasticsearch_url).rstrip('/')}/{index_name}/_doc/probe")
             response.raise_for_status()
             assert response.json()["_source"]["value"] == marker
-        response = await asyncio.to_thread(store.get_object, settings.minio_bucket, object_name)
+        response = await asyncio.to_thread(store.get_object, settings.object_storage_bucket, object_name)
         try:
             assert response.read().decode() == marker
         finally:
@@ -120,11 +118,11 @@ async def test_environment_persistence_outages_and_reset() -> None:
             response.release_conn()
 
         with TestClient(create_app(settings)) as api:
-            for service in ("postgres", "redis", "rabbitmq", "elasticsearch", "minio", "phoenix"):
+            for service in ("postgres", "redis", "rabbitmq", "elasticsearch", "rustfs", "phoenix"):
                 compose("test", "stop", service)
                 report = api.get("/health/ready")
                 assert report.status_code == 503, (service, report.text)
-                assert report.json()["dependencies"][service] is False
+                assert report.json()["dependencies"]["object_storage" if service == "rustfs" else service] is False
                 assert settings.postgres_password.get_secret_value() not in report.text
                 assert api.get("/health/live").status_code == 200
                 up("test")
@@ -138,5 +136,6 @@ async def test_environment_persistence_outages_and_reset() -> None:
         with TestClient(create_app(settings)) as api:
             assert api.get("/health/ready").status_code == 200
     finally:
+        storage_context.close()
         await cache.aclose()
         compose("test", "down", "--volumes")

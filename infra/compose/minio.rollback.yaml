@@ -1,0 +1,35 @@
+# Manual source-volume rollback only. Never mount RustFS-written volumes here.
+services:
+  minio:
+    image: enterprise-rag/minio:RELEASE.2025-09-07T16-13-09Z
+    pull_policy: never
+    command: [server, /data, --console-address, ':9001']
+    environment:
+      MINIO_ROOT_USER: ${ENTERPRISE_RAG_MINIO_ACCESS_KEY:?}
+      MINIO_ROOT_PASSWORD: ${ENTERPRISE_RAG_MINIO_SECRET_KEY:?}
+      MINIO_REGION_NAME: us-east-1
+    ports:
+      - '127.0.0.1:${MINIO_PORT:?}:9000'
+      - '127.0.0.1:${MINIO_CONSOLE_PORT:?}:9001'
+    volumes:
+      - minio-source:/data
+    healthcheck:
+      test:
+        [
+          CMD,
+          wget,
+          -q,
+          -O,
+          /dev/null,
+          'http://127.0.0.1:9000/minio/health/live',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    mem_limit: 512m
+    restart: 'no'
+
+volumes:
+  minio-source:
+    external: true
+    name: ${MINIO_ROLLBACK_VOLUME:?}
