@@ -21,7 +21,7 @@ line-length = 120
 select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 
 [tool.pyright]
-include = ["backend/app", "backend/tests", "scripts"]
+include = ["backend/app", "backend/migrations", "backend/tests", "scripts"]
 extraPaths = ["backend"]
 typeCheckingMode = "strict"
 pythonVersion = "3.12"

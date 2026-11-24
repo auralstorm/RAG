@@ -8,11 +8,10 @@ import aio_pika
 import httpx2
 import redis.asyncio as redis
 from minio import Minio
-from psycopg import AsyncConnection
-from psycopg.conninfo import make_conninfo
 from pydantic import BaseModel
 
 from app.adapters.object_storage import open_s3_client
+from app.adapters.postgres import postgres_transaction
 from app.core.config import Settings
 from app.core.readiness import ReadinessReport, check_dependencies
 
@@ -70,16 +69,7 @@ class InfrastructureMonitor:
         return await check_dependencies(checks, self.settings.dependency_timeout)
 
     async def check_postgres(self) -> None:
-        settings = self.settings
-        conninfo = make_conninfo(
-            host=settings.postgres_host,
-            port=str(settings.postgres_port),
-            user=settings.postgres_user,
-            password=settings.postgres_password.get_secret_value(),
-            dbname=settings.postgres_database,
-            connect_timeout=str(max(1, int(settings.dependency_timeout))),
-        )
-        async with await AsyncConnection.connect(conninfo) as connection:
+        async with postgres_transaction(self.settings) as connection:
             cursor = await connection.execute("SELECT 1")
             if await cursor.fetchone() != (1,):
                 raise RuntimeError("PostgreSQL probe did not return the expected result")

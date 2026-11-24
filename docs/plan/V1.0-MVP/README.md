@@ -41,7 +41,8 @@
 - [P0-01 工程初始化与本地验收](implementation/P0-01.md)：记录实际命令、结果和待执行的远程检查，不代替阶段 Exit Criteria。
 - [P0-02 Docker 开发环境与就绪检查](implementation/P0-02.md)：记录依赖启动、持久化、故障恢复和重置验证。
 - 试点口径、问答样例和 Chat/Admin 验收流程见 [P0-05 MVP 需求与验收口径](implementation/P0-05.md)。
+- [P1-01 后端工程底座](implementation/P1-01.md) 记录数据库迁移、事务边界和模块依赖验证。
 
 对象存储已按用户确认采用 RustFS，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md) 与 [替换实施记录](implementation/rustfs-object-storage.md)。选型和开发验收已分开记录，POC-08 的生产准入检查继续在 P0-03 完成。
 
-当前进入 P0-03，已确认文档格式，百炼模型仅作为本次 POC 候选，执行顺序、功能证据及待确认项见 [P0-03 实施进度](implementation/P0-03.md)。
+技术 POC 的执行顺序、功能证据及待确认项见 [P0-03 实施进度](implementation/P0-03.md)。

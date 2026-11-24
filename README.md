@@ -47,6 +47,8 @@ make dev-admin
 
 `/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。两个前端当前是独立启动壳；应用层后续通过公共客户端和各自 `VITE_API_BASE_URL` 接入业务 API。
 
+PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运行 `make db-current` 查看版本。两个命令均可使用 `PROFILE=test` 选择测试库。迁移与事务边界见 [P1-01 实施记录](docs/plan/V1.0-MVP/implementation/P1-01.md)。
+
 ## 目录与依赖
 
 ```text

@@ -1,4 +1,4 @@
-.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test poc-search poc-storage
+.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test db-upgrade db-current poc-search poc-storage
 
 PROFILE ?= development
 
@@ -62,6 +62,12 @@ infra-reset:
 
 infra-test:
 	uv run --locked pytest -m infrastructure -v
+
+db-upgrade:
+	ENTERPRISE_RAG_INFRA_PROFILE=$(PROFILE) uv run --locked python -m scripts.migrate_database upgrade
+
+db-current:
+	ENTERPRISE_RAG_INFRA_PROFILE=$(PROFILE) uv run --locked python -m scripts.migrate_database current
 
 poc-search:
 	uv run --locked python scripts/poc/search.py

@@ -10,26 +10,52 @@ import httpx2
 import pytest
 import redis.asyncio as redis
 from app.adapters.object_storage import open_s3_client
+from app.adapters.postgres import postgres_conninfo, postgres_transaction
 from app.core.config import Settings, load_settings
 from app.main import create_app
 from fastapi.testclient import TestClient
-from psycopg import AsyncConnection
-from psycopg.conninfo import make_conninfo
+from psycopg import AsyncConnection, sql
 from tests.storage_protocol import verify_storage_protocol
 
 from scripts.infrastructure import compose, initialize_config, reset, up
+from scripts.migrate_database import run_migration
 
 pytestmark = [pytest.mark.infrastructure, pytest.mark.anyio]
 
 
-def postgres_dsn(settings: Settings) -> str:
-    return make_conninfo(
-        host=settings.postgres_host,
-        port=str(settings.postgres_port),
-        user=settings.postgres_user,
-        password=settings.postgres_password.get_secret_value(),
-        dbname=settings.postgres_database,
-    )
+async def verify_database_foundation(settings: Settings) -> None:
+    database_name = f"p1_verify_{uuid4().hex}"
+    identifier = sql.Identifier(database_name)
+    async with await AsyncConnection.connect(postgres_conninfo(settings), autocommit=True) as admin:
+        await admin.execute(sql.SQL("CREATE DATABASE {} TEMPLATE template0").format(identifier))
+        try:
+            isolated = settings.model_copy(update={"postgres_database": database_name})
+            assert await asyncio.to_thread(run_migration, isolated, "current") == ""
+            await asyncio.to_thread(run_migration, isolated, "upgrade")
+            await asyncio.to_thread(run_migration, isolated, "upgrade")
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0001_baseline (head)"
+
+            async with postgres_transaction(isolated) as connection:
+                await connection.execute("CREATE TABLE transaction_probe (value text NOT NULL)")
+                await connection.execute("INSERT INTO transaction_probe VALUES (%s)", ("committed",))
+            assert connection.closed
+
+            with pytest.raises(ValueError, match="rollback probe"):
+                async with postgres_transaction(isolated) as connection:
+                    await connection.execute("INSERT INTO transaction_probe VALUES (%s)", ("rolled back",))
+                    raise ValueError("rollback probe")
+            assert connection.closed
+
+            async with postgres_transaction(isolated) as connection:
+                rows = await connection.execute("SELECT value FROM transaction_probe")
+                assert await rows.fetchall() == [("committed",)]
+
+            await asyncio.to_thread(run_migration, isolated, "downgrade", "base")
+            assert await asyncio.to_thread(run_migration, isolated, "current") == ""
+            await asyncio.to_thread(run_migration, isolated, "upgrade")
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0001_baseline (head)"
+        finally:
+            await admin.execute(sql.SQL("DROP DATABASE {}").format(identifier))
 
 
 async def rabbit_connection(settings: Settings) -> aio_pika.abc.AbstractConnection:
@@ -58,13 +84,14 @@ async def test_environment_persistence_outages_and_reset() -> None:
     store = storage_context.enter_context(open_s3_client(settings))
     try:
         up("test")
+        await verify_database_foundation(settings)
         await verify_storage_protocol(store, settings, marker)
         with TestClient(create_app(settings)) as api:
             report = api.get("/health/ready")
             assert report.status_code == 200, report.text
             assert all(report.json()["dependencies"].values())
 
-        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+        async with postgres_transaction(settings) as connection:
             await connection.execute("CREATE TABLE IF NOT EXISTS p0_probe (id text PRIMARY KEY)")
             await connection.execute("INSERT INTO p0_probe VALUES (%s)", (marker,))
         await cache.set(f"p0:verify:{marker}", marker)
@@ -94,7 +121,7 @@ async def test_environment_persistence_outages_and_reset() -> None:
         compose("test", "down")
         up("test")
 
-        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+        async with postgres_transaction(settings) as connection:
             cursor = await connection.execute("SELECT id FROM p0_probe WHERE id=%s", (marker,))
             assert await cursor.fetchone() == (marker,)
         assert await cache.get(f"p0:verify:{marker}") == marker
@@ -129,7 +156,7 @@ async def test_environment_persistence_outages_and_reset() -> None:
                 assert api.get("/health/ready").status_code == 200
 
         reset("test", confirmed=True)
-        async with await AsyncConnection.connect(postgres_dsn(settings)) as connection:
+        async with postgres_transaction(settings) as connection:
             cursor = await connection.execute("SELECT to_regclass('public.p0_probe')")
             assert await cursor.fetchone() == (None,)
         assert await cache.get(f"p0:verify:{marker}") is None
