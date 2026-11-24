@@ -136,7 +136,7 @@ stateDiagram-v2
 2. 计算 SHA-256，按 KB + 文件 Hash 做重复检测；是否允许同内容多版本由 KB 配置决定。
 3. 原件写入对象存储，PostgreSQL 写入 Document、DocumentVersion、IngestionJob。
 4. 投递 Celery 任务；API 返回 `document_id`、`job_id` 和初始状态。
-5. Parser Adapter 调用 Docling；复杂 PDF 可按策略路由 MinerU。
+5. Parser Adapter 默认调用 Docling；先完成首期基础解析，实际样本证明 Docling 有明确缺口后，再验证并按已确认策略接入 MinerU。
 6. 统一输出 `ParsedDocument`：页面、段落、表格、标题层级、来源位置、解析告警。
 7. Normalizer 统一空白、编码、页码、标题路径和结构元数据。
 8. Structure-aware Chunker 按标题、段落、表格边界切片；支持 Parent-Child。
@@ -173,6 +173,8 @@ class ParsedBlock:
 ```
 
 Parser 只负责内容解析，不直接写 ES、不决定 ACL、不负责平台 Document 状态。
+
+当前优先完成 Docling 的 Markdown、DOCX、PDF 基础解析；MinerU 保留为 PDF 备选，不作为当前集成依赖。先收集 Docling 在实际样本上的内容、表格、阅读顺序、引用定位及耗时证据；缺口经配置/OCR/Adapter 排查仍存在时，再按 [POC-02](04-poc-acceptance-and-adr.md) 使用同一批失败样本验证 MinerU，并保持 ParsedDocument 输出契约。
 
 ### 4.3 Chunking 策略
 
@@ -424,7 +426,7 @@ Contract 不包含 Elasticsearch 专有字段。未来可替换搜索引擎，�
 ## 11. 待 POC 决策项
 
 - Elasticsearch 版本、Dense 向量字段类型、Hybrid Query 方式和 ACL Filter 性能。
-- Docling 与 MinerU 对目标 PDF 样本的解析质量、表格保真度和耗时。
+- 先验证 Docling 对目标 Markdown、DOCX、PDF 样本的解析质量、表格保真度与耗时；实际缺口触发时再验证 MinerU，不提前要求双 Parser 对比。
 - LlamaIndex 组件使用边界与升级兼容性。
 - Embedding / Reranker 模型选择、维度、批大小、成本和限流。
 - Chunking 参数与 Parent-Child 召回收益。

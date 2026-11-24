@@ -78,10 +78,12 @@ POC 的任务是验证既定默认技术方案能否满足项目硬性要求，�
 
 [POC-01 实施记录](implementation/POC-01-search.md) 与 `make poc-search` 提供独立真实服务、合成向量与权限夹具的功能证据；完整业务质量、容量、实际权限集成和非作者安全评审仍待完成，不能据此关闭 POC-01。全部 P0-03 输入和状态见 [实施进度](implementation/P0-03.md)。
 
-## 5. POC-02 Docling / MinerU Parser
+## 5. POC-02 Docling 基础解析与按需 PDF 对比
+
+**执行决定（2026-11-24）：** 用户确认当前优先使用 Docling，先完成 Markdown、DOCX、PDF 的基础解析与目标样本验收。MinerU 保留为 PDF 备选；发现 Docling 对实际样本存在明确质量或性能缺口时，再开展同样本对比并决定是否接入。当前不要求安装、集成或完成 MinerU 对比后才能推进 Docling/P0-03。
 
 ### 5.1 样本
-- 数字 PDF、扫描 PDF、混合 PDF、双栏排版、复杂表格、页眉页脚、图片标题、DOCX、PPTX（按产品实际格式范围）。
+- 首期覆盖 Markdown、DOCX、PDF；PDF 以目标业务样本为准，记录数字/扫描/混合、双栏、复杂表格、页眉页脚及图片标题等特征。PPTX 等其他格式按后续已确认范围增加。
 - 对样本建立人工校验基准：标题层级、正文、表格内容、页码、阅读顺序。
 
 ### 5.2 测试
@@ -89,12 +91,14 @@ POC 的任务是验证既定默认技术方案能否满足项目硬性要求，�
 - CPU / GPU（如适用）资源、耗时、内存峰值。
 - 相同文件重复解析结果稳定性。
 - 超大文件、损坏文件、加密文件、异常编码的错误行为。
-- 对复杂 PDF 比较 Docling 与 MinerU，决定是否按规则路由。
+- 先记录 Docling 在目标样本上的正文/标题/页码、阅读顺序、表格单元格与合并关系、错误、耗时和资源使用；不以“解析成功”替代内容正确性验收。
+- Docling 出现漏内容、表格错位、阅读顺序或引用定位错误、耗时不达已确认门槛时，保留失败样本、版本、参数及日志，先核对 Docling 配置/OCR/Adapter；缺口仍存在时再用同一批样本比较 MinerU 的质量、耗时与部署成本。
 
 ### 5.3 通过标准
 - 关键内容抽取达到业务确认阈值。
 - 失败能明确返回 Parser Error，不生成看似成功的空索引。
 - Parser Adapter 输出统一 ParsedDocument，不把 Parser 专有结构泄漏到业务层。
+- 当前验收针对 Docling；MinerU 记录为“保留备选、未启用/未验收”，不将缺少 MinerU 对比作为当前 POC 的前置阻塞，也不标记为通过。Docling 未满足首期必需内容质量时继续修复或按上述条件启动备选验证。
 
 ## 6. POC-03 LlamaIndex RAG Pipeline
 
@@ -286,7 +290,7 @@ POC 编号、数据、链接。
 - 重审条件：POC 证明 ES 在关键功能、性能或成本上无法满足目标且 OpenSearch 有可复现优势。
 
 ### ADR-0004：Parser 默认 Docling，MinerU 作为复杂 PDF 备选
-- 状态：Accepted（样本质量待 POC）
+- 状态：Accepted（样本质量待 POC；2026-11-24 用户确认 Docling 优先、MinerU 按实际缺口验证）
 - 决策：统一 Parser Adapter 与 ParsedDocument Contract。
 - 重审条件：代表性文档集解析质量或性能不达标。
 
