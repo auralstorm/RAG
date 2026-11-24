@@ -16,7 +16,7 @@ async function readJson(path) {
 function convertReferences(value) {
   if (Array.isArray(value)) return value.map(convertReferences);
   if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(
+    const converted = Object.fromEntries(
       Object.entries(value).map(([key, child]) => [
         key,
         key === '$ref' &&
@@ -26,6 +26,19 @@ function convertReferences(value) {
           : convertReferences(child),
       ]),
     );
+    // OpenAPI discriminator mappings contain reference strings without a $ref key.
+    const mapping = value.discriminator?.mapping;
+    if (mapping && typeof mapping === 'object') {
+      converted.discriminator.mapping = Object.fromEntries(
+        Object.entries(mapping).map(([tag, reference]) => [
+          tag,
+          typeof reference === 'string' && reference.startsWith('#/$defs/')
+            ? reference.replace('#/$defs/', '#/components/schemas/')
+            : reference,
+        ]),
+      );
+    }
+    return converted;
   }
   return value;
 }
@@ -39,7 +52,9 @@ for (const entry of catalog.schemas) {
   if (entry.frontend_group === null) continue;
   if (
     entry.visibility !== 'public' ||
-    !['common', 'iam', 'knowledge'].includes(entry.frontend_group) ||
+    !['common', 'iam', 'knowledge', 'retrieval'].includes(
+      entry.frontend_group,
+    ) ||
     !/^schemas\/[a-z0-9/-]+\.json$/.test(entry.path) ||
     !/^[A-Za-z][A-Za-z0-9]+$/.test(entry.name)
   ) {

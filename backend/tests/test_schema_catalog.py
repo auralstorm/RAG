@@ -47,3 +47,13 @@ def test_internal_knowledge_facts_are_not_exported_in_public_types_or_schemas() 
     # This change must keep the application's existing HTTP surface unchanged.
     components = create_app(Settings(infrastructure_enabled=False)).openapi()["components"]["schemas"]
     assert "KnowledgeBase" not in components and "StoredObjectRef" not in components
+
+
+def test_retrieval_types_exclude_private_parser_inputs_and_authorization_facts() -> None:
+    generated = (ROOT / "frontend/packages/api-client/src/generated/retrieval.ts").read_text()
+    for source in SCHEMAS:
+        if source.path.startswith("internal/"):
+            assert f"readonly {source.name}:" not in generated
+    for field in ("object_key", "physical_index_name", "alias_name", "access_context", "permission_codes", "actor_ref"):
+        assert f"readonly {field}:" not in generated
+    assert "readonly RetrievedChunk:" in generated and "readonly RetrievalSelection:" in generated

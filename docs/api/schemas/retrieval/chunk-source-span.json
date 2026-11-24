@@ -1,0 +1,216 @@
+{
+  "$defs": {
+    "BoundingBox": {
+      "additionalProperties": false,
+      "description": "Normalized [0,1] coordinates, origin at the page's top-left, in displayed orientation.",
+      "properties": {
+        "bottom": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Bottom",
+          "type": "number"
+        },
+        "left": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Left",
+          "type": "number"
+        },
+        "right": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Right",
+          "type": "number"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Top",
+          "type": "number"
+        }
+      },
+      "required": [
+        "left",
+        "top",
+        "right",
+        "bottom"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "DocxSourceLocation": {
+      "additionalProperties": false,
+      "description": "Zero-based body element index, counting paragraphs and tables in original order.",
+      "properties": {
+        "element_index": {
+          "minimum": 0,
+          "title": "Element Index",
+          "type": "integer"
+        },
+        "element_type": {
+          "enum": [
+            "paragraph",
+            "table"
+          ],
+          "title": "Element Type",
+          "type": "string"
+        },
+        "kind": {
+          "const": "docx",
+          "default": "docx",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "element_index",
+        "element_type"
+      ],
+      "title": "DocxSourceLocation",
+      "type": "object"
+    },
+    "MarkdownSourceLocation": {
+      "additionalProperties": false,
+      "description": "Half-open Unicode code-point offsets in the original decoded Markdown source.",
+      "properties": {
+        "char_end": {
+          "exclusiveMinimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "markdown",
+          "default": "markdown",
+          "title": "Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "char_start",
+        "char_end"
+      ],
+      "title": "MarkdownSourceLocation",
+      "type": "object"
+    },
+    "PdfSourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kind": {
+          "const": "pdf",
+          "default": "pdf",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_no"
+      ],
+      "title": "PdfSourceLocation",
+      "type": "object"
+    },
+    "SourceLocation": {
+      "discriminator": {
+        "mapping": {
+          "docx": "#/$defs/DocxSourceLocation",
+          "markdown": "#/$defs/MarkdownSourceLocation",
+          "pdf": "#/$defs/PdfSourceLocation"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PdfSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/MarkdownSourceLocation"
+        },
+        {
+          "$ref": "#/$defs/DocxSourceLocation"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "block_id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Block Id",
+      "type": "string"
+    },
+    "char_end": {
+      "exclusiveMinimum": 0,
+      "title": "Char End",
+      "type": "integer"
+    },
+    "char_start": {
+      "minimum": 0,
+      "title": "Char Start",
+      "type": "integer"
+    },
+    "location": {
+      "$ref": "#/$defs/SourceLocation"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "block_id",
+    "char_start",
+    "char_end",
+    "location"
+  ],
+  "title": "ChunkSourceSpan",
+  "type": "object"
+}

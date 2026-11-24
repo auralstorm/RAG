@@ -145,6 +145,9 @@ sourceId 与内部 UUID 映射应受限访问。普通 Trace 不展示姓名和 
 - Unique(`document_id`, `version`)
 
 #### `chunks`
+
+**契约落实（2026-11-24）：** P0-04-04 的 Chunk/ChunkMetadata/SourceLocation、完整版本引用、Parser/Retriever 契约与原字段映射见 [解析与检索契约](../../api/parsing-retrieval-contracts.md)；以下物理列仍为设计输入，跨页来源、Tokenizer 版本与父子关系须在实际 DDL/存量调查后显式落实。本轮无表/列迁移。
+
 - `id UUID PK`
 - `document_version_id UUID FK`
 - `kb_id UUID`

@@ -240,6 +240,132 @@
       "name": "PublishedDocumentSnapshot",
       "path": "schemas/internal/published-document-snapshot.json",
       "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedDocument",
+      "path": "schemas/internal/parsed-document.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedPage",
+      "path": "schemas/internal/parsed-page.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedBlock",
+      "path": "schemas/internal/parsed-block.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsedTable",
+      "path": "schemas/internal/parsed-table.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParsingWarning",
+      "path": "schemas/internal/parsing-warning.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "ParserInput",
+      "path": "schemas/internal/parser-input.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "Chunk",
+      "path": "schemas/internal/chunk.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalRequest",
+      "path": "schemas/internal/retrieval-request.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalFacts",
+      "path": "schemas/internal/retrieval-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalDocumentFacts",
+      "path": "schemas/internal/retrieval-document-facts.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "RetrievalIndexBinding",
+      "path": "schemas/internal/retrieval-index-binding.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "AuthorizedRetrievalScope",
+      "path": "schemas/internal/authorized-retrieval-scope.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalSelection",
+      "path": "schemas/retrieval/retrieval-selection.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalFilters",
+      "path": "schemas/retrieval/retrieval-filters.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievedChunk",
+      "path": "schemas/retrieval/retrieved-chunk.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalDiagnostics",
+      "path": "schemas/retrieval/retrieval-diagnostics.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "RetrievalResult",
+      "path": "schemas/retrieval/retrieval-result.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ScoreComponents",
+      "path": "schemas/retrieval/score-components.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkSource",
+      "path": "schemas/retrieval/chunk-source.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkSourceSpan",
+      "path": "schemas/retrieval/chunk-source-span.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "retrieval",
+      "name": "ChunkMetadata",
+      "path": "schemas/retrieval/chunk-metadata.json",
+      "visibility": "public"
     }
   ]
 }

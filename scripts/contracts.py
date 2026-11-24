@@ -11,6 +11,7 @@ from typing import Literal
 from app.api.schemas.common import ApiErrorEnvelope, PageResponse, PaginationQuery
 from app.core.config import Settings
 from app.main import create_app
+from app.modules.chunking.domain.contracts import Chunk, ChunkMetadata, ChunkSource, ChunkSourceSpan
 from app.modules.documents.domain.contracts import (
     Document,
     DocumentAccessPolicy,
@@ -33,12 +34,33 @@ from app.modules.iam.domain.contracts import (
 )
 from app.modules.ingestion.domain.contracts import IngestionEvent, IngestionFailure, IngestionJob, IngestionProgress
 from app.modules.knowledge_base.domain.contracts import EmbeddingBinding, KnowledgeBase
+from app.modules.parsing.domain.contracts import (
+    ParsedBlock,
+    ParsedDocument,
+    ParsedPage,
+    ParsedTable,
+    ParserInput,
+    ParsingWarning,
+)
 from app.modules.policy.domain.contracts import (
     AccessContext,
     AuthorizationRequest,
     AuthorizationSnapshot,
     PolicyDecision,
     ResourceGrant,
+)
+from app.modules.rag.domain.contracts import (
+    AuthorizedRetrievalScope,
+    RetrievalDiagnostics,
+    RetrievalDocumentFacts,
+    RetrievalFacts,
+    RetrievalFilters,
+    RetrievalIndexBinding,
+    RetrievalRequest,
+    RetrievalResult,
+    RetrievalSelection,
+    RetrievedChunk,
+    ScoreComponents,
 )
 from app.modules.search.domain.contracts import (
     IndexAlias,
@@ -63,7 +85,7 @@ class SchemaSource:
 
     name: str
     path: str
-    frontend_group: Literal["common", "iam", "knowledge"] | None
+    frontend_group: Literal["common", "iam", "knowledge", "retrieval"] | None
     generate: Callable[[], object]
 
 
@@ -139,6 +161,48 @@ SCHEMAS = (
         None,
         PublishedDocumentSnapshot.model_json_schema,
     ),
+    SchemaSource("ParsedDocument", "internal/parsed-document.json", None, ParsedDocument.model_json_schema),
+    SchemaSource("ParsedPage", "internal/parsed-page.json", None, ParsedPage.model_json_schema),
+    SchemaSource("ParsedBlock", "internal/parsed-block.json", None, ParsedBlock.model_json_schema),
+    SchemaSource("ParsedTable", "internal/parsed-table.json", None, ParsedTable.model_json_schema),
+    SchemaSource("ParsingWarning", "internal/parsing-warning.json", None, ParsingWarning.model_json_schema),
+    SchemaSource("ParserInput", "internal/parser-input.json", None, ParserInput.model_json_schema),
+    SchemaSource("Chunk", "internal/chunk.json", None, Chunk.model_json_schema),
+    SchemaSource("RetrievalRequest", "internal/retrieval-request.json", None, RetrievalRequest.model_json_schema),
+    SchemaSource("RetrievalFacts", "internal/retrieval-facts.json", None, RetrievalFacts.model_json_schema),
+    SchemaSource(
+        "RetrievalDocumentFacts",
+        "internal/retrieval-document-facts.json",
+        None,
+        RetrievalDocumentFacts.model_json_schema,
+    ),
+    SchemaSource(
+        "RetrievalIndexBinding", "internal/retrieval-index-binding.json", None, RetrievalIndexBinding.model_json_schema
+    ),
+    SchemaSource(
+        "AuthorizedRetrievalScope",
+        "internal/authorized-retrieval-scope.json",
+        None,
+        AuthorizedRetrievalScope.model_json_schema,
+    ),
+    SchemaSource(
+        "RetrievalSelection", "retrieval/retrieval-selection.json", "retrieval", RetrievalSelection.model_json_schema
+    ),
+    SchemaSource(
+        "RetrievalFilters", "retrieval/retrieval-filters.json", "retrieval", RetrievalFilters.model_json_schema
+    ),
+    SchemaSource("RetrievedChunk", "retrieval/retrieved-chunk.json", "retrieval", RetrievedChunk.model_json_schema),
+    SchemaSource(
+        "RetrievalDiagnostics",
+        "retrieval/retrieval-diagnostics.json",
+        "retrieval",
+        RetrievalDiagnostics.model_json_schema,
+    ),
+    SchemaSource("RetrievalResult", "retrieval/retrieval-result.json", "retrieval", RetrievalResult.model_json_schema),
+    SchemaSource("ScoreComponents", "retrieval/score-components.json", "retrieval", ScoreComponents.model_json_schema),
+    SchemaSource("ChunkSource", "retrieval/chunk-source.json", "retrieval", ChunkSource.model_json_schema),
+    SchemaSource("ChunkSourceSpan", "retrieval/chunk-source-span.json", "retrieval", ChunkSourceSpan.model_json_schema),
+    SchemaSource("ChunkMetadata", "retrieval/chunk-metadata.json", "retrieval", ChunkMetadata.model_json_schema),
 )
 
 

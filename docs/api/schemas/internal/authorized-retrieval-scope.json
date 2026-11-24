@@ -1,0 +1,353 @@
+{
+  "$defs": {
+    "AccessContext": {
+      "additionalProperties": false,
+      "description": "Internal server-created context, never authenticated by deserializing its fields.\n\nUser-supplied filters, token role claims and model output do not populate this type.\nactor_ref is pseudonymous correlation, not an alternative authorization subject.",
+      "properties": {
+        "actor_ref": {
+          "$ref": "#/$defs/ActorReference"
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "expires_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "identity_id": {
+          "format": "uuid",
+          "title": "Identity Id",
+          "type": "string"
+        },
+        "issued_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "policy_version": {
+          "$ref": "#/$defs/PolicyVersion"
+        },
+        "purpose": {
+          "$ref": "#/$defs/AccessPurpose"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "subject_id": {
+          "format": "uuid",
+          "title": "Subject Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subject_id",
+        "identity_id",
+        "actor_ref",
+        "environment",
+        "purpose",
+        "policy_version",
+        "issued_at",
+        "expires_at"
+      ],
+      "title": "AccessContext",
+      "type": "object"
+    },
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
+    "ActorReference": {
+      "pattern": "^actor_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    },
+    "DocumentSourceType": {
+      "enum": [
+        "UPLOAD",
+        "CONNECTOR"
+      ],
+      "title": "DocumentSourceType",
+      "type": "string"
+    },
+    "DocumentVersionRef": {
+      "additionalProperties": false,
+      "description": "Stable version entity ID plus the numeric version used by retrieval projections.",
+      "properties": {
+        "document_id": {
+          "format": "uuid",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "document_version_id": {
+          "format": "uuid",
+          "title": "Document Version Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_version_id",
+        "document_id",
+        "kb_id",
+        "document_version"
+      ],
+      "title": "DocumentVersionRef",
+      "type": "object"
+    },
+    "EmbeddingBinding": {
+      "additionalProperties": false,
+      "description": "Exact model/configuration/vector-space identity; dimensions have no inferred default.",
+      "properties": {
+        "config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "dimensions": {
+          "minimum": 1,
+          "title": "Dimensions",
+          "type": "integer"
+        },
+        "embedding_model_id": {
+          "format": "uuid",
+          "title": "Embedding Model Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedding_model_id",
+        "config_version",
+        "dimensions"
+      ],
+      "title": "EmbeddingBinding",
+      "type": "object"
+    },
+    "Environment": {
+      "enum": [
+        "development",
+        "test",
+        "production"
+      ],
+      "type": "string"
+    },
+    "PolicyVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
+      "type": "string"
+    },
+    "RetrievalFilters": {
+      "additionalProperties": false,
+      "properties": {
+        "document_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Document Ids",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "source_types": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DocumentSourceType"
+          },
+          "title": "Source Types",
+          "type": "array"
+        }
+      },
+      "title": "RetrievalFilters",
+      "type": "object"
+    },
+    "RetrievalIndexBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "chunking_config_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "embedding": {
+          "$ref": "#/$defs/EmbeddingBinding"
+        },
+        "index_version_id": {
+          "format": "uuid",
+          "title": "Index Version Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "pipeline_version": {
+          "$ref": "#/$defs/ConfigurationVersion"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kb_id",
+        "index_version_id",
+        "embedding",
+        "chunking_config_version",
+        "pipeline_version"
+      ],
+      "title": "RetrievalIndexBinding",
+      "type": "object"
+    },
+    "RetrievalRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "access_context": {
+          "$ref": "#/$defs/AccessContext"
+        },
+        "config_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigurationVersion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "filters": {
+          "$ref": "#/$defs/RetrievalFilters"
+        },
+        "kb_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Kb Ids",
+          "type": "array"
+        },
+        "query": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Query",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "top_k": {
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Top K",
+          "type": "integer"
+        },
+        "trace_id": {
+          "pattern": "^[0-9a-f]{32}$",
+          "title": "Trace Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query",
+        "kb_ids",
+        "top_k",
+        "access_context",
+        "trace_id"
+      ],
+      "title": "RetrievalRequest",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Internal current bounds for adapters; an empty version set must skip search IO.",
+  "properties": {
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "document_versions": {
+      "items": {
+        "$ref": "#/$defs/DocumentVersionRef"
+      },
+      "title": "Document Versions",
+      "type": "array"
+    },
+    "expires_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "index_bindings": {
+      "items": {
+        "$ref": "#/$defs/RetrievalIndexBinding"
+      },
+      "title": "Index Bindings",
+      "type": "array"
+    },
+    "prepared_at": {
+      "$ref": "#/$defs/UtcTimestamp"
+    },
+    "request": {
+      "$ref": "#/$defs/RetrievalRequest"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request",
+    "config_version",
+    "index_bindings",
+    "document_versions",
+    "prepared_at",
+    "expires_at"
+  ],
+  "title": "AuthorizedRetrievalScope",
+  "type": "object"
+}

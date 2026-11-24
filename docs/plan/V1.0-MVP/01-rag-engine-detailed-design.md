@@ -152,6 +152,8 @@ stateDiagram-v2
 
 ### 4.2 ParsedDocument 契约
 
+**契约落实（2026-11-24）：** P0-04-04 的实际 ParsedDocument、SourceLocation、Chunk 来源/父子关系与版本映射见 [解析与检索契约](../../api/parsing-retrieval-contracts.md)。以下为原最小草案；规范模型使用完整 DocumentVersionRef、parser_name、明确的格式位置与元数据，不接收任意 SDK 对象/字典。Markdown/DOCX 不虚构 PDF 页码。
+
 ```python
 class ParsedDocument:
     document_id: str
@@ -336,6 +338,8 @@ Context Budget Manager 输入：
 事件顺序和字段形成 API 契约；断线恢复策略由客户端携带 message / cursor 信息实现，第一期可先支持重新发起，不承诺无损续传。
 
 ## 6. Retriever Contract
+
+**契约落实（2026-11-24）：** 正式名称继续使用 RetrievalRequest/Result，公共业务选择、内部 AccessContext/当前事实、结果来源与前后授权规则见 [解析与检索契约](../../api/parsing-retrieval-contracts.md) 及 [统一契约 2.3](../../architecture/统一契约与跨版本演进规则.md#23-v10-解析chunk-与-retriever-契约)。以下任意字典为原草案，实际源码采用明确的 RetrievalFilters/ScoreComponents/ChunkSource。POC SearchQuery/AuthorizedSearchScope 仍是独立 Adapter 协议，正式联网 Retriever 在 P3/P4 集成。
 
 ```python
 class RetrievalRequest:

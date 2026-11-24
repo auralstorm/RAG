@@ -2,6 +2,7 @@ import type { components as ApiComponents } from './generated/openapi';
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';
+import type { components as RetrievalComponents } from './generated/retrieval';
 
 export type {
   paths as ApiPaths,
@@ -34,6 +35,18 @@ export type IngestionProgress =
 export type IndexVersion = KnowledgeComponents['schemas']['IndexVersion'];
 export type IndexPublication =
   KnowledgeComponents['schemas']['IndexPublication'];
+export type RetrievalSelection =
+  RetrievalComponents['schemas']['RetrievalSelection'];
+export type RetrievalFilters =
+  RetrievalComponents['schemas']['RetrievalFilters'];
+export type RetrievalResult = RetrievalComponents['schemas']['RetrievalResult'];
+export type RetrievedChunk = RetrievalComponents['schemas']['RetrievedChunk'];
+export type RetrievalDiagnostics =
+  RetrievalComponents['schemas']['RetrievalDiagnostics'];
+export type ChunkSource = RetrievalComponents['schemas']['ChunkSource'];
+export type ChunkSourceSpan = RetrievalComponents['schemas']['ChunkSourceSpan'];
+export type ChunkMetadata = RetrievalComponents['schemas']['ChunkMetadata'];
+export type ScoreComponents = RetrievalComponents['schemas']['ScoreComponents'];
 export type PageResponse<Item> = Omit<
   CommonComponents['schemas']['PageResponse'],
   'items'

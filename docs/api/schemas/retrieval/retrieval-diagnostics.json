@@ -1,0 +1,46 @@
+{
+  "$defs": {
+    "ConfigurationVersion": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "\\S",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "config_version": {
+      "$ref": "#/$defs/ConfigurationVersion"
+    },
+    "elapsed_ms": {
+      "minimum": 0,
+      "title": "Elapsed Ms",
+      "type": "number"
+    },
+    "returned_chunk_count": {
+      "minimum": 0,
+      "title": "Returned Chunk Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "trace_id": {
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Trace Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "trace_id",
+    "config_version",
+    "returned_chunk_count",
+    "elapsed_ms"
+  ],
+  "title": "RetrievalDiagnostics",
+  "type": "object"
+}
