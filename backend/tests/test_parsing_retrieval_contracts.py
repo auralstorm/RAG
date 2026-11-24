@@ -7,6 +7,18 @@ from uuid import UUID
 import pytest
 from app.modules.chunking.application.validation import validate_chunk_set
 from app.modules.chunking.domain.contracts import Chunk, ChunkMetadata, ChunkRole, ChunkSource, ChunkSourceSpan
+from app.modules.conversations.application.messages import (
+    complete_sourced_answer,
+    require_owned_conversation,
+    require_readable_message,
+)
+from app.modules.conversations.domain.contracts import (
+    Conversation,
+    Message,
+    MessageRole,
+    MessageStatus,
+    StoredConversation,
+)
 from app.modules.documents.domain.contracts import (
     Document,
     DocumentAccessPolicy,
@@ -296,6 +308,167 @@ def result() -> RetrievalResult:
             trace_id="a" * 32, config_version="retrieval-v1", returned_chunk_count=1, elapsed_ms=10
         ),
     )
+
+
+def pending_answer() -> tuple[StoredConversation, Message]:
+    conversation = Conversation(id=UUID(int=20), title="问答", created_at=NOW, updated_at=NOW)
+    return StoredConversation(conversation=conversation, owner_subject_id=USER), Message(
+        id=UUID(int=21),
+        conversation_id=conversation.id,
+        sequence=2,
+        role=MessageRole.ASSISTANT,
+        status=MessageStatus.GENERATING,
+        created_at=NOW,
+        trace_id=result().diagnostics.trace_id,
+    )
+
+
+def test_answer_citation_uses_authoritative_metadata_and_can_be_read_by_the_owner() -> None:
+    request, facts = scenario()
+    owner, pending = pending_answer()
+    retrieved = result()
+    completed = complete_sourced_answer(
+        owner,
+        pending,
+        "答案 [[cite:1]]，补充说明 [[cite:1]]",
+        scope=prepare_retrieval_scope(request, facts, now=NOW),
+        retrieval=retrieved,
+        context_chunk_ids=(CHUNK,),
+        fresh_facts=facts,
+        now=NOW,
+    )
+    assert completed.evidence_versions == (reference(),)
+    (citation,) = completed.message.citations
+    assert completed.message.status is MessageStatus.COMPLETED
+    assert citation.title == facts.documents[0].published.document.title
+    assert citation.excerpt == TEXT
+    assert citation.locations == tuple(span.location for span in retrieved.chunks[0].source.spans)
+    assert (
+        require_readable_message(
+            owner, completed, request.access_context, facts.authorization, facts.documents, now=NOW
+        )
+        == completed.message
+    )
+
+
+@pytest.mark.parametrize("answer", ["答案", "答案 [[cite:2]]", "答案 [[cite:01]]", "答案 [[cite:1]] [[CITE:1]]"])
+def test_answer_rejects_missing_unknown_or_malformed_markers(answer: str) -> None:
+    request, facts = scenario()
+    owner, pending = pending_answer()
+    with pytest.raises(ValueError, match="citation"):
+        complete_sourced_answer(
+            owner,
+            pending,
+            answer,
+            scope=prepare_retrieval_scope(request, facts, now=NOW),
+            retrieval=result(),
+            context_chunk_ids=(CHUNK,),
+            fresh_facts=facts,
+            now=NOW,
+        )
+
+
+@pytest.mark.parametrize("selection", [(), (CHUNK, CHUNK), (UUID(int=99),)])
+def test_model_cannot_cite_chunks_outside_the_prompt_selection(selection: tuple[UUID, ...]) -> None:
+    request, facts = scenario()
+    owner, pending = pending_answer()
+    with pytest.raises(ValueError, match="evidence"):
+        complete_sourced_answer(
+            owner,
+            pending,
+            "答案 [[cite:1]]",
+            scope=prepare_retrieval_scope(request, facts, now=NOW),
+            retrieval=result(),
+            context_chunk_ids=selection,
+            fresh_facts=facts,
+            now=NOW,
+        )
+
+
+def test_conversation_owner_check_conceals_missing_deleted_and_foreign_records() -> None:
+    request, facts = scenario()
+    owner, _pending = pending_answer()
+    for record in (None, changed(owner, owner_subject_id=UUID(int=99)), changed(owner, deleted_at=NOW)):
+        with pytest.raises(LookupError, match="Conversation is unavailable"):
+            require_owned_conversation(record, request.access_context, facts.authorization, now=NOW)
+    with pytest.raises(PermissionError, match="current Chat identity"):
+        require_owned_conversation(owner, None, facts.authorization, now=NOW)
+    admin = changed(request.access_context, purpose=AccessPurpose.ADMIN)
+    with pytest.raises(PermissionError, match="current Chat identity"):
+        require_owned_conversation(owner, admin, changed(facts.authorization, purpose=AccessPurpose.ADMIN), now=NOW)
+
+
+def test_revocation_hides_the_entire_answer_during_completion_and_history() -> None:
+    request, facts = scenario()
+    owner, pending = pending_answer()
+    scope = prepare_retrieval_scope(request, facts, now=NOW)
+    completed = complete_sourced_answer(
+        owner,
+        pending,
+        "答案 [[cite:1]]",
+        scope=scope,
+        retrieval=result(),
+        context_chunk_ids=(CHUNK,),
+        fresh_facts=facts,
+        now=NOW,
+    )
+    document = facts.documents[0]
+    policy_id = UUID(int=50)
+    restricted = changed(
+        document,
+        published=changed(document.published, document=changed(document.published.document, acl_policy_id=policy_id)),
+        policy=changed(document.policy, acl_policy_id=policy_id, allowed_subject_ids=frozenset({UUID(int=99)})),
+    )
+    with pytest.raises(PermissionError):
+        complete_sourced_answer(
+            owner,
+            pending,
+            "答案 [[cite:1]]",
+            scope=scope,
+            retrieval=result(),
+            context_chunk_ids=(CHUNK,),
+            fresh_facts=changed(facts, documents=(restricted,)),
+            now=NOW,
+        )
+    for documents in ((), (restricted,)):
+        with pytest.raises(PermissionError):
+            require_readable_message(owner, completed, request.access_context, facts.authorization, documents, now=NOW)
+    with pytest.raises(LookupError, match="Message is unavailable"):
+        require_readable_message(
+            owner,
+            changed(completed, message=changed(completed.message, conversation_id=UUID(int=99))),
+            request.access_context,
+            facts.authorization,
+            facts.documents,
+            now=NOW,
+        )
+
+
+def test_history_requires_uncited_dependencies_and_valid_message_states() -> None:
+    request, facts = scenario()
+    owner, pending = pending_answer()
+    with pytest.raises(ValidationError, match="Only completed"):
+        changed(pending, status=MessageStatus.CANCELLED, content="partial private output")
+    with pytest.raises(ValidationError, match="matching ordered"):
+        changed(pending, status=MessageStatus.COMPLETED, content="answer without evidence")
+    completed = complete_sourced_answer(
+        owner,
+        pending,
+        "答案 [[cite:1]]",
+        scope=prepare_retrieval_scope(request, facts, now=NOW),
+        retrieval=result(),
+        context_chunk_ids=(CHUNK,),
+        fresh_facts=facts,
+        now=NOW,
+    )
+    uncited = changed(reference(), document_id=UUID(int=90), document_version_id=UUID(int=91))
+    dependent = changed(completed, evidence_versions=(*completed.evidence_versions, uncited))
+    with pytest.raises(PermissionError, match="evidence version is unavailable"):
+        require_readable_message(
+            owner, dependent, request.access_context, facts.authorization, facts.documents, now=NOW
+        )
+    with pytest.raises(ValidationError, match="recorded evidence dependencies"):
+        changed(completed, evidence_versions=())
 
 
 def test_parser_output_is_bound_to_authorized_source_version() -> None:

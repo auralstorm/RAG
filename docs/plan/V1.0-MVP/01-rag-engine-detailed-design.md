@@ -314,6 +314,8 @@ Context Budget Manager 输入：
 
 ### 5.7 Citation 生成与验证
 
+正式引用制品与确认规则见 [会话、消息与引用契约](../../api/chat-contracts.md)。正式制品使用格式化 locations 和平台生成的 excerpt。以下列表保留初始设计，来源访问和 SSE 按 P4 集成。
+
 每条引用至少包含：
 `citation_id, document_id, document_version, chunk_id, title, page_no, heading_path, excerpt, score, source_uri`。
 

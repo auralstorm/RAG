@@ -450,6 +450,36 @@
       "name": "PreparedModelCall",
       "path": "schemas/internal/prepared-model-call.json",
       "visibility": "internal"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Conversation",
+      "path": "schemas/chat/conversation.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Message",
+      "path": "schemas/chat/message.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "chat",
+      "name": "Citation",
+      "path": "schemas/chat/citation.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredConversation",
+      "path": "schemas/internal/stored-conversation.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredMessage",
+      "path": "schemas/internal/stored-message.json",
+      "visibility": "internal"
     }
   ]
 }

@@ -77,3 +77,11 @@ def test_model_registry_types_exclude_credentials_vendor_routes_and_prompt_proto
     ):
         assert f"readonly {field}:" not in generated
     assert "readonly Provider:" in generated and "readonly ModelUsage:" in generated
+
+
+def test_chat_types_exclude_private_owner_and_evidence_dependencies() -> None:
+    generated = (ROOT / "frontend/packages/api-client/src/generated/chat.ts").read_text()
+    for name in ("Conversation", "Message", "Citation"):
+        assert f"readonly {name}:" in generated
+    for field in ("StoredConversation", "StoredMessage", "owner_subject_id", "evidence_versions", "deleted_at"):
+        assert f"readonly {field}:" not in generated

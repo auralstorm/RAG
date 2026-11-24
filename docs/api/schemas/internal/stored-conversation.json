@@ -1,0 +1,80 @@
+{
+  "$defs": {
+    "Conversation": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Title",
+          "type": "string"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/UtcTimestamp"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "Conversation",
+      "type": "object"
+    },
+    "UtcTimestamp": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "conversation": {
+      "$ref": "#/$defs/Conversation"
+    },
+    "deleted_at": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UtcTimestamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "owner_subject_id": {
+      "format": "uuid",
+      "title": "Owner Subject Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversation",
+    "owner_subject_id"
+  ],
+  "title": "StoredConversation",
+  "type": "object"
+}

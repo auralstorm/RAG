@@ -12,6 +12,13 @@ from app.api.schemas.common import ApiErrorEnvelope, PageResponse, PaginationQue
 from app.core.config import Settings
 from app.main import create_app
 from app.modules.chunking.domain.contracts import Chunk, ChunkMetadata, ChunkSource, ChunkSourceSpan
+from app.modules.conversations.domain.contracts import (
+    Citation,
+    Conversation,
+    Message,
+    StoredConversation,
+    StoredMessage,
+)
 from app.modules.documents.domain.contracts import (
     Document,
     DocumentAccessPolicy,
@@ -101,7 +108,7 @@ class SchemaSource:
 
     name: str
     path: str
-    frontend_group: Literal["common", "iam", "knowledge", "retrieval", "models"] | None
+    frontend_group: Literal["common", "iam", "knowledge", "retrieval", "models", "chat"] | None
     generate: Callable[[], object]
 
 
@@ -233,6 +240,11 @@ SCHEMAS = (
     SchemaSource("TokenMeasurement", "internal/token-measurement.json", None, TokenMeasurement.model_json_schema),
     SchemaSource("ModelCallFacts", "internal/model-call-facts.json", None, ModelCallFacts.model_json_schema),
     SchemaSource("PreparedModelCall", "internal/prepared-model-call.json", None, PreparedModelCall.model_json_schema),
+    SchemaSource("Conversation", "chat/conversation.json", "chat", Conversation.model_json_schema),
+    SchemaSource("Message", "chat/message.json", "chat", Message.model_json_schema),
+    SchemaSource("Citation", "chat/citation.json", "chat", Citation.model_json_schema),
+    SchemaSource("StoredConversation", "internal/stored-conversation.json", None, StoredConversation.model_json_schema),
+    SchemaSource("StoredMessage", "internal/stored-message.json", None, StoredMessage.model_json_schema),
 )
 
 

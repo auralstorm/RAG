@@ -4,6 +4,7 @@ import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';
 import type { components as RetrievalComponents } from './generated/retrieval';
 import type { components as ModelComponents } from './generated/models';
+import type { components as ChatComponents } from './generated/chat';
 
 export type {
   paths as ApiPaths,
@@ -53,6 +54,9 @@ export type ModelConfig = ModelComponents['schemas']['ModelConfig'];
 export type ModelUsage = ModelComponents['schemas']['ModelUsage'];
 export type ModelCost = ModelComponents['schemas']['ModelCost'];
 export type ModelFailure = ModelComponents['schemas']['ModelFailure'];
+export type Conversation = ChatComponents['schemas']['Conversation'];
+export type Message = ChatComponents['schemas']['Message'];
+export type Citation = ChatComponents['schemas']['Citation'];
 export type PageResponse<Item> = Omit<
   CommonComponents['schemas']['PageResponse'],
   'items'
