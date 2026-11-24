@@ -1,0 +1,7 @@
+docs/
+AGENTS.md
+pnpm-lock.yaml
+uv.lock
+node_modules/
+dist/
+.venv/
