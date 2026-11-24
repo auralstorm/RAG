@@ -14,6 +14,7 @@ Docker Desktop 建议分配至少 8 GB 内存，以同时运行开发/测试依�
 | `make infra-down` | 停止并移除本项目开发容器及网络，保留数据卷 |
 | `make infra-reset` | 清空本项目开发数据卷，再重新启动；会删除该环境中的数据 |
 | `make infra-test` | 在独立测试环境验证持久化、故障与重置，结束后清理测试卷；测试数据会被丢弃 |
+| `make poc-storage` | 在独立 RustFS POC 项目验证权限、生命周期回收及新卷备份恢复，结束后清理 POC 卷；使用相同测试端口，不能与 `make infra-test` 同时运行 |
 
 管理命令可用 `PROFILE=test` 选择测试环境，例如 `make infra-status PROFILE=test`。脚本只接受 `development` 和 `test`，分别绑定 `enterprise-rag-dev`、`enterprise-rag-test` Compose 项目，不管理其他项目的容器或卷。
 

@@ -76,6 +76,8 @@ make check
 
 技术检索 POC 使用 `make poc-search`：启动独立 Elasticsearch、验证客户端 RRF 与权限/索引边界，并保存 `.poc-results/search/` 报告。普通测试不启动 Docker，完整 POC 状态见 [P0-03 进度](docs/plan/V1.0-MVP/implementation/P0-03.md)。
 
+对象存储 POC 使用 `make poc-storage`：在独立 RustFS 项目验证受限身份、Service Account/STS、生命周期回收与空新卷备份恢复，并保存 `.poc-results/storage/` 报告。测试结束清理 POC 卷；使用测试端口，不能与 `make infra-test` 同时运行。功能证据与剩余准入见 [POC-08 记录](docs/plan/V1.0-MVP/implementation/POC-08-storage.md)。
+
 需要针对变更检查时使用 `make lint`、`make format-check`、`make typecheck`、`make test` 或 `make build`。前端格式化使用 `pnpm format`，Python 格式化使用 `uv run --locked ruff format backend scripts`。
 
 仓库检查脚本检查本地链接、误纳入版本控制的环境文件、常见 OpenAI Key 和私钥格式；它不替代专门的凭据扫描、权限测试或安全评审。历史审查原文和规划文档保留原有格式，前端 Prettier 范围不包含这些文档。
