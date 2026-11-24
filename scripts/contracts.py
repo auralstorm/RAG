@@ -11,6 +11,7 @@ from typing import Literal
 from app.api.schemas.common import ApiErrorEnvelope, PageResponse, PaginationQuery
 from app.core.config import Settings
 from app.main import create_app
+from app.modules.audit.domain.contracts import AuditEvent, StoredAuditEvent
 from app.modules.chunking.domain.contracts import Chunk, ChunkMetadata, ChunkSource, ChunkSourceSpan
 from app.modules.conversations.domain.contracts import (
     Citation,
@@ -97,6 +98,7 @@ from app.modules.search.domain.contracts import (
     PublishedDocumentSnapshot,
     StoredIndexVersion,
 )
+from app.modules.traces.domain.contracts import Trace, TraceIdentityLink, TraceSpan
 from pydantic import JsonValue, RootModel, TypeAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,7 +110,7 @@ class SchemaSource:
 
     name: str
     path: str
-    frontend_group: Literal["common", "iam", "knowledge", "retrieval", "models", "chat"] | None
+    frontend_group: Literal["common", "iam", "knowledge", "retrieval", "models", "chat", "observability"] | None
     generate: Callable[[], object]
 
 
@@ -245,6 +247,11 @@ SCHEMAS = (
     SchemaSource("Citation", "chat/citation.json", "chat", Citation.model_json_schema),
     SchemaSource("StoredConversation", "internal/stored-conversation.json", None, StoredConversation.model_json_schema),
     SchemaSource("StoredMessage", "internal/stored-message.json", None, StoredMessage.model_json_schema),
+    SchemaSource("Trace", "observability/trace.json", "observability", Trace.model_json_schema),
+    SchemaSource("TraceSpan", "observability/trace-span.json", "observability", TraceSpan.model_json_schema),
+    SchemaSource("AuditEvent", "observability/audit-event.json", "observability", AuditEvent.model_json_schema),
+    SchemaSource("TraceIdentityLink", "internal/trace-identity-link.json", None, TraceIdentityLink.model_json_schema),
+    SchemaSource("StoredAuditEvent", "internal/stored-audit-event.json", None, StoredAuditEvent.model_json_schema),
 )
 
 

@@ -240,6 +240,8 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 
 会话归属、消息状态与版本化引用采用 [会话、消息与引用契约](../../api/chat-contracts.md)。下列为表设计草案，物理映射、迁移与清理按 P4 验收。
 
+Trace、私有身份关联及 AuditEvent 的规范字段见 [Trace 与 AuditEvent 契约](../../api/trace-audit-contracts.md)。相关表的物理映射和保存规则按 P1/P5 验收。
+
 #### `conversations`
 - `id UUID PK`
 - `employee_id UUID FK`

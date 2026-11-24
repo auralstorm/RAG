@@ -480,6 +480,36 @@
       "name": "StoredMessage",
       "path": "schemas/internal/stored-message.json",
       "visibility": "internal"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "Trace",
+      "path": "schemas/observability/trace.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "TraceSpan",
+      "path": "schemas/observability/trace-span.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": "observability",
+      "name": "AuditEvent",
+      "path": "schemas/observability/audit-event.json",
+      "visibility": "public"
+    },
+    {
+      "frontend_group": null,
+      "name": "TraceIdentityLink",
+      "path": "schemas/internal/trace-identity-link.json",
+      "visibility": "internal"
+    },
+    {
+      "frontend_group": null,
+      "name": "StoredAuditEvent",
+      "path": "schemas/internal/stored-audit-event.json",
+      "visibility": "internal"
     }
   ]
 }

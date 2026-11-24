@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, AwareDatetime, BaseModel, ConfigDict
+from pydantic import AfterValidator, AwareDatetime, BaseModel, ConfigDict, Field
 
 
 def utc_timestamp(value: datetime) -> datetime:
@@ -11,6 +11,16 @@ def utc_timestamp(value: datetime) -> datetime:
 
 
 type UtcTimestamp = Annotated[AwareDatetime, AfterValidator(utc_timestamp)]
+
+
+def nonzero_identifier(value: str) -> str:
+    if not value.strip("0"):
+        raise ValueError("Correlation identifiers must be nonzero")
+    return value
+
+
+type TraceId = Annotated[str, Field(pattern=r"^[0-9a-f]{32}$"), AfterValidator(nonzero_identifier)]
+type SpanId = Annotated[str, Field(pattern=r"^[0-9a-f]{16}$"), AfterValidator(nonzero_identifier)]
 
 
 class VersionedContract(BaseModel):

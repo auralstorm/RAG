@@ -390,6 +390,8 @@ Contract 不包含 Elasticsearch 专有字段。未来可替换搜索引擎，�
 
 ## 8. Trace 与诊断
 
+阶段、诊断字段及受控内容的边界见 [Trace 与 AuditEvent 契约](../../api/trace-audit-contracts.md)。
+
 每次问答一个 Trace；一个 Conversation 可包含多个 Trace。建议 Span：
 - `auth.policy`
 - `query.route`
