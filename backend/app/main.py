@@ -7,7 +7,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.adapters.infrastructure import InfrastructureMonitor
+from app.api.errors import common_error_responses, install_error_handlers
 from app.api.health import create_health_router
+from app.api.middleware.request_context import RequestContextMiddleware
 from app.api.v1.router import router as api_router
 from app.core.config import Settings, load_settings
 
@@ -25,13 +27,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         finally:
             await monitor.close()
 
-    application = FastAPI(title=configuration.app_name, version="0.1.0", lifespan=lifespan)
+    application = FastAPI(
+        title=configuration.app_name, version="0.1.0", lifespan=lifespan, responses=common_error_responses()
+    )
+    install_error_handlers(application)
+    application.add_middleware(RequestContextMiddleware)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=configuration.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "Idempotency-Key"],
+        allow_headers=["Content-Type", "Authorization", "Idempotency-Key", "traceparent"],
+        expose_headers=["X-Request-ID", "X-Trace-ID", "traceparent"],
     )
     application.include_router(create_health_router(monitor.check))
     application.include_router(api_router)

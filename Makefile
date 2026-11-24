@@ -1,4 +1,4 @@
-.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check infra-up infra-down infra-status infra-init infra-reset infra-test poc-search poc-storage
+.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test poc-search poc-storage
 
 PROFILE ?= development
 
@@ -35,7 +35,13 @@ test:
 build:
 	pnpm build
 
-check: lint format-check typecheck test build
+contracts:
+	uv run --locked python scripts/contracts.py
+
+contracts-check:
+	uv run --locked python scripts/contracts.py --check
+
+check: lint format-check typecheck test build contracts-check
 	uv run --locked python scripts/check_repository.py
 	git diff --check
 

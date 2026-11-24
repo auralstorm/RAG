@@ -20,7 +20,7 @@ const forbidImports = (patterns) => [
 export default defineConfig([
   globalIgnores(['**/dist/**', '**/node_modules/**']),
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },
   },

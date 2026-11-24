@@ -1,0 +1,27 @@
+{
+  "$defs": {
+    "PageNumber": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "PageSize": {
+      "maximum": 100,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Bound page selection at the HTTP boundary; the limit is not a capacity SLO.",
+  "properties": {
+    "page": {
+      "$ref": "#/$defs/PageNumber",
+      "default": 1
+    },
+    "page_size": {
+      "$ref": "#/$defs/PageSize",
+      "default": 20
+    }
+  },
+  "title": "PaginationQuery",
+  "type": "object"
+}

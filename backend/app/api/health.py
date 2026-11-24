@@ -4,12 +4,13 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import APIRouter, Response
 
+from app.api.schemas.common import LivenessResponse
 from app.core.readiness import ReadinessReport
 
 
-async def liveness() -> dict[str, str]:
+async def liveness() -> LivenessResponse:
     """Report that the API process can serve HTTP requests."""
-    return {"status": "ok"}
+    return LivenessResponse()
 
 
 def create_health_router(check: Callable[[], Awaitable[ReadinessReport]]) -> APIRouter:

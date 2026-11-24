@@ -1,0 +1,14 @@
+{
+  "name": "@enterprise-rag/api-codegen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/generate.mjs"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3"
+  }
+}

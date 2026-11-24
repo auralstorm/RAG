@@ -5,12 +5,15 @@ import { createApiClient } from './index';
 
 let status = 200;
 let payload: object = { status: 'ok' };
+let rawBody: string | undefined;
+let correlationHeaders: Record<string, string> = {};
 let baseUrl = '';
 const server = createServer((request, response) => {
   response.writeHead(request.url === '/health/live' ? status : 404, {
     'Content-Type': 'application/json',
+    ...correlationHeaders,
   });
-  response.end(JSON.stringify(payload));
+  response.end(rawBody ?? JSON.stringify(payload));
 });
 
 beforeAll(async () => {
@@ -24,6 +27,8 @@ beforeAll(async () => {
 beforeEach(() => {
   status = 200;
   payload = { status: 'ok' };
+  rawBody = undefined;
+  correlationHeaders = {};
 });
 
 afterAll(async () => {
@@ -60,4 +65,62 @@ it('propagates caller cancellation', async () => {
   await expect(
     createApiClient(baseUrl).getLiveness(controller.signal),
   ).rejects.toMatchObject({ name: 'AbortError' });
+});
+
+it('reads a validated public error and its correlation metadata', async () => {
+  status = 422;
+  payload = {
+    error: {
+      code: 'API_VALIDATION_ERROR',
+      message: '请求参数不合法',
+      request_id: '12345678-1234-4321-8123-123456789abc',
+      retryable: false,
+      details: { error_count: 1 },
+    },
+  };
+  correlationHeaders = { 'X-Trace-ID': '1234567890abcdef1234567890abcdef' };
+  await expect(createApiClient(baseUrl).getLiveness()).rejects.toMatchObject({
+    status: 422,
+    code: 'API_VALIDATION_ERROR',
+    message: '请求参数不合法',
+    requestId: '12345678-1234-4321-8123-123456789abc',
+    traceId: '1234567890abcdef1234567890abcdef',
+    retryable: false,
+    details: { error_count: 1 },
+  });
+});
+
+it('rejects malformed error envelopes without displaying their message', async () => {
+  status = 500;
+  payload = {
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: 'private diagnostic',
+      request_id: 'not-a-uuid',
+      retryable: false,
+      details: {},
+    },
+  };
+  await expect(createApiClient(baseUrl).getLiveness()).rejects.toMatchObject({
+    status: 500,
+    message: 'HTTP request failed (500)',
+    code: undefined,
+    requestId: undefined,
+  });
+});
+
+it('handles non-JSON HTTP errors using safe headers and a status fallback', async () => {
+  status = 503;
+  rawBody = '<html>private upstream diagnostic</html>';
+  correlationHeaders = {
+    'X-Request-ID': '12345678-1234-4321-8123-123456789abc',
+    'X-Trace-ID': 'invalid-trace',
+  };
+  await expect(createApiClient(baseUrl).getLiveness()).rejects.toMatchObject({
+    status: 503,
+    message: 'HTTP request failed (503)',
+    requestId: '12345678-1234-4321-8123-123456789abc',
+    traceId: undefined,
+    retryable: false,
+  });
 });

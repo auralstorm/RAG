@@ -80,6 +80,8 @@ make check
 
 需要针对变更检查时使用 `make lint`、`make format-check`、`make typecheck`、`make test` 或 `make build`。前端格式化使用 `pnpm format`，Python 格式化使用 `uv run --locked ruff format backend scripts`。
 
+公共 HTTP 契约与生成制品见 [契约入口](docs/api/README.md)。修改后端 DTO/路由后运行 `make contracts`，使用 `make contracts-check` 核对实际 OpenAPI、JSON Schema 与前端类型；此检查纳入 `make check`。当前主线状态见 [P0-04 进度](docs/plan/V1.0-MVP/implementation/P0-04.md)，Docling 实际解析验证按用户决定延后到 P3-01 正式集成。
+
 仓库检查脚本检查本地链接、误纳入版本控制的环境文件、常见 OpenAI Key 和私钥格式；它不替代专门的凭据扫描、权限测试或安全评审。历史审查原文和规划文档保留原有格式，前端 Prettier 范围不包含这些文档。
 
 CI 配置见 [.github/workflows/ci.yml](.github/workflows/ci.yml)，执行相同 `make install` 和 `make check`，并用 commitlint 校验新增提交信息。服务端 CI 和 PR 的执行状态以实际运行结果为准。

@@ -338,6 +338,8 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 - 版本：不兼容变化升主版本；新增可选字段保持兼容。
 - API 层只暴露平台 DTO，不暴露 ES Query DSL、Celery Task ID 内部细节或供应商密钥。
 
+公共 HTTP 契约的实际源码与生成制品见 [契约入口](../../api/README.md)，`make contracts` / `make contracts-check` 生成与核对当前真实 OpenAPI、JSON Schema 和前端类型。当前分页输入默认 page=1、page_size=20，page_size 上限 100；此为 HTTP 输入边界，不代表 MVP 容量/并发门槛已确认。业务列表、身份登录和下述 API 清单仍按对应主线任务交付。
+
 ## 6. API 清单（MVP）
 
 ### 6.1 Authentication / IAM
