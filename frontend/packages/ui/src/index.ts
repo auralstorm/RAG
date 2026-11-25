@@ -1,4 +1,3 @@
-export { ApplicationShell } from './ApplicationShell';
 export { AccessScreen } from './AccessScreen';
 export {
   SessionProvider,
