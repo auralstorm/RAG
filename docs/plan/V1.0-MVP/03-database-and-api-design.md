@@ -48,6 +48,8 @@ erDiagram
 
 **逻辑契约落实（2026-11-24）：** P0-04-02 以 User、ExternalIdentity 与 SubjectBinding 明确规范平台主体及既有管理员/员工来源映射，字段、状态、权限与 Schema 见 [身份与授权契约](../../api/iam-policy-contracts.md) 和 [统一契约 2.1](../../architecture/统一契约与跨版本演进规则.md#21-v10-平台主体与身份授权契约)。下列 admin_users/employees 仍保留为原逻辑设计；实际 users/identities、来源关联和 FK/唯一约束由 P1-03 在调查实际消费者后冻结，本轮没有物理表迁移。
 
+**物理迁移落实（2026-11-25）：** P1-03 确认实际代码和本地开发库没有存量来源档案表或业务外键，采用 users/identities/subject_bindings、user_roles 及权限/审计基础表；不新建平行的 admin_users/employees/admin_user_roles。规范主体及显式来源 ID 语义保持兼容，唯一/FK、软删除、角色保护与审计追加写入约束以 [0002 迁移](../../../backend/migrations/versions/0002_iam_audit.py) 为准。调查、精确身份索引及回退边界见 [P1-03 实施记录](implementation/P1-03.md)。以下清单继续作为原逻辑设计输入，不代表当前物理 DDL。
+
 #### `admin_users`
 - `id UUID PK`
 - `username VARCHAR(128) UNIQUE`

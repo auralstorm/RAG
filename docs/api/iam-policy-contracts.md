@@ -6,7 +6,7 @@
 
 源码此前只有健康检查、公共 HTTP 契约与基础设施/Search Adapter，没有 IAM 表模型、迁移或身份路由。对本项目开发 PostgreSQL 的只读表盘点未发现业务基础表；本结论仅针对本地开发数据库。
 
-V1.0 数据库详设使用 admin_users/employees，完整实施计划 P1-03 使用 users/identities。[IAM 契约](../../backend/app/modules/iam/domain/contracts.py) 以 User 表达稳定的平台逻辑主体，以 SubjectBinding 显式关联既有管理员/员工主体；本轮未选择或执行物理拆表、UUID 回填、表重命名与数据迁移。P1-03 仍需核对实际消费者和 FK/唯一约束，再冻结迁移制品。
+V1.0 数据库详设使用 admin_users/employees，完整实施计划 P1-03 使用 users/identities。[IAM 契约](../../backend/app/modules/iam/domain/contracts.py) 以 User 表达稳定的平台逻辑主体，以 SubjectBinding 显式关联既有管理员/员工主体。P1-03 已核对实际消费者和本地开发库：没有来源档案表、业务 FK 或待迁移用户；新增 users/identities/subject_bindings 和权限/审计基础表，没有 UUID 回填或表重命名。精确身份唯一约束、来源关联和 FK、删除及回退策略见 [P1-03 实施记录](../plan/V1.0-MVP/implementation/P1-03.md)。此结论不覆盖未经盘点的外部数据库。
 
 | 输入来源 | 唯一选择语义 | 处理规则 |
 |---|---|---|
@@ -19,14 +19,14 @@ V1.0 数据库详设使用 admin_users/employees，完整实施计划 P1-03 使�
 
 ## 公共模型
 
-所有 IAM/Policy 对象使用字符串 schema_version="1.0"，当前读者拒绝其他版本和未知字段；此版本独立于产品版本、Policy 事实版本和数据库 revision。集合关系与并发唯一性还需实际数据库约束，DTO 校验不代替事务/FK 验证。
+所有 IAM/Policy 对象使用字符串 schema_version="1.0"，当前读者拒绝其他版本和未知字段；此版本独立于产品版本、Policy 事实版本和数据库 revision。P1-03 已为身份、角色及关系落实数据库唯一/FK 约束；DTO 校验不代替事务和真实数据库验证。
 
 | 模型 | 必需业务字段与限制 |
 |---|---|
 | User | id、display_name、status、created_at、updated_at；状态为 ACTIVE/DISABLED/LOCKED/PENDING_DEPARTURE/DEPARTED，仅 ACTIVE 可用；时间有时区并归一 UTC，更新不得早于创建 |
 | Role | id、code、name、is_system、protected；三个固定代码 SUPER_ADMIN/KB_ADMIN/AUDIT_READONLY 必须为受保护系统角色，自定义角色不能占用这些代码或声明为系统角色 |
 | Permission | id、code、resource、action、description；code 精确等于 resource.action，采用小写标识；角色集合与资源 ACL 分别计算 |
-| UserRole / RolePermission | user_id + role_id / role_id + permission_id；关系 ID 指向规范实体，实际 FK/复合唯一约束由 P1-03 交付 |
+| UserRole / RolePermission | user_id + role_id / role_id + permission_id；关系 ID 指向规范实体，P1-03 已落实 FK/复合主键约束 |
 | ResourceGrant | id、kb_id、principal_type、principal_id、permission；permission 为 READ/MANAGE，MANAGE 包含 READ，READ 不包含 MANAGE |
 
 ResourceGrant 保留 ADMIN_USER/EMPLOYEE/ROLE/GROUP 来源类型，并增加 USER 表达平台 User.id。旧来源类型的 principal_id 保持原语义，授权时经明确映射读取；未建立关联时拒绝，不因 UUID 值碰巧等于 User.id 而授权。角色和组成员身份不授予未明确关联的 KB。

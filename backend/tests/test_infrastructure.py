@@ -15,6 +15,7 @@ from app.core.config import Settings, load_settings
 from app.main import create_app
 from fastapi.testclient import TestClient
 from psycopg import AsyncConnection, sql
+from tests.iam_schema import verify_iam_schema
 from tests.storage_protocol import verify_storage_protocol
 
 from scripts.infrastructure import compose, initialize_config, reset, up
@@ -33,7 +34,8 @@ async def verify_database_foundation(settings: Settings) -> None:
             assert await asyncio.to_thread(run_migration, isolated, "current") == ""
             await asyncio.to_thread(run_migration, isolated, "upgrade")
             await asyncio.to_thread(run_migration, isolated, "upgrade")
-            assert await asyncio.to_thread(run_migration, isolated, "current") == "0001_baseline (head)"
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0002_iam_audit (head)"
+            await verify_iam_schema(isolated)
 
             async with postgres_transaction(isolated) as connection:
                 await connection.execute("CREATE TABLE transaction_probe (value text NOT NULL)")
@@ -52,8 +54,13 @@ async def verify_database_foundation(settings: Settings) -> None:
 
             await asyncio.to_thread(run_migration, isolated, "downgrade", "base")
             assert await asyncio.to_thread(run_migration, isolated, "current") == ""
+            async with postgres_transaction(isolated) as connection:
+                cursor = await connection.execute(
+                    "SELECT to_regclass('public.users'), to_regclass('public.audit_events')"
+                )
+                assert await cursor.fetchone() == (None, None)
             await asyncio.to_thread(run_migration, isolated, "upgrade")
-            assert await asyncio.to_thread(run_migration, isolated, "current") == "0001_baseline (head)"
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0002_iam_audit (head)"
         finally:
             await admin.execute(sql.SQL("DROP DATABASE {}").format(identifier))
 
