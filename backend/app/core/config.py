@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     cors_origins: list[str] = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"]
     infrastructure_enabled: bool = False
+    local_identity_config_ref: Path | None = None
+    auth_access_seconds: int = Field(default=900, ge=60, le=900)
+    auth_session_seconds: int = Field(default=86400, ge=900, le=604800)
+    auth_chat_origins: list[str] = ["http://127.0.0.1:5173", "http://127.0.0.1:4173"]
+    auth_admin_origins: list[str] = ["http://127.0.0.1:5174", "http://127.0.0.1:4174"]
     dependency_timeout: float = Field(default=2.0, gt=0, le=10)
     postgres_host: str = "127.0.0.1"
     postgres_port: int = Field(default=15432, ge=1, le=65535)
@@ -57,6 +62,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def require_local_credentials(self) -> Self:
+        if self.environment == "production" and self.local_identity_config_ref is not None:
+            raise ValueError("Local test identities are not available in production")
         if self.infrastructure_enabled:
             for name in (
                 "postgres_password",
@@ -70,7 +77,7 @@ class Settings(BaseSettings):
                     raise ValueError(f"Infrastructure credential is missing: {name}")
         return self
 
-    @field_validator("cors_origins")
+    @field_validator("cors_origins", "auth_chat_origins", "auth_admin_origins")
     @classmethod
     def require_explicit_origins(cls, origins: list[str]) -> list[str]:
         if "*" in origins:

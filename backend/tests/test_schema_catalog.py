@@ -29,7 +29,14 @@ def test_internal_identity_and_policy_schemas_are_not_exported_to_frontend() -> 
     catalog: dict[str, object] = json.loads((ROOT / "docs/api/schema-catalog.json").read_text())
     assert catalog["schema_version"] == "1.0"
     paths: dict[str, object] = create_app(Settings(infrastructure_enabled=False)).openapi()["paths"]
-    assert set(paths) == {"/health/live", "/health/ready"}
+    assert set(paths) == {
+        "/health/live",
+        "/health/ready",
+        *(
+            f"/api/v1/auth/{{application}}/{action}"
+            for action in ("config", "login", "me", "csrf", "refresh", "logout")
+        ),
+    }
 
 
 def test_internal_knowledge_facts_are_not_exported_in_public_types_or_schemas() -> None:

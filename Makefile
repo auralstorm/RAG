@@ -7,7 +7,7 @@ install:
 	pnpm install --frozen-lockfile
 
 dev-backend:
-	uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+	uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --no-proxy-headers
 
 dev-chat:
 	pnpm dev:chat
