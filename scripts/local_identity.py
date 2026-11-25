@@ -52,6 +52,7 @@ def _provision_locked(username: str, password: str, applications: list[str], pat
     account = account.model_copy(update={"password_hash": password_hash(password, account.salt)})
     configuration = LocalIdentityConfig(
         signing_key=existing.signing_key if existing else SecretStr(secrets.token_hex(48)),
+        pseudonymization_key=existing.pseudonymization_key if existing else None,
         accounts=(*(existing.accounts if existing else ()), account),
     )
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -63,6 +64,11 @@ def _provision_locked(username: str, password: str, applications: list[str], pat
                 json.dumps(
                     {
                         "signing_key": configuration.signing_key.get_secret_value(),
+                        **(
+                            {"pseudonymization_key": configuration.pseudonymization_key.get_secret_value()}
+                            if configuration.pseudonymization_key
+                            else {}
+                        ),
                         "accounts": [item.model_dump() for item in configuration.accounts],
                     }
                 )

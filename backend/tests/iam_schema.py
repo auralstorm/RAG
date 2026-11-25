@@ -113,18 +113,18 @@ async def verify_iam_schema(settings: Settings) -> None:
         )
 
         await connection.execute(
-            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'kb.read', 'kb', 'read')",
+            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'foundation_probe.read', 'foundation_probe', 'read')",
             (permission_id,),
         )
         await rejected(
             connection,
-            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'kb.read', 'kb', 'read')",
+            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'foundation_probe.read', 'foundation_probe', 'read')",
             (uuid4(),),
             UniqueViolation,
         )
         await rejected(
             connection,
-            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'kb.manage', 'kb', 'read')",
+            "INSERT INTO permissions (id, code, resource, action) VALUES (%s, 'foundation_probe.manage', 'foundation_probe', 'read')",
             (uuid4(),),
         )
         for table, columns, values in (

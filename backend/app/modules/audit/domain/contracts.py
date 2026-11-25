@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 
 from app.core.contracts import TraceId, UtcTimestamp, VersionedContract
 from app.modules.iam.domain.contracts import SystemRoleCode, UserStatus
+from app.modules.policy.domain.contracts import AccessPurpose, ResourceGrant
 
 
 class AuditAction(StrEnum):
@@ -42,6 +43,14 @@ class AuditSnapshot(VersionedContract):
     permission_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)
     configuration_id: UUID | None = None
     credential_present: bool | None = Field(default=None, strict=True)
+    resource_grant: ResourceGrant | None = None
+    resource_purpose: AccessPurpose | None = None
+
+    @model_validator(mode="after")
+    def require_grant_purpose(self) -> Self:
+        if (self.resource_grant is None) != (self.resource_purpose is None):
+            raise ValueError("An audited resource grant requires its application purpose")
+        return self
 
 
 class AuditEvent(VersionedContract):

@@ -49,7 +49,7 @@ make dev-admin
 
 PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运行 `make db-current` 查看版本。两个命令均可使用 `PROFILE=test` 选择测试库。迁移与事务边界见 [P1-01 实施记录](docs/plan/V1.0-MVP/implementation/P1-01.md)。
 
-需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。该测试来源不替代企业 OIDC、RBAC 或生产安全验收。
+需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。RBAC 后端与固定矩阵已由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员需按其中步骤显式配置，不自动提升开发账号。该测试来源不替代企业 OIDC 或生产安全验收。
 
 ## 目录与依赖
 

@@ -4,6 +4,15 @@ export type AuthSessionResponse =
   ApiComponents['schemas']['AuthSessionResponse'];
 export type LoginCredentials = ApiComponents['schemas']['LoginCredentials'];
 export type AuthConfiguration = ApiComponents['schemas']['AuthConfiguration'];
+export type CapabilityView = ApiComponents['schemas']['CapabilityView'];
+export type KnowledgeScope = ApiComponents['schemas']['KnowledgeScope'];
+export type RoleView = ApiComponents['schemas']['RoleView'];
+export type GrantView = ApiComponents['schemas']['GrantView'];
+export type ConfirmedMutation = ApiComponents['schemas']['ConfirmedMutation'];
+export type CreateRole = ApiComponents['schemas']['CreateRole'];
+export type UpdateRole = ApiComponents['schemas']['UpdateRole'];
+export type AssignRoles = ApiComponents['schemas']['AssignRoles'];
+export type PutGrant = ApiComponents['schemas']['PutGrant'];
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';

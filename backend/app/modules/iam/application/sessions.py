@@ -11,6 +11,7 @@ from app.modules.iam.domain.sessions import (
     Application,
     AuthenticationDenied,
     AuthenticationThrottled,
+    AuthRepository,
     AuthTransaction,
     CurrentIdentity,
     IdentityProvider,
@@ -116,24 +117,30 @@ class SessionService:
         return issue
 
     async def current(self, application: Application, access_token: str) -> SessionIssue:
-        claims = self.tokens.verify(access_token, application)
         async with self.transactions() as repository:
-            session = await repository.session(claims.session_id)
-            now = datetime.now(UTC)
-            if (
-                session is None
-                or session.revoked
-                or session.expires_at <= now
-                or session.application != application
-                or session.user_id != claims.user_id
-                or session.identity_id != claims.identity_id
-            ):
-                raise AuthenticationDenied()
-            facts = require_identity(await repository.current_identity(session.identity_id), application)
-            now = datetime.now(UTC)
-            if session.expires_at <= now or claims.expires_at <= now:
-                raise AuthenticationDenied()
-            return SessionIssue(session, facts.user, "", "", self.tokens.csrf(session.id), claims.expires_at)
+            return await self.current_in_transaction(repository, application, access_token)
+
+    async def current_in_transaction(
+        self, repository: AuthRepository, application: Application, access_token: str
+    ) -> SessionIssue:
+        """Authenticate within an operation's transaction; never commit or create a new connection."""
+        claims = self.tokens.verify(access_token, application)
+        session = await repository.session(claims.session_id)
+        now = datetime.now(UTC)
+        if (
+            session is None
+            or session.revoked
+            or session.expires_at <= now
+            or session.application != application
+            or session.user_id != claims.user_id
+            or session.identity_id != claims.identity_id
+        ):
+            raise AuthenticationDenied()
+        facts = require_identity(await repository.current_identity(session.identity_id), application)
+        now = datetime.now(UTC)
+        if session.expires_at <= now or claims.expires_at <= now:
+            raise AuthenticationDenied()
+        return SessionIssue(session, facts.user, "", "", self.tokens.csrf(session.id), claims.expires_at)
 
     async def refresh(
         self, application: Application, refresh_token: str, csrf: str, *, logout: bool = False

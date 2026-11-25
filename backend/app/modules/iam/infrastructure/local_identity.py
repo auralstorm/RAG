@@ -28,6 +28,7 @@ class LocalAccount(BaseModel):
 class LocalIdentityConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, hide_input_in_errors=True)
     signing_key: SecretStr = Field(min_length=64)
+    pseudonymization_key: SecretStr | None = Field(default=None, min_length=64)
     accounts: tuple[LocalAccount, ...] = Field(min_length=1, max_length=100)
 
 

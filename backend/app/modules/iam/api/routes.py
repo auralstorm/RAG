@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from app.api.errors import request_context
 from app.modules.iam.api.schemas import AuthConfiguration, AuthSessionResponse, CsrfResponse, LoginCredentials
+from app.modules.iam.api.security import guard_origin as enforce_origin
 from app.modules.iam.application.sessions import SessionService
 from app.modules.iam.domain.sessions import (
     Application,
@@ -34,11 +35,7 @@ def create_auth_router(
         return service
 
     def guard_origin(request: Request, application: Application, *, mutation: bool = False) -> None:
-        origin = request.headers.get("origin")
-        if (mutation or origin is not None) and origin not in origins[application]:
-            raise HTTPException(403)
-        if request.headers.get("sec-fetch-site") == "cross-site":
-            raise HTTPException(403)
+        enforce_origin(request, application, origins, mutation=mutation)
 
     async def invoke(operation: Callable[[], Awaitable[ResultT]]) -> ResultT:
         try:

@@ -34,7 +34,7 @@ async def verify_database_foundation(settings: Settings) -> None:
             assert await asyncio.to_thread(run_migration, isolated, "current") == ""
             await asyncio.to_thread(run_migration, isolated, "upgrade")
             await asyncio.to_thread(run_migration, isolated, "upgrade")
-            assert await asyncio.to_thread(run_migration, isolated, "current") == "0003_auth_sessions (head)"
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0004_rbac_policy (head)"
             await verify_iam_schema(isolated)
 
             async with postgres_transaction(isolated) as connection:
@@ -60,7 +60,7 @@ async def verify_database_foundation(settings: Settings) -> None:
                 )
                 assert await cursor.fetchone() == (None, None)
             await asyncio.to_thread(run_migration, isolated, "upgrade")
-            assert await asyncio.to_thread(run_migration, isolated, "current") == "0003_auth_sessions (head)"
+            assert await asyncio.to_thread(run_migration, isolated, "current") == "0004_rbac_policy (head)"
         finally:
             await admin.execute(sql.SQL("DROP DATABASE {}").format(identifier))
 

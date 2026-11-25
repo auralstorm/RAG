@@ -1,6 +1,6 @@
 # V1.0 身份与授权契约
 
-日期：2026-11-24。对应 P0-04-02，交付平台字段、显式身份关联、纯授权规则与 Schema；实际登录、持久化、完整角色默认矩阵与 HTTP 接入按 P1-03/04/05 实现。部署范围保持 [ADR-0013](../adr/0013-single-enterprise-deployment-scope.md) 的单企业模式。
+日期：2026-11-25。P0-04-02 交付平台字段、显式身份关联、纯授权规则与 Schema；P1-03/04/05 已增加持久化、本地平台会话、固定角色矩阵与受保护 HTTP 接入。部署范围保持 [ADR-0013](../adr/0013-single-enterprise-deployment-scope.md) 的单企业模式。
 
 ## 身份调查与兼容
 
@@ -56,4 +56,6 @@ actor_ref 为以服务端独立密钥生成的 HMAC 伪名引用；[生成函数
 
 PolicyDecision 绑定当前检查对象，不能当作可重放 Token 或替代其他操作、对象下载、引用扩展、Worker 恢复时的重新授权。有效期校验不证明缓存仍代表最新权限；P1 生产者必须在每次操作重新加载一致的当前身份、权限、成员与 ACL，失败时拒绝。原 [Search Adapter](../../backend/app/adapters/elasticsearch.py) 仍使用自己的内部 AuthorizedSearchScope，Retriever/文档关系就绪后再验证 Policy→Search 的真实衔接。
 
-本轮纯规则和 Schema 验收不代表 OAuth、JWT、数据库、完整固定角色权限矩阵或业务端点已可用；这些能力按实施计划继续交付，完整 P0-04/M0 尚未关闭。
+P1-05 的 [执行与迁移记录](../plan/V1.0-MVP/implementation/P1-05.md) 固定 23 个操作码和三个系统角色的矩阵。PolicyEnforcer 从当前数据库事实构造上下文，KB 内容必须同时具备操作能力与目的匹配的显式 Grant；后台角色不授予 Chat 内容。只有不可委派的 acl.manage 可配置第一份 ACL，ACL 明细查询另要求目标 KB 可读。缺组成员事实时 GROUP 持久化/API 拒绝，不能猜测成员关系。自定义角色只接受只读集合；统一授权仍过滤意外的管理权限关系。
+
+真实企业 OIDC、KB/文档实体及 Policy→Retriever 集成仍按对应主线验收；不能用本地会话和权限范围 ID 测试替代这些交付。完整 P0-04/M0 及 P1/M1 不因上述基础实现自动关闭。

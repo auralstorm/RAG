@@ -65,6 +65,7 @@ def auth(postgres_settings: Settings, tmp_path: Path) -> Iterator[AuthFixture]:
                 json.dumps(
                     {
                         "signing_key": secrets.token_hex(48),
+                        "pseudonymization_key": secrets.token_hex(48),
                         "accounts": [
                             {
                                 "username": "fixture",

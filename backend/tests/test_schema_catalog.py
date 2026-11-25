@@ -32,6 +32,15 @@ def test_internal_identity_and_policy_schemas_are_not_exported_to_frontend() -> 
     assert set(paths) == {
         "/health/live",
         "/health/ready",
+        "/api/v1/authorization/{application}/me",
+        "/api/v1/authorization/{application}/knowledge-bases",
+        "/api/v1/authorization/{application}/knowledge-bases/{kb_id}",
+        "/api/v1/admin/roles",
+        "/api/v1/admin/roles/{role_id}",
+        "/api/v1/admin/permissions",
+        "/api/v1/admin/users/{user_id}/roles",
+        "/api/v1/admin/kb-access/{kb_id}",
+        "/api/v1/admin/kb-access/{kb_id}/{grant_id}",
         *(
             f"/api/v1/auth/{{application}}/{action}"
             for action in ("config", "login", "me", "csrf", "refresh", "logout")

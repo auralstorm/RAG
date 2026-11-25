@@ -14,4 +14,6 @@ Span 提供显式诊断字段，包括候选数、文档版本、Prompt 版本�
 
 前后摘要使用显式字段，覆盖启用状态、用户状态、角色/权限/配置 ID 及凭据是否存在。失败和拒绝事件只记录动作与可用的变更前摘要。身份溯源成功要求高危等级、已知操作者、目标 Trace ID 及受保护原因记录。查询请求的 Trace ID 与被查看的 Trace ID 分别记录。原因引用只出现在 [StoredAuditEvent](schemas/internal/stored-audit-event.json)。
 
+P1-05 增加可选的成对字段 resource_grant/resource_purpose，分别保存明确主体/KB/READ 或 MANAGE 的 Grant 与 admin/chat 用途；旧摘要缺字段仍有效。ACL 建立、修改与删除记录受影响单条 Grant 的前后摘要，角色权限编辑记录权限 ID 的前后集合，均与业务变更同事务写入，不保存任意请求正文。生成 Schema/前端类型同步更新，查询服务仍由 P1-06 交付。
+
 全部制品采用 `schema_version=1.0`。原 `rag_traces`、`audit_logs` 表草案的关联 ID 和身份引用按上述契约映射。P1/P5 集成负责采集与传播、持久化和保留、当前管理员读取授权，以及高危操作的审计写入失败控制。
