@@ -28,6 +28,15 @@ jobs:
       - run: make install
       - run: make check
       - run: make infra-test
+      - run: sudo apt-get update && sudo apt-get install -y nginx
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: make frontend-e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: admin-browser-results
+          path: .poc-results/frontend/admin-pro
+          if-no-files-found: ignore
       - run: make poc-search
       - name: Validate new commit messages
         env:

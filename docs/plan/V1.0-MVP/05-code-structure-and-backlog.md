@@ -103,8 +103,10 @@ enterprise-agent-platform/
 │   │   │   ├── src/
 │   │   │   │   ├── app/
 │   │   │   │   ├── routes/
-│   │   │   │   ├── features/chat/
-│   │   │   │   ├── stores/
+│   │   │   │   ├── api/
+│   │   │   │   ├── assets/
+│   │   │   │   ├── pages/auth/、pages/chat/
+│   │   │   │   ├── modules/auth/、modules/chat/
 │   │   │   │   └── styles/
 │   │   │   └── tests/
 │   │   └── admin/
@@ -113,19 +115,15 @@ enterprise-agent-platform/
 │   │       ├── .env.example
 │   │       ├── src/
 │   │       │   ├── app/
+│   │       │   ├── api/
+│   │       │   ├── assets/
+│   │       │   ├── pages/auth/、pages/dashboard/
 │   │       │   ├── routes/
-│   │       │   ├── features/
+│   │       │   ├── modules/
 │   │       │   │   ├── dashboard/
-│   │       │   │   ├── providers/
-│   │       │   │   ├── knowledge-bases/
-│   │       │   │   ├── documents/
-│   │       │   │   ├── traces/
-│   │       │   │   ├── users/
-│   │       │   │   ├── roles/
-│   │       │   │   ├── audit/
-│   │       │   │   ├── evaluation/
-│   │       │   │   └── settings/
-│   │       │   ├── stores/
+│   │       │   │   ├── knowledgeBase/
+│   │       │   │   ├── document/
+│   │       │   │   └── prompt/
 │   │       │   └── styles/
 │   │       └── tests/
 │   └── packages/
@@ -149,6 +147,8 @@ enterprise-agent-platform/
 ```
 
 Chat/Admin 应用分离与工具选择依据 [ADR-0014](../../adr/0014-monorepo-and-independent-frontend-apps.md)。前端 pnpm workspace 在根目录声明 `frontend/apps/*` 与 `frontend/packages/*`，使用统一 pnpm 锁文件；Python 依赖由 uv 与实际 pyproject.toml/uv.lock 管理，不通过 pnpm 安装。
+
+前端业务模块和页面目录使用 camelCase，组件文件使用 PascalCase，普通逻辑文件使用 camelCase，基础目录使用小写单词。模块按需添加 API、store、domain、Hook 和组件，不预建空目录；模块通过 `index.ts` 导出公开接口。Admin 使用 `@admin/*`、Chat 使用 `@chat/*` 别名指向各自 `src/`，并在 Vite、TypeScript 和 Vitest 中保持一致。目录图中的未来模块只代表规划，不等同于当前版本的交付要求。
 
 两个前端各自拥有 Vite 入口、路由、环境配置、构建产物与部署目标，共用后端 API。公共包维护显式导出，依赖方向为应用 → 公共包；公共包不依赖应用，两个应用不直接导入彼此源码。登录、API 地址与跨应用跳转按真实环境配置，状态和权限以既有后端契约为准。
 

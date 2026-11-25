@@ -10,6 +10,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 5174 --strictPort"
   },
   "dependencies": {
+    "@ant-design/icons": "6.3.4",
+    "@ant-design/pro-components": "3.1.15-9",
     "@enterprise-rag/api-client": "workspace:*",
     "@enterprise-rag/shared": "workspace:*",
     "@enterprise-rag/ui": "workspace:*",

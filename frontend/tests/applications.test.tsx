@@ -7,14 +7,21 @@ import {
 } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { createMemoryRouter } from 'react-router';
-import { createChatRoutes } from '../apps/chat/src/routes/routes';
-import { createAdminRoutes } from '../apps/admin/src/routes/routes';
-import { ChatWorkspacePage } from '../apps/chat/src/features/chat/pages/ChatWorkspacePage';
-import { App as ChatApp } from '../apps/chat/src/app/App';
-import { App as AdminApp } from '../apps/admin/src/app/App';
-import { AppProviders } from '../apps/chat/src/app/AppProviders';
-import { ChatPage } from '../apps/chat/src/features/chat/pages/ChatPage';
-import { mockReplySource } from '../apps/chat/src/mocks/chat-reply-source';
+import { createChatRoutes } from '@chat/routes/routes';
+import { createAdminRoutes } from '@admin/routes/routes';
+import { ChatWorkspacePage } from '@chat/pages/chat/ChatWorkspacePage';
+import { App as ChatApp } from '@chat/app/App';
+import { App as AdminApp } from '@admin/app/App';
+import { AppProviders } from '@chat/app/AppProviders';
+import { ChatPage } from '@chat/modules/chat';
+import { waitForRouter } from './router';
+
+const mockReplySource = {
+  notice: 'test reply source',
+  async *streamReply() {
+    yield '网络与远程访问';
+  },
+};
 
 describe.each([
   ['员工端', ChatApp, '登录企业知识助手', createChatRoutes],
@@ -25,6 +32,12 @@ describe.each([
       initialEntries: ['/'],
     });
     render(<App router={router} />);
+    await waitForRouter(
+      router,
+      (state) =>
+        state.location.pathname === '/login' &&
+        state.navigation.state === 'idle',
+    );
     await screen.findByRole('heading', { level: 1, name: title });
     expect(router.state.location.pathname).toBe('/login');
     expect(

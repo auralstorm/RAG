@@ -2,12 +2,12 @@ import { Link, Navigate } from 'react-router';
 import type { RouteObject } from 'react-router';
 import { AccessScreen } from '@enterprise-rag/ui';
 import { RequireSession, RouteErrorPage } from './RouteBoundary';
-import { LoginPage } from '../features/auth/pages/LoginPage';
+import { LoginPage } from '@chat/pages/auth/LoginPage';
 
 export function createChatRoutes(): RouteObject[] {
   const workspace = async () => {
     const { ChatWorkspacePage } =
-      await import('../features/chat/pages/ChatWorkspacePage');
+      await import('@chat/pages/chat/ChatWorkspacePage');
     return { Component: ChatWorkspacePage };
   };
   return [
@@ -30,7 +30,7 @@ export function createChatRoutes(): RouteObject[] {
                 path: 'preview',
                 lazy: async () => {
                   const { ChatWorkspacePage } =
-                    await import('../features/chat/pages/ChatWorkspacePage');
+                    await import('@chat/pages/chat/ChatWorkspacePage');
                   return { element: <ChatWorkspacePage isPreview /> };
                 },
               },

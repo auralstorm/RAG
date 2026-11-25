@@ -29,3 +29,9 @@ Vite 开发服务使用相同 `/backend/` 前缀，由应用 `.env.example` 的 
 5. 开发 Admin 登录页进入 `/preview`，检查公开 API 连通性表格的初始空态、检查中、成功、失败后重试。此预览不会建立登录态，也不加载业务或授权数据。
 
 P1-02 的本地部署验证不代表生产发布、真实登录或完整 P1/M1 验收。[实施记录](../../docs/plan/V1.0-MVP/implementation/P1-02.md)
+
+## 自动浏览器验收
+
+安装 Nginx、准备可用 Docker，运行 `make check` 生成生产构建，再运行 `pnpm exec playwright install --with-deps chromium` 和 `make frontend-e2e`。该入口启动隔离数据库、真实后端和两个临时 Nginx 静态服务，验证认证权限、Admin 导航与故障恢复、双应用回归及资源服务规则。端口自动选择，测试不使用或修改开发账号。
+
+截图输出到 `.poc-results/frontend/admin-pro/`。测试默认使用 Playwright Chromium；本机可通过 `ENTERPRISE_RAG_BROWSER_EXECUTABLE` 指定其他已安装的兼容浏览器。[范围与验证记录](../../docs/plan/V1.0-MVP/implementation/admin-pro-ui.md)

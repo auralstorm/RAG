@@ -1,5 +1,17 @@
 {
   "extends": "./tsconfig.base.json",
-  "compilerOptions": { "types": ["node", "vite/client"] },
-  "include": ["vitest.config.ts", "frontend/tests", "frontend/packages/*/src", "frontend/apps/*/src"]
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@admin/*": ["./frontend/apps/admin/src/*"],
+      "@chat/*": ["./frontend/apps/chat/src/*"]
+    }
+  },
+  "include": [
+    "vitest.config.ts",
+    "frontend/tests",
+    "frontend/e2e",
+    "frontend/packages/*/src",
+    "frontend/apps/*/src"
+  ]
 }

@@ -35,6 +35,7 @@ addopts = "-ra -m 'not infrastructure and not poc'"
 markers = [
     "infrastructure: starts this project's isolated Docker test environment",
     "poc: runs isolated real-service technical acceptance",
+    "frontend_e2e: production browser acceptance with isolated backend and static servers",
 ]
 
 [dependency-groups]

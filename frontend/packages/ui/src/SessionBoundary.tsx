@@ -10,6 +10,13 @@ const SessionActionsContext = createContext<SessionActions>({
   mode: 'unavailable',
 });
 
+export interface SessionStatusProps {
+  readonly kind: 'checking' | 'error' | 'forbidden';
+  readonly title: string;
+  readonly description: string;
+  readonly children: ReactNode;
+}
+
 export function SessionProvider({
   state,
   children,
@@ -41,11 +48,13 @@ export function SessionBoundary({
   loginFallback,
   recoveryAction,
   requiredPermission,
+  renderStatus,
 }: {
   readonly children: ReactNode;
   readonly loginFallback: ReactNode;
   readonly recoveryAction: ReactNode;
   readonly requiredPermission?: string;
+  readonly renderStatus?: (props: SessionStatusProps) => ReactNode;
 }) {
   const state = useSessionState();
   if (state.status === 'anonymous') return loginFallback;
@@ -65,27 +74,33 @@ export function SessionBoundary({
     );
   }
   if (state.status === 'checking') {
-    return (
-      <AccessScreen title="正在确认登录状态" description="请稍候。">
+    const props: SessionStatusProps = {
+      kind: 'checking',
+      title: '正在确认登录状态',
+      description: '请稍候。',
+      children: (
         <div role="status">
           <Spin aria-label="正在确认登录状态" />
         </div>
-      </AccessScreen>
-    );
+      ),
+    };
+    return renderStatus ? renderStatus(props) : <AccessScreen {...props} />;
   }
-  return (
-    <AccessScreen
-      title={state.status === 'error' ? '暂时无法确认登录状态' : '暂无访问权限'}
-      description={
-        state.status === 'error'
-          ? '请刷新页面重试，或联系管理员。'
-          : '请联系管理员确认账号和应用访问权限。'
-      }
-    >
-      {state.status === 'error' && state.requestId ? (
-        <p>请求编号：{state.requestId}</p>
-      ) : null}
-      {recoveryAction}
-    </AccessScreen>
-  );
+  const props: SessionStatusProps = {
+    kind: state.status === 'error' ? 'error' : 'forbidden',
+    title: state.status === 'error' ? '暂时无法确认登录状态' : '暂无访问权限',
+    description:
+      state.status === 'error'
+        ? '请刷新页面重试，或联系管理员。'
+        : '请联系管理员确认账号和应用访问权限。',
+    children: (
+      <>
+        {state.status === 'error' && state.requestId ? (
+          <p>请求编号：{state.requestId}</p>
+        ) : null}
+        {recoveryAction}
+      </>
+    ),
+  };
+  return renderStatus ? renderStatus(props) : <AccessScreen {...props} />;
 }

@@ -1,4 +1,4 @@
-.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test db-upgrade db-current poc-search poc-storage
+.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test frontend-e2e db-upgrade db-current poc-search poc-storage
 
 PROFILE ?= development
 
@@ -61,7 +61,10 @@ infra-reset:
 	uv run --locked python scripts/infrastructure.py reset --profile $(PROFILE) --confirm-reset
 
 infra-test:
-	uv run --locked pytest -m infrastructure -v
+	uv run --locked pytest -m 'infrastructure and not frontend_e2e' -v
+
+frontend-e2e:
+	uv run --locked pytest backend/tests/test_frontend_browser.py -m frontend_e2e -s -q --tb=short
 
 db-upgrade:
 	ENTERPRISE_RAG_INFRA_PROFILE=$(PROFILE) uv run --locked python -m scripts.migrate_database upgrade

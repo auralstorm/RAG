@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import type { DataRouter } from 'react-router';
 import { createSessionStore } from '@enterprise-rag/api-client';
-import { apiClient } from './api-client';
+import { apiClient } from '@admin/api/apiClient';
 import { App } from './App';
 
 const sessionStore = createSessionStore(apiClient, 'admin');

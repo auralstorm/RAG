@@ -8,24 +8,32 @@ Chat 和 Admin 的应用入口位于各自 `src/app/`，全局样式位于 `src/
 
 ```text
 src/
-├── app/                      # App、Provider、回复来源初始化
-├── features/chat/
-│   ├── pages/                # ChatPage 与用例编排
-│   ├── components/           # 欢迎页、会话列表、消息区、输入框
-│   ├── hooks/                # useChat 与行为测试
-│   ├── styles/               # Feature CSS Modules
-│   ├── prompts.ts            # 推荐问题与分组
-│   └── types.ts              # 本地视图类型与回复来源接口
-├── mocks/                    # 开发固定答案与模拟生成
-├── styles/                   # 全局基础样式
-└── main.tsx
+├── app/                      # App、Provider、会话接入
+├── api/apiClient.ts          # 应用配置后的公共客户端
+├── pages/
+│   ├── auth/LoginPage.tsx
+│   └── chat/ChatWorkspacePage.tsx
+├── modules/auth/              # 登录提交、取消和错误状态
+├── modules/chat/
+│   ├── ChatPage.tsx           # 聊天页面业务 UI
+│   ├── components/            # 欢迎页、会话列表、消息区、输入框
+│   ├── hooks/useChat.ts       # 会话与消息状态
+│   ├── mocks/                 # 开发固定答案与模拟生成
+│   ├── styles/chat.module.css
+│   ├── chat.types.ts
+│   ├── loadReplySource.ts
+│   ├── prompts.ts
+│   └── index.ts               # 模块公开接口
+├── routes/
+└── styles/global.css         # 全局基础样式
+main.tsx
 ```
 
-入口见 [App.tsx](../../../../frontend/apps/chat/src/app/App.tsx)，页面见 [ChatPage.tsx](../../../../frontend/apps/chat/src/features/chat/pages/ChatPage.tsx)。源码与文件名不再使用旧临时命名。Admin 当前仍为初始化壳；公共包位置、正式 exports 和依赖方向保持一致。路由与登录入口已按 [P1-02](P1-02.md) 建立，store 按实际需求增加。
+入口见 [App.tsx](../../../../frontend/apps/chat/src/app/App.tsx)，聊天 UI 见 [ChatPage.tsx](../../../../frontend/apps/chat/src/modules/chat/ChatPage.tsx)。Admin 的登录与 Dashboard 页面使用相同的 `pages/`、`modules/` 结构；公共包位置、正式 exports 和依赖方向保持一致。路由与登录入口已按 [P1-02](P1-02.md) 建立，store 按实际需求增加。
 
 ## 回复来源与交互
 
-`useChat` 接收 `ChatReplySource | null`，管理会话、消息与反馈。回复来源提供 `streamReply(question, AbortSignal)` 增量文本和展示说明；这是 Feature 内部接口，不是平台 HTTP/SSE 契约。固定答案及 70ms/12 字符的模拟节奏均在 `mocks/` 内。
+`useChat` 接收 `ChatReplySource | null`，管理会话、消息与反馈。回复来源提供 `streamReply(question, AbortSignal)` 增量文本和展示说明；这是 Chat 模块内部接口，不是平台 HTTP/SSE 契约。固定答案及 70ms/12 字符的模拟节奏均在 `modules/chat/mocks/` 内。
 
 应用只有同时满足 Vite `DEV` 和 `MODE=development` 才动态导入 mocks；测试显式注入。生产构建、测试模式和其他运行模式默认不加载模拟来源。开发 `/preview` 页面显示“开发环境 · 回答为模拟内容”，生产不开放 `/preview`，受保护问答页面在获准访问后显示“知识问答接口尚未接入”，并禁用发送、推荐问题提交和附件预览。初始化具有加载与失败提示。
 
@@ -42,7 +50,7 @@ P1-04 接续后，受保护 `/chat` 即使在 development 也明确传入不加�
 - `pnpm test`：30 项前端测试通过。覆盖会话生命周期、空输入和重复发送、完整/部分输出、取消和迟到事件、来源错误及重试、反馈、Strict Mode 清理；应用测试覆盖加载、初始化失败、来源模式选择和未接入状态。
 - `make check`：全部通过，覆盖仓库 lint、格式、类型、247 项后端测试、30 项前端测试、双应用构建、契约及文档链接检查。普通入口排除 22 项需要真实基础设施的测试，本次未执行此类测试。
 - 临时 Playwright 1.58.2 脚本驱动本机 Chrome，开发模式的发送/停止/重试、剪贴板、键盘反馈、会话管理、本地附件和移动抽屉通过；生产 preview 的未接入状态、提交禁用和模拟资源未加载通过。覆盖 1440、768、390、320px 宽度，未出现页面错误或网络写入。
-- 生产构建检查通过：不含固定答案、模拟说明或开发回复模块。应用源码的旧命名清理与 Feature 不导入 mocks 检查通过，测试文件允许显式注入模拟来源。
+- 生产构建检查通过：不含固定答案、模拟说明或开发回复模块。应用源码的命名与模块边界检查通过，测试文件允许显式注入模拟来源。
 
 ## 登录接续与兼容
 
