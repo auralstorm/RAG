@@ -44,6 +44,10 @@ def respects_boundary(module: str, dependency: str) -> bool:
     target_layer = module_layer(target)
     layer = source_layer[1] if source_layer else source[1]
 
+    if source[:2] == ("app", "adapters") and target[:2] == ("app", "modules"):
+        # Shared adapters may implement module ports, but must not depend on a
+        # module's use cases, HTTP layer, or private persistence implementation.
+        return target_layer is not None and target_layer[1] == "domain"
     if target_layer and target_layer[1] == "infrastructure" and source_layer and source_layer[0] != target_layer[0]:
         return False
     if layer not in {"api", "application", "domain"}:
@@ -90,6 +94,11 @@ def test_backend_module_dependencies_follow_layer_boundaries() -> None:
         ("app.modules.iam.domain.user", "from ..application import service", False),
         ("app.modules.iam.application.user", "from app import adapters", False),
         ("app.modules.iam.infrastructure.repo", "from app.modules.policy import infrastructure", False),
+        ("app.adapters.rbac", "from app.modules.iam.application import sessions", False),
+        ("app.adapters.audit_query", "from app.modules.audit.api import schemas", False),
+        ("app.adapters.rbac", "from app.modules.iam.infrastructure import repositories", False),
+        ("app.adapters.rbac", "from app.modules.iam.domain import rbac", True),
+        ("app.adapters.postgres", "from app.core.observability import observe_operation", True),
         ("app.api.v1.router", "from sqlalchemy import select", False),
         ("app.api.v1.router", "from app.modules.iam.application import service", True),
         ("app.modules.policy.domain.contracts", "from app.modules.iam.domain import contracts", True),

@@ -6,10 +6,10 @@ from uuid import UUID
 
 from psycopg.errors import CheckViolation, ForeignKeyViolation, UniqueViolation
 
+from app.adapters.iam_repository import PostgresAuthRepository
 from app.modules.iam.domain.contracts import Permission, Role, SubjectBinding, User
 from app.modules.iam.domain.rbac import RbacConflict, RoleDetails
 from app.modules.iam.domain.sessions import Application
-from app.modules.iam.infrastructure.repositories import PostgresAuthRepository
 from app.modules.policy.domain.contracts import ResourceGrant
 
 

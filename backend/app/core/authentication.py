@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from psycopg import Error
 
+from app.adapters.iam_repository import PostgresAuthRepository
 from app.adapters.postgres import postgres_transaction
 from app.adapters.rbac import PostgresRbacRepository
 from app.core.config import Settings
@@ -17,7 +18,6 @@ from app.modules.iam.domain.rbac import RbacRepository
 from app.modules.iam.domain.sessions import AuthenticationUnavailable, AuthRepository
 from app.modules.iam.infrastructure.local_identity import LocalIdentityProvider, read_private_config
 from app.modules.iam.infrastructure.platform_config import PlatformAuthConfig, read_platform_config
-from app.modules.iam.infrastructure.repositories import PostgresAuthRepository
 from app.modules.iam.infrastructure.tokens import JwtSessionTokens
 from app.modules.policy.application.enforcement import PolicyEnforcer
 

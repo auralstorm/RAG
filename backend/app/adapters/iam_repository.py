@@ -1,4 +1,4 @@
-"""IAM PostgreSQL facts participate in the application-owned transaction."""
+"""PostgreSQL IAM facts for the shared IAM/Policy transaction adapter."""
 
 from datetime import datetime
 from uuid import UUID
