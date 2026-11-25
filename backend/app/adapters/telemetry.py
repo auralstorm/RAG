@@ -10,7 +10,6 @@ from threading import Lock
 
 from opentelemetry import trace
 from opentelemetry.context import Context
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.metrics import CallbackOptions, Counter, Histogram, Observation, UpDownCounter
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -29,6 +28,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcess
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from opentelemetry.trace import NonRecordingSpan, SpanContext, SpanKind, Status, StatusCode, TraceFlags
 
+from app.adapters.otlp import AcknowledgedOtlpExporter
 from app.adapters.telemetry_credentials import read_collector_credentials
 from app.core.config import Settings
 from app.core.observability import HttpOutcome, MetricBatch, MetricSample
@@ -194,15 +194,12 @@ class OpenTelemetry:
                 raise ValueError("Collector credential reference is missing")
             credentials = read_collector_credentials(self.settings.telemetry_credentials_ref)
             endpoint = str(self.settings.telemetry_otlp_endpoint).rstrip("/")
-            exporter = OTLPSpanExporter(
-                endpoint=endpoint,
-                insecure=endpoint.startswith("http://"),
-                timeout=2,
-                headers={"authorization": "Bearer " + credentials.bearer_token.get_secret_value()},
+            exporter = AcknowledgedOtlpExporter(
+                endpoint, credentials.bearer_token.get_secret_value(), exported_spans, export_failures
             )
             self.traces.add_span_processor(
                 BatchSpanProcessor(
-                    ObservedSpanExporter(exporter, exported_spans, export_failures),
+                    exporter,
                     max_queue_size=2048,
                     max_export_batch_size=256,
                     export_timeout_millis=2000,

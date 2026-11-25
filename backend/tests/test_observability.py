@@ -265,6 +265,31 @@ def test_formatter_never_formats_raw_messages_arguments_or_exception_stacks() ->
     assert "client-spoofed" not in StructuredFormatter().format(record)
 
 
+def test_unexpected_failures_keep_safe_causal_types_and_locations(logs: StringIO) -> None:
+    application = create_app(Settings(infrastructure_enabled=False))
+
+    @application.get("/diagnostic")
+    async def failed() -> None:
+        try:
+            raise ValueError("private-cause-token")
+        except ValueError as cause:
+            raise RuntimeError("private-request-body") from cause
+
+    with TestClient(application) as client:
+        response = client.get("/diagnostic")
+        assert response.status_code == 500
+    records = [json.loads(line) for line in logs.getvalue().splitlines()]
+    failure = next(record for record in records if record["event"] == "unhandled_http_error")
+    assert failure["trace_id"] == response.headers["X-Trace-ID"]
+    assert failure["request_id"] == response.headers["X-Request-ID"]
+    assert [cause["type"] for cause in failure["exception_chain"]] == ["RuntimeError", "ValueError"]
+    frames = failure["exception_chain"][0]["frames"]
+    assert any(frame["source"] == "app/api/middleware/failures.py" for frame in frames)
+    assert all(set(frame) == {"source", "function", "line"} and frame["line"] > 0 for frame in frames)
+    rendered = logs.getvalue() + response.text
+    assert "private-" not in rendered and str(Path(__file__).parents[2]) not in rendered
+
+
 def test_private_collector_reference_rejects_shared_symlink_and_malformed_files(tmp_path: Path) -> None:
     reference = tmp_path / "collector.json"
     reference.write_text(json.dumps({"bearer_token": "private-test-token"}))

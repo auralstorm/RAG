@@ -180,7 +180,13 @@ async def verify_observability(settings: Settings) -> None:
                         if query.status_code == 200 and len(query.json()["data"]) >= 8:
                             break
                         await asyncio.sleep(0.25)
-                    assert query is not None and query.status_code == 200 and len(query.json()["data"]) >= 8
+                    assert query is not None and query.status_code == 200 and len(query.json()["data"]) >= 8, {
+                        "received": len(query.json()["data"])
+                        if query is not None and query.status_code == 200
+                        else None,
+                        "exported": export_count(active_metrics, "telemetry.spans.exported"),
+                        "failures": export_count(active_metrics, "telemetry.export.failures"),
+                    }
 
                     # Revoke while the exporter still holds its established gRPC channel.
                     revoked = await phoenix.delete(f"/v1/system/api_keys/{key_id}")

@@ -9,6 +9,7 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.api.errors import error_response
+from app.core.logging import exception_chain
 from app.core.observability import HttpOutcome, Telemetry, current_request, current_telemetry
 from app.core.request_context import create_request_context
 
@@ -58,9 +59,12 @@ class RequestContextMiddleware:
             except asyncio.CancelledError:
                 outcome = "cancelled"
                 raise
-            except Exception:
+            except Exception as error:
                 outcome = "aborted" if response_started else "error"
-                logger.error("unhandled_http_error", extra={"response_started": response_started})
+                logger.error(
+                    "unhandled_http_error",
+                    extra={"response_started": response_started, "diagnostic": exception_chain(error)},
+                )
                 if response_started:
                     raise RuntimeError("HTTP response stream aborted") from None
                 await error_response(context, 500)(scope, receive, contextual_send)
