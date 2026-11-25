@@ -51,6 +51,8 @@ PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运�
 
 [P1-06 审计基础](docs/plan/V1.0-MVP/implementation/P1-06.md) 已提供统一追加写入和 `GET /api/v1/admin/audit-logs` 筛选分页查询；读取要求当前 Admin 会话与 audit.read，普通业务 API 不提供审计增改删。登录/权限变更与审计保持原子提交，审计失败时拒绝提交关键变更。
 
+[P1-07 可观测性](docs/plan/V1.0-MVP/implementation/P1-07.md) 在现有健康检查上补齐受控 JSON 请求日志、OpenTelemetry 基础指标及 HTTP/依赖/数据库 Trace。`make dev-backend` 已使用脱敏日志配置并关闭原始访问日志；Phoenix 网络导出需显式启用及私密服务凭据引用，配置、指标读法和验证边界见实施记录。
+
 需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。RBAC 后端与固定矩阵已由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员需按其中步骤显式配置，不自动提升开发账号。该测试来源不替代企业 OIDC 或生产安全验收。
 
 ## 目录与依赖

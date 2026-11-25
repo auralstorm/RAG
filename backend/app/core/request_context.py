@@ -16,6 +16,7 @@ class RequestContext:
     trace_id: str
     span_id: str
     trace_flags: str
+    parent_span_id: str | None = None
 
     def response_headers(self) -> dict[str, str]:
         return {
@@ -34,4 +35,5 @@ def create_request_context(traceparent: str | None = None) -> RequestContext:
         trace_id=parent[1] if valid_parent and parent is not None else secrets.token_hex(16),
         span_id=secrets.token_hex(8),
         trace_flags=f"{int(parent[3], 16) & 1:02x}" if valid_parent and parent is not None else "00",
+        parent_span_id=parent[2] if valid_parent and parent is not None else None,
     )

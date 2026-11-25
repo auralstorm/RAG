@@ -46,6 +46,7 @@
 - [P1-04 本地身份与平台会话](implementation/P1-04.md) 记录真实本地登录、会话续期与撤销、双应用接入及外部 OIDC/完整 Policy 的剩余验收。
 - [P1-05 RBAC 与权限执行](implementation/P1-05.md) 记录固定矩阵、自定义角色边界、目的隔离 ACL、即时撤权、确认/审计与显式首位管理员配置。
 - [P1-06 操作审计基础能力](implementation/P1-06.md) 记录统一追加写入、登录及权限变更定位、受保护查询、防修改与审计失败回滚。
+- [P1-07 基础健康检查与可观测性](implementation/P1-07.md) 记录受控日志、SDK 指标、认证 Phoenix 导出、实际依赖观测与传播/隐私边界。
 - [Chat 页面与开发回复来源](implementation/chat-ui.md) 记录目录整改、会话交互、开发 mocks 隔离及生产未接入状态；正式登录、RAG 与会话持久化继续按实施计划交付。
 
 对象存储已按用户确认采用 RustFS，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md) 与 [替换实施记录](implementation/rustfs-object-storage.md)。选型和开发验收已分开记录，POC-08 的生产准入检查继续在 P0-03 完成。

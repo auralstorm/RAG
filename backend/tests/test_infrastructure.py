@@ -16,6 +16,7 @@ from app.main import create_app
 from fastapi.testclient import TestClient
 from psycopg import AsyncConnection, sql
 from tests.iam_schema import verify_iam_schema
+from tests.observability_protocol import verify_observability
 from tests.storage_protocol import verify_storage_protocol
 
 from scripts.infrastructure import compose, initialize_config, reset, up
@@ -91,6 +92,7 @@ async def test_environment_persistence_outages_and_reset() -> None:
     store = storage_context.enter_context(open_s3_client(settings))
     try:
         up("test")
+        await verify_observability(settings)
         await verify_database_foundation(settings)
         await verify_storage_protocol(store, settings, marker)
         with TestClient(create_app(settings)) as api:

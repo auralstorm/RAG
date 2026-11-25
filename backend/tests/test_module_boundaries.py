@@ -21,6 +21,7 @@ INFRASTRUCTURE_PACKAGES = frozenset(
         "litellm",
         "llama_index",
         "minio",
+        "opentelemetry",
         "psycopg",
         "psycopg_pool",
         "redis",

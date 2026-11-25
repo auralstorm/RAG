@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     auth_chat_origins: list[str] = ["http://127.0.0.1:5173", "http://127.0.0.1:4173"]
     auth_admin_origins: list[str] = ["http://127.0.0.1:5174", "http://127.0.0.1:4174"]
     dependency_timeout: float = Field(default=2.0, gt=0, le=10)
+    telemetry_enabled: bool = True
+    telemetry_trace_export_enabled: bool = False
+    telemetry_credentials_ref: Path | None = Field(default=None, repr=False)
+    telemetry_otlp_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:14317")
+    telemetry_sample_ratio: float = Field(default=1.0, ge=0, le=1)
+    telemetry_interval_seconds: float = Field(default=30.0, ge=5, le=300)
+    telemetry_queues: list[str] = Field(default_factory=list, max_length=20)
     postgres_host: str = "127.0.0.1"
     postgres_port: int = Field(default=15432, ge=1, le=65535)
     postgres_user: str = "enterprise_rag"
@@ -62,6 +69,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def require_local_credentials(self) -> Self:
+        if self.telemetry_trace_export_enabled and not self.telemetry_enabled:
+            raise ValueError("Trace export requires telemetry to be enabled")
+        if self.telemetry_trace_export_enabled and self.telemetry_credentials_ref is None:
+            raise ValueError("Trace export requires a private collector credential reference")
         if self.environment == "production" and self.local_identity_config_ref is not None:
             raise ValueError("Local test identities are not available in production")
         if self.infrastructure_enabled:
@@ -84,6 +95,26 @@ class Settings(BaseSettings):
             raise ValueError("CORS requires explicit origins")
         return origins
 
+    @field_validator("telemetry_otlp_endpoint")
+    @classmethod
+    def require_technical_endpoint(cls, endpoint: AnyHttpUrl) -> AnyHttpUrl:
+        if (
+            endpoint.username
+            or endpoint.password
+            or endpoint.query
+            or endpoint.fragment
+            or endpoint.path not in {None, "/"}
+        ):
+            raise ValueError("OTLP gRPC endpoint requires a host/port without credentials or request parameters")
+        return endpoint
+
+    @field_validator("telemetry_queues")
+    @classmethod
+    def require_bounded_queues(cls, queues: list[str]) -> list[str]:
+        if len(set(queues)) != len(queues) or any(not queue or len(queue) > 128 for queue in queues):
+            raise ValueError("Observed queues require unique, bounded server configuration names")
+        return queues
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -94,6 +125,7 @@ class DevelopmentSettings(Settings):
 
 class TestSettings(Settings):
     model_config = SettingsConfigDict(env_file=PROJECT_ROOT / "infra/compose/.env.test")
+    telemetry_otlp_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:24317")
 
 
 def load_settings(profile: Literal["development", "test"] | None = None) -> Settings:

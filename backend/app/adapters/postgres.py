@@ -9,6 +9,7 @@ from psycopg.conninfo import make_conninfo
 from psycopg.rows import TupleRow
 
 from app.core.config import Settings
+from app.core.observability import observe_operation
 
 
 def postgres_conninfo(settings: Settings) -> str:
@@ -28,5 +29,6 @@ async def postgres_transaction(settings: Settings) -> AsyncGenerator[AsyncConnec
 
     Repositories share the supplied connection within one use case and leave completion to its owner.
     """
-    async with await AsyncConnection.connect(postgres_conninfo(settings)) as connection:
-        yield connection
+    with observe_operation("postgres.transaction"):
+        async with await AsyncConnection.connect(postgres_conninfo(settings)) as connection:
+            yield connection
