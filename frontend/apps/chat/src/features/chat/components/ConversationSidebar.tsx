@@ -9,11 +9,11 @@ import {
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
 import { Button, Input, Modal } from 'antd';
-import type { ChatSession } from './use-demo-chat';
-import styles from './ChatPage.module.css';
+import type { ChatSession } from '../types';
+import styles from '../styles/Chat.module.css';
 
 interface SidebarProps {
-  sessions: ChatSession[];
+  sessions: readonly ChatSession[];
   activeId: string;
   canCreate: boolean;
   onSelect: (id: string) => void;

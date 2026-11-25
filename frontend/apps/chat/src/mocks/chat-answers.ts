@@ -1,23 +1,4 @@
-export const promptGroups = [
-  {
-    title: '常见问题',
-    prompts: [
-      '如何申请 VPN 访问？',
-      '忘记账号密码怎么办？',
-      '如何连接办公 Wi-Fi？',
-    ],
-  },
-  {
-    title: '办公支持',
-    prompts: [
-      '如何申请安装办公软件？',
-      '如何提交 IT 工单？',
-      '公司电脑丢失后怎么处理？',
-    ],
-  },
-];
-
-const examples: Record<string, string> = {
+const ANSWERS: Record<string, string> = {
   '如何申请 VPN 访问？':
     '1. 在内部服务台选择 **网络与远程访问**。\n2. 提交访问用途、设备与预计使用时间。\n3. 审批完成后，按工单中的指引配置客户端。',
   '忘记账号密码怎么办？':
@@ -32,9 +13,9 @@ const examples: Record<string, string> = {
     '尽快联系 IT 服务台，说明丢失时间与设备信息，并按照公司安全流程处理账号及设备访问。',
 };
 
-export function exampleAnswer(question: string) {
-  const example = Object.hasOwn(examples, question)
-    ? examples[question]
+export function getMockAnswer(question: string) {
+  const example = Object.hasOwn(ANSWERS, question)
+    ? ANSWERS[question]
     : undefined;
   return example
     ? `**示例回答**\n\n${example}`

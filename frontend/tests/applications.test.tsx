@@ -6,8 +6,11 @@ import {
   within,
 } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { App as ChatApp } from '../apps/chat/src/App';
-import { App as AdminApp } from '../apps/admin/src/App';
+import { App as ChatApp } from '../apps/chat/src/app/App';
+import { App as AdminApp } from '../apps/admin/src/app/App';
+import { AppProviders } from '../apps/chat/src/app/AppProviders';
+import { ChatPage } from '../apps/chat/src/features/chat/pages/ChatPage';
+import { mockReplySource } from '../apps/chat/src/mocks/chat-reply-source';
 
 describe.each([
   ['员工端', ChatApp, '新对话'],
@@ -22,9 +25,62 @@ describe.each([
   });
 });
 
-it('supports asking, stopping, retrying, feedback and isolated session switching', async () => {
+it('shows the unavailable interface state with submission disabled', async () => {
   render(<ChatApp />);
+  await waitFor(() => {
+    expect(screen.getAllByText('知识问答接口尚未接入').length).toBeGreaterThan(
+      0,
+    );
+  });
+  expect(
+    screen.getByRole('textbox', { name: '输入你的 IT 问题' }),
+  ).toBeDisabled();
+  expect(screen.getByRole('button', { name: '发送问题' })).toBeDisabled();
+  expect(
+    screen
+      .getAllByRole('button', { name: '如何申请 VPN 访问？' })
+      .every((button) => button.hasAttribute('disabled')),
+  ).toBe(true);
+  expect(
+    screen.queryByText('开发环境 · 回答为模拟内容'),
+  ).not.toBeInTheDocument();
+});
+
+it('shows a safe generation error without exposing source details', async () => {
+  render(
+    <AppProviders>
+      <ChatPage
+        replySource={{
+          notice: '',
+          async *streamReply() {
+            yield '部分回答';
+            throw new Error('private-source-details');
+          },
+        }}
+      />
+    </AppProviders>,
+  );
+  fireEvent.change(screen.getByRole('textbox', { name: '输入你的 IT 问题' }), {
+    target: { value: 'test question' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
+  await waitFor(() =>
+    expect(screen.getByRole('status')).toHaveTextContent('回答生成失败'),
+  );
+  expect(screen.getByText('部分回答')).toBeInTheDocument();
+  expect(screen.getByText('回答生成失败，请重试。')).toBeInTheDocument();
+  expect(screen.queryByText('private-source-details')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '重新生成' })).toBeEnabled();
+});
+
+it('supports asking, stopping, retrying, feedback and isolated session switching', async () => {
+  render(
+    <AppProviders>
+      <ChatPage replySource={mockReplySource} />
+    </AppProviders>,
+  );
   const input = screen.getByRole('textbox', { name: '输入你的 IT 问题' });
+  expect(screen.getByRole('button', { name: '发送问题' })).toBeDisabled();
   fireEvent.change(input, { target: { value: '如何申请 VPN 访问？' } });
   fireEvent.click(screen.getByRole('button', { name: '发送问题' }));
   expect(input).toHaveValue('');

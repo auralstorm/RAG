@@ -1,16 +1,27 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { MenuOutlined } from '@ant-design/icons';
-import { Button, Drawer, theme } from 'antd';
-import { ChatComposer } from './ChatComposer';
-import { ChatWelcome } from './ChatWelcome';
-import { ConversationSidebar } from './ConversationSidebar';
-import { MessageTimeline } from './MessageTimeline';
-import { useDemoChat } from './use-demo-chat';
-import styles from './ChatPage.module.css';
+import { Alert, Button, Drawer, theme } from 'antd';
+import { ChatComposer } from '../components/ChatComposer';
+import { ChatWelcome } from '../components/ChatWelcome';
+import { ConversationSidebar } from '../components/ConversationSidebar';
+import { MessageTimeline } from '../components/MessageTimeline';
+import { useChat } from '../hooks/use-chat';
+import type { ChatReplySource } from '../types';
+import styles from '../styles/Chat.module.css';
 
-export function ChatPage() {
-  const chat = useDemoChat();
+interface ChatPageProps {
+  readonly replySource: ChatReplySource | null;
+  readonly isInitializing?: boolean;
+  readonly initializationFailed?: boolean;
+}
+
+export function ChatPage({
+  replySource,
+  isInitializing = false,
+  initializationFailed = false,
+}: ChatPageProps) {
+  const chat = useChat(replySource);
   const lastStatus = chat.session.turns.at(-1)?.status;
   const [historyOpen, setHistoryOpen] = useState(false);
   const { token } = theme.useToken();
@@ -66,7 +77,9 @@ export function ChatPage() {
               ? '已停止生成'
               : lastStatus === 'success'
                 ? '回答已完成'
-                : ''}
+                : lastStatus === 'error'
+                  ? '回答生成失败'
+                  : ''}
         </span>
         <header className={styles.header}>
           <Button
@@ -78,6 +91,19 @@ export function ChatPage() {
           />
           <h1 title={chat.session.title}>{chat.session.title}</h1>
         </header>
+        {!chat.canSend && (
+          <Alert
+            type={initializationFailed ? 'error' : 'info'}
+            showIcon
+            title={
+              initializationFailed
+                ? '问答服务初始化失败，请刷新页面重试。'
+                : isInitializing
+                  ? '正在初始化问答服务'
+                  : '知识问答接口尚未接入'
+            }
+          />
+        )}
         {chat.session.turns.length > 0 ? (
           <MessageTimeline
             key={`timeline-${chat.session.id}`}
@@ -87,11 +113,13 @@ export function ChatPage() {
             onFeedback={chat.feedback}
           />
         ) : (
-          <ChatWelcome onPrompt={chat.send} />
+          <ChatWelcome onPrompt={chat.send} disabled={!chat.canSend} />
         )}
         <ChatComposer
           key={`composer-${chat.session.id}`}
           running={chat.running}
+          disabled={!chat.canSend}
+          notice={replySource?.notice ?? '知识问答接口尚未接入'}
           onSend={chat.send}
           onStop={chat.stop}
         />

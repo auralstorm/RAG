@@ -4,13 +4,15 @@ import {
   ToolOutlined,
 } from '@ant-design/icons';
 import { Prompts, Welcome } from '@ant-design/x';
-import { promptGroups } from './demo-content';
-import styles from './ChatPage.module.css';
+import { promptGroups } from '../prompts';
+import styles from '../styles/Chat.module.css';
 
 export function ChatWelcome({
   onPrompt,
+  disabled,
 }: {
-  onPrompt: (prompt: string) => void;
+  readonly onPrompt: (prompt: string) => void;
+  readonly disabled: boolean;
 }) {
   return (
     <div className={styles.welcome}>
@@ -38,6 +40,7 @@ export function ChatWelcome({
                 children: prompts.map((prompt) => ({
                   key: prompt,
                   description: prompt,
+                  disabled,
                 })),
               },
             ]}

@@ -3,18 +3,26 @@ import type { ComponentProps } from 'react';
 import { PaperClipOutlined } from '@ant-design/icons';
 import { Attachments, Prompts, Sender } from '@ant-design/x';
 import { Button } from 'antd';
-import styles from './ChatPage.module.css';
+import styles from '../styles/Chat.module.css';
 
 const shortcuts = ['如何申请 VPN 访问？', '如何提交 IT 工单？'];
 type LocalFiles = NonNullable<ComponentProps<typeof Attachments>['items']>;
 
 interface ComposerProps {
+  readonly disabled: boolean;
+  readonly notice: string;
   running: boolean;
   onSend: (question: string) => boolean;
   onStop: () => void;
 }
 
-export function ChatComposer({ running, onSend, onStop }: ComposerProps) {
+export function ChatComposer({
+  running,
+  disabled,
+  notice,
+  onSend,
+  onStop,
+}: ComposerProps) {
   const [draft, setDraft] = useState('');
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [files, setFiles] = useState<LocalFiles>([]);
@@ -31,7 +39,7 @@ export function ChatComposer({ running, onSend, onStop }: ComposerProps) {
           items={shortcuts.map((question) => ({
             key: question,
             label: question,
-            disabled: running,
+            disabled: running || disabled,
           }))}
           onItemClick={({ data }) => submit(data.key)}
         />
@@ -43,11 +51,15 @@ export function ChatComposer({ running, onSend, onStop }: ComposerProps) {
         onSubmit={submit}
         onCancel={onStop}
         loading={running}
+        disabled={disabled}
         suffix={(_, { components: { SendButton, LoadingButton } }) =>
           running ? (
             <LoadingButton aria-label="停止生成" />
           ) : (
-            <SendButton aria-label="发送问题" />
+            <SendButton
+              aria-label="发送问题"
+              disabled={disabled || !draft.trim()}
+            />
           )
         }
         placeholder="输入你的 IT 问题"
@@ -56,6 +68,7 @@ export function ChatComposer({ running, onSend, onStop }: ComposerProps) {
             type="text"
             aria-label="附件预览"
             aria-expanded={attachmentsOpen}
+            disabled={disabled}
             icon={<PaperClipOutlined />}
             onClick={() => setAttachmentsOpen((open) => !open)}
           />
@@ -79,7 +92,7 @@ export function ChatComposer({ running, onSend, onStop }: ComposerProps) {
           </Sender.Header>
         }
       />
-      <div className={styles.composerNote}>本地演示 · 回答为示例内容</div>
+      <div className={styles.composerNote}>{notice}</div>
     </div>
   );
 }

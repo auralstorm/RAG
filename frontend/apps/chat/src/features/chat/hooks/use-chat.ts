@@ -1,30 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { exampleAnswer } from './demo-content';
-
-export type AnswerStatus = 'loading' | 'updating' | 'success' | 'abort';
-
-export interface ChatTurn {
-  id: string;
-  question: string;
-  answer: string;
-  status: AnswerStatus;
-  feedback: 'like' | 'dislike' | null;
-}
-
-export interface ChatSession {
-  id: string;
-  title: string;
-  turns: ChatTurn[];
-}
+import type { ChatReplySource, ChatSession, ChatTurn } from '../types';
 
 const emptySession: ChatSession = { id: 'initial', title: '新对话', turns: [] };
 
-export function useDemoChat() {
+export function useChat(replySource: ChatReplySource | null) {
   const [{ sessions, activeId }, setChat] = useState({
     sessions: [emptySession],
     activeId: emptySession.id,
   });
-  const requests = useRef(new Map<string, ReturnType<typeof setInterval>>());
+  const requests = useRef(new Map<string, AbortController>());
   const session =
     sessions.find((item) => item.id === activeId) ??
     sessions[0] ??
@@ -34,10 +18,10 @@ export function useDemoChat() {
   );
 
   useEffect(() => {
-    const timers = requests.current;
+    const activeRequests = requests.current;
     return () => {
-      timers.forEach(clearInterval);
-      timers.clear();
+      activeRequests.forEach((request) => request.abort());
+      activeRequests.clear();
     };
   }, []);
 
@@ -62,25 +46,40 @@ export function useDemoChat() {
   }
 
   function clearRequest(sessionId: string) {
-    const timer = requests.current.get(sessionId);
-    if (timer !== undefined) clearInterval(timer);
+    requests.current.get(sessionId)?.abort();
     requests.current.delete(sessionId);
   }
 
   function generate(sessionId: string, turnId: string, question: string) {
-    const answer = Array.from(exampleAnswer(question));
-    let length = 0;
-    const timer = setInterval(() => {
-      if (requests.current.get(sessionId) !== timer) return;
-      length += 12;
-      const done = length >= answer.length;
-      updateTurn(sessionId, turnId, {
-        answer: answer.slice(0, length).join(''),
-        status: done ? 'success' : 'updating',
-      });
-      if (done) clearRequest(sessionId);
-    }, 70);
-    requests.current.set(sessionId, timer);
+    if (!replySource) return;
+    const source = replySource;
+    const request = new AbortController();
+    requests.current.set(sessionId, request);
+    async function receiveReply() {
+      let answer = '';
+      try {
+        for await (const delta of source.streamReply(
+          question,
+          request.signal,
+        )) {
+          if (requests.current.get(sessionId) !== request) return;
+          answer += delta;
+          updateTurn(sessionId, turnId, { answer, status: 'updating' });
+        }
+        if (requests.current.get(sessionId) === request) {
+          updateTurn(sessionId, turnId, { answer, status: 'success' });
+        }
+      } catch {
+        if (requests.current.get(sessionId) === request) {
+          updateTurn(sessionId, turnId, { status: 'error' });
+        }
+      } finally {
+        if (requests.current.get(sessionId) === request) {
+          requests.current.delete(sessionId);
+        }
+      }
+    }
+    void receiveReply();
   }
 
   function newSession() {
@@ -130,7 +129,8 @@ export function useDemoChat() {
 
   function send(value: string) {
     const question = value.trim();
-    if (!question || requests.current.has(session.id)) return false;
+    if (!replySource || !question || requests.current.has(session.id))
+      return false;
     const turn: ChatTurn = {
       id: crypto.randomUUID(),
       question,
@@ -177,6 +177,7 @@ export function useDemoChat() {
 
   function retry(turn: ChatTurn) {
     if (
+      !replySource ||
       requests.current.has(session.id) ||
       !session.turns.some(({ id }) => id === turn.id)
     )
@@ -193,6 +194,7 @@ export function useDemoChat() {
     sessions,
     session,
     running,
+    canSend: replySource !== null,
     selectSession,
     newSession,
     deleteSession,

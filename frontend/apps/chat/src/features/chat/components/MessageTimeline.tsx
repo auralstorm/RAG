@@ -7,12 +7,12 @@ import {
 import { Actions, Bubble, ThoughtChain } from '@ant-design/x';
 import XMarkdown from '@ant-design/x-markdown';
 import '@ant-design/x-markdown/themes/light.css';
-import { Avatar, Button } from 'antd';
-import type { ChatTurn } from './use-demo-chat';
-import styles from './ChatPage.module.css';
+import { Alert, Avatar, Button } from 'antd';
+import type { ChatTurn } from '../types';
+import styles from '../styles/Chat.module.css';
 
 interface TimelineProps {
-  turns: ChatTurn[];
+  turns: readonly ChatTurn[];
   running: boolean;
   onRetry: (turn: ChatTurn) => void;
   onFeedback: (id: string, feedback: ChatTurn['feedback']) => void;
@@ -62,6 +62,9 @@ export function MessageTimeline({
                 </XMarkdown>
                 {turn.status === 'abort' && (
                   <span className={styles.muted}>已停止生成</span>
+                )}
+                {turn.status === 'error' && (
+                  <Alert type="error" title="回答生成失败，请重试。" showIcon />
                 )}
               </>
             ),
