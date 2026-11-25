@@ -3,11 +3,44 @@
 from datetime import datetime
 from uuid import UUID
 
+from psycopg import Error
 from pydantic import BaseModel, ConfigDict
 
 from app.adapters.audit_writer import PostgresAuditWriter
+from app.adapters.postgres import postgres_transaction
+from app.core.config import Settings
 from app.modules.iam.domain.contracts import ExternalIdentity, IdentityKey, Role, User
-from app.modules.iam.domain.sessions import Application, CurrentIdentity, PlatformSession
+from app.modules.iam.domain.identity_providers import (
+    PLATFORM_ISSUER,
+    PLATFORM_PROVIDER_KEY,
+    PlatformPasswordCredential,
+)
+from app.modules.iam.domain.sessions import (
+    Application,
+    AuthenticationUnavailable,
+    CurrentIdentity,
+    PlatformSession,
+)
+
+
+class PostgresPlatformCredentialLookup:
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
+    async def __call__(self, username: str) -> PlatformPasswordCredential | None:
+        try:
+            async with postgres_transaction(self.settings) as connection:
+                await connection.execute("SET LOCAL statement_timeout = '5s'")
+                cursor = await connection.execute(
+                    "SELECT i.subject, c.password_hash FROM platform_password_credentials c "
+                    "JOIN identities i ON i.id=c.identity_id "
+                    "WHERE lower(c.username)=lower(%s) AND i.provider_key=%s AND i.issuer=%s",
+                    (username, PLATFORM_PROVIDER_KEY, PLATFORM_ISSUER),
+                )
+                row = await cursor.fetchone()
+        except Error as error:
+            raise AuthenticationUnavailable() from error
+        return PlatformPasswordCredential(subject=str(row[0]), password_hash=str(row[1])) if row else None
 
 
 class SessionRow(BaseModel):

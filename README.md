@@ -1,6 +1,6 @@
 # EnterpriseRag
 
-单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、可选本地测试登录、公共包和工程检查入口。业务功能和企业身份源按后续任务交付，基础设施使用本项目的 Docker 编排，对象存储已按 [ADR-0015](docs/adr/0015-rustfs-object-storage.md) 采用 RustFS（S3 协议）。
+单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、平台账号登录、可选本地测试身份源、公共包和工程检查入口。飞书等外部企业身份源按实际需求后续接入。基础设施使用本项目的 Docker 编排，对象存储已按 [ADR-0015](docs/adr/0015-rustfs-object-storage.md) 采用 RustFS（S3 协议）。
 
 ## 工具链
 
@@ -45,7 +45,7 @@ make dev-admin
 | Chat | <http://127.0.0.1:5173> |
 | Admin | <http://127.0.0.1:5174> |
 
-`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat/Admin 的 [登录页面与受保护路由](docs/plan/V1.0-MVP/implementation/P1-02.md) 已接入 [P1-04 本地测试登录、会话恢复与登出](docs/plan/V1.0-MVP/implementation/P1-04.md)；默认没有账号，须显式配置私密身份源，生产拒绝此来源。开发模式下，Chat 的 `/preview` 提供问答演示，Admin 的 `/preview` 提供真实 API 连通性表格；生产均不开放预览。受保护 Chat 不加载模拟回答。两个应用通过各自的 `VITE_API_BASE_URL` 装配公共客户端，默认 `/backend/` 经同源代理访问后端。独立静态部署与路由回退见 [部署步骤](infra/frontend/README.md)。
+`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat/Admin 的 [登录页面与受保护路由](docs/plan/V1.0-MVP/implementation/P1-02.md) 复用 [P1-04 平台账号登录与会话](docs/plan/V1.0-MVP/implementation/P1-04.md)；生产平台账号由受控 CLI 创建，新账号默认只有 Chat 入口，Admin 入口须显式授权。开发测试身份源仍可单独启用，生产拒绝该来源。开发模式下，Chat 的 `/preview` 提供问答演示，Admin 的 `/preview` 提供真实 API 连通性表格；生产均不开放预览。受保护 Chat 不加载模拟回答。两个应用通过各自的 `VITE_API_BASE_URL` 装配公共客户端，默认 `/backend/` 经同源代理访问后端。独立静态部署与路由回退见 [部署步骤](infra/frontend/README.md)。
 
 PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运行 `make db-current` 查看版本。两个命令均可使用 `PROFILE=test` 选择测试库。迁移与事务边界见 [P1-01 实施记录](docs/plan/V1.0-MVP/implementation/P1-01.md)。
 
@@ -53,9 +53,9 @@ PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运�
 
 [P1-07 可观测性](docs/plan/V1.0-MVP/implementation/P1-07.md) 在现有健康检查上补齐受控 JSON 请求日志、OpenTelemetry 基础指标及 HTTP/依赖/数据库 Trace。`make dev-backend` 已使用脱敏日志配置并关闭原始访问日志；Phoenix 网络导出需显式启用及私密服务凭据引用，配置、指标读法和验证边界见实施记录。
 
-需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。RBAC 后端与固定矩阵已由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员需按其中步骤显式配置，不自动提升开发账号。该测试来源不替代企业 OIDC 或生产安全验收。
+开发测试登录仍可按 [P1-04 本地测试身份步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地测试身份与兼容配置) 创建，并显式设置 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF` 启动后端。正式平台账号先设置私密 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF`，按 [P1-04 CLI 步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#正式平台账号与运维初始化) 初始化密钥和数据库账号；密码从终端不回显输入，不写命令参数或仓库。RBAC 固定矩阵由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员必须明确授予 Admin 入口并执行初始化，不自动提升任何账号。
 
-平台会话/伪名密钥可通过 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF` 与账号来源独立配置；旧组合文件继续兼容。使用 `uv run --locked python -m scripts.separate_auth_config` 复制原密钥，完整参数与切换步骤见 [身份源适配与配置拆分](docs/plan/V1.0-MVP/implementation/P1-04.md#身份源适配调整2026-11-25)。迁移不轮换密钥，不自动建立企业身份关联。
+平台会话/伪名密钥可通过 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF` 独立配置；旧组合文件继续兼容。使用 `uv run --locked python -m scripts.separate_auth_config` 可复制现有密钥而不轮换；正式平台账号配置和初始化见 [P1-04 实施记录](docs/plan/V1.0-MVP/implementation/P1-04.md)。飞书等外部身份源暂缓，未来须显式关联平台用户。
 
 ## 目录与依赖
 

@@ -51,7 +51,7 @@ export function CredentialForm({
       ) : null}
       <Form<SessionCredentials>
         form={form}
-        name="local-login"
+        name="account-login"
         layout="vertical"
         requiredMark={false}
         disabled={!onLogin || isSubmitting}

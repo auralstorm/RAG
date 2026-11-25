@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, datetime
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
@@ -29,6 +29,7 @@ def create_auth_router(
     *,
     secure_cookies: bool,
     password_login: LoginService[PasswordCredentials] | None = None,
+    password_login_mode: Literal["local", "platform"] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
@@ -83,7 +84,7 @@ def create_auth_router(
     async def configuration(application: Application, request: Request, response: Response) -> AuthConfiguration:
         guard_origin(request, application)
         response.headers["Cache-Control"] = "no-store"
-        return AuthConfiguration(mode="local" if password_login else "unavailable")
+        return AuthConfiguration(mode=password_login_mode or "unavailable")
 
     @router.post("/{application}/login")
     async def login(

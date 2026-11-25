@@ -179,6 +179,7 @@ source = { editable = "backend" }
 dependencies = [
     { name = "aio-pika" },
     { name = "alembic" },
+    { name = "argon2-cffi" },
     { name = "fastapi" },
     { name = "grpcio" },
     { name = "httpx2" },
@@ -202,6 +203,7 @@ dependencies = [
 requires-dist = [
     { name = "aio-pika", specifier = "==10.2.3" },
     { name = "alembic", specifier = "==1.18.4" },
+    { name = "argon2-cffi", specifier = "==25.1.0" },
     { name = "fastapi", specifier = "==0.165.0" },
     { name = "grpcio", specifier = "==1.85.4" },
     { name = "httpx2", specifier = "==2.16.2" },

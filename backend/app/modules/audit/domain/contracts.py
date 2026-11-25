@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import Field, model_validator
@@ -39,6 +39,7 @@ class AuditRisk(StrEnum):
 class AuditSnapshot(VersionedContract):
     enabled: bool | None = Field(default=None, strict=True)
     user_status: UserStatus | None = None
+    application_access: tuple[Literal["chat", "admin"], ...] | None = Field(default=None, max_length=2)
     role_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)
     permission_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)
     configuration_id: UUID | None = None
@@ -50,6 +51,8 @@ class AuditSnapshot(VersionedContract):
     def require_grant_purpose(self) -> Self:
         if (self.resource_grant is None) != (self.resource_purpose is None):
             raise ValueError("An audited resource grant requires its application purpose")
+        if self.application_access is not None and len(set(self.application_access)) != len(self.application_access):
+            raise ValueError("Application access snapshots cannot contain duplicates")
         return self
 
 

@@ -22,7 +22,7 @@ export interface SessionCredentials {
 }
 
 export interface SessionActions {
-  readonly mode: 'local' | 'unavailable';
+  readonly mode: 'local' | 'platform' | 'unavailable';
   readonly login?: (
     credentials: SessionCredentials,
     signal: AbortSignal,

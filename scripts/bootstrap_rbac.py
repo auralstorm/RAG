@@ -1,4 +1,4 @@
-"""Explicitly appoint the first active local administrator; no default user is elevated."""
+"""Explicitly appoint the first active platform administrator; no default user is elevated."""
 
 import argparse
 import asyncio
@@ -56,9 +56,11 @@ async def appoint_first_admin(settings: Settings, user_id: UUID) -> None:
 
 
 def bootstrap(settings: Settings, path: Path, user_id: UUID) -> None:
-    if settings.environment == "production":
-        raise ValueError("Local identity bootstrap is not available in production")
     separate_platform = settings.auth_platform_config_ref is not None
+    if settings.environment == "production" and not separate_platform:
+        raise ValueError("Production administrator bootstrap requires a separate platform authentication config")
+    if settings.environment == "production" and settings.local_identity_config_ref is not None:
+        raise ValueError("The development-only local identity source is not available in production")
     path = (settings.auth_platform_config_ref or path).absolute()
     descriptor = os.open(path.with_name(path.name + ".lock"), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "r+") as lock:

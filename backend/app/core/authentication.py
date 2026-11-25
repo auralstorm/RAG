@@ -3,10 +3,11 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Literal
 
 from psycopg import Error
 
-from app.adapters.iam_repository import PostgresAuthRepository
+from app.adapters.iam_repository import PostgresAuthRepository, PostgresPlatformCredentialLookup
 from app.adapters.postgres import postgres_transaction
 from app.adapters.rbac import PostgresRbacRepository
 from app.core.config import Settings
@@ -18,6 +19,7 @@ from app.modules.iam.domain.rbac import RbacRepository
 from app.modules.iam.domain.sessions import AuthenticationUnavailable, AuthRepository
 from app.modules.iam.infrastructure.local_identity import LocalIdentityProvider, read_private_config
 from app.modules.iam.infrastructure.platform_config import PlatformAuthConfig, read_platform_config
+from app.modules.iam.infrastructure.platform_identity import PlatformIdentityProvider
 from app.modules.iam.infrastructure.tokens import JwtSessionTokens
 from app.modules.policy.application.enforcement import PolicyEnforcer
 
@@ -27,6 +29,7 @@ class IamServices:
     sessions: SessionService | None = None
     rbac: RbacService | None = None
     password_login: LoginService[PasswordCredentials] | None = None
+    password_login_mode: Literal["local", "platform"] | None = None
 
 
 def create_iam_services(settings: Settings) -> IamServices:
@@ -58,13 +61,26 @@ def create_iam_services(settings: Settings) -> IamServices:
         access_seconds=settings.auth_access_seconds,
         session_seconds=settings.auth_session_seconds,
     )
-    password_login = (
-        LoginService(sessions, LocalIdentityProvider(local), account_key=lambda credentials: credentials.username)
-        if local is not None
-        else None
-    )
+    if local is not None:
+        password_login = LoginService(
+            sessions,
+            LocalIdentityProvider(local),
+            account_key=lambda credentials: credentials.username,
+        )
+        password_login_mode: Literal["local", "platform"] = "local"
+    else:
+        password_login = LoginService(
+            sessions,
+            PlatformIdentityProvider(PostgresPlatformCredentialLookup(settings)),
+            account_key=lambda credentials: credentials.username.casefold(),
+        )
+        password_login_mode = "platform"
     if configuration.pseudonymization_key is None:
-        return IamServices(sessions=sessions, password_login=password_login)
+        return IamServices(
+            sessions=sessions,
+            password_login=password_login,
+            password_login_mode=password_login_mode,
+        )
 
     @asynccontextmanager
     async def policy_transaction() -> AsyncGenerator[RbacRepository]:
@@ -84,4 +100,9 @@ def create_iam_services(settings: Settings) -> IamServices:
             configuration.pseudonymization_key.get_secret_value().encode(),
         ),
     )
-    return IamServices(sessions=sessions, rbac=rbac, password_login=password_login)
+    return IamServices(
+        sessions=sessions,
+        rbac=rbac,
+        password_login=password_login,
+        password_login_mode=password_login_mode,
+    )

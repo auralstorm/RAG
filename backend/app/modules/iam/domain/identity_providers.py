@@ -5,11 +5,22 @@ from typing import Protocol
 
 from app.modules.iam.domain.contracts import IdentityKey
 
+PLATFORM_PROVIDER_KEY = "platform"
+PLATFORM_ISSUER = "urn:enterprise-rag:platform"
+
 
 @dataclass(frozen=True)
 class PasswordCredentials:
     username: str = field(repr=False)
     password: str = field(repr=False)
+
+
+@dataclass(frozen=True)
+class PlatformPasswordCredential:
+    """Stored password verifier and exact platform identity returned by persistence."""
+
+    subject: str = field(repr=False)
+    password_hash: str = field(repr=False)
 
 
 class IdentityProvider[CredentialsT](Protocol):

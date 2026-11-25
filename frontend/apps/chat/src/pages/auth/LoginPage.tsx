@@ -19,6 +19,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const session = useSessionState();
   const actions = useSessionActions();
   const { handleLogin, isSubmitting, hasError } = useLogin(onLogin);
+  const hasPasswordLogin =
+    actions.mode === 'local' || actions.mode === 'platform';
 
   const loginForm = (
     <AccessScreen
@@ -43,7 +45,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           description="仅用于开发与测试，不代表企业 SSO 已接入。"
         />
       ) : null}
-      {!onLogin && actions.mode !== 'local' ? (
+      {!onLogin && !hasPasswordLogin ? (
         <Alert type="info" showIcon title="企业登录暂未开放，请联系管理员。" />
       ) : null}
       {hasError ? (
@@ -53,8 +55,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           title="暂时无法登录，请重试或联系管理员。"
         />
       ) : null}
-      {actions.mode === 'local' ? (
-        <CredentialForm accountLabel="测试账号" onLogin={actions.login} />
+      {hasPasswordLogin ? (
+        <CredentialForm
+          accountLabel={actions.mode === 'local' ? '测试账号' : '平台账号'}
+          onLogin={actions.login}
+        />
       ) : (
         <Button
           type="primary"

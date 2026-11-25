@@ -16,7 +16,7 @@ class LoginCredentials(HttpContract):
 
 
 class AuthConfiguration(HttpContract):
-    mode: Literal["local", "unavailable"]
+    mode: Literal["local", "platform", "unavailable"]
 
 
 class CsrfResponse(HttpContract):

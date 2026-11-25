@@ -50,6 +50,8 @@ erDiagram
 
 **物理迁移落实（2026-11-25）：** P1-03 确认实际代码和本地开发库没有存量来源档案表或业务外键，采用 users/identities/subject_bindings、user_roles 及权限/审计基础表；不新建平行的 admin_users/employees/admin_user_roles。规范主体及显式来源 ID 语义保持兼容，唯一/FK、软删除、角色保护与审计追加写入约束以 [0002 迁移](../../../backend/migrations/versions/0002_iam_audit.py) 为准。调查、精确身份索引及回退边界见 [P1-03 实施记录](implementation/P1-03.md)。以下清单继续作为原逻辑设计输入，不代表当前物理 DDL。
 
+**平台账号落实（2026-11-26）：** 正式平台密码凭据独立保存于 `platform_password_credentials`，通过 identity FK 关联 `users/identities`；密码仅存 Argon2id 校验值，用户名不区分大小写唯一。`identity_applications` 独立控制 Chat/Admin 入口，`user_roles` 控制后台操作权限；建号默认授予 Chat，Admin 入口显式授权。实际 DDL 以 [0005 迁移](../../../backend/migrations/versions/0005_platform_password_accounts.py) 为准；Admin 用户管理 UI/API 仍按 P5-04 交付。
+
 #### `admin_users`
 - `id UUID PK`
 - `username VARCHAR(128) UNIQUE`
@@ -82,7 +84,7 @@ erDiagram
 
 #### `employees`
 - `id UUID PK`
-- `source_id VARCHAR(256)`：OAuth 来源的稳定主体 ID，敏感字段限制访问
+- `source_id VARCHAR(256)`：身份来源的稳定主体 ID，敏感字段限制访问；平台账号或后续外部身份均经显式映射
 - `display_name VARCHAR(128)`
 - `login_provider VARCHAR(32)`
 - `status VARCHAR(24)`：ACTIVE / PENDING_DEPARTURE / DEPARTED / DISABLED
@@ -335,7 +337,7 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 
 - 前缀：`/api/v1`
 - JSON：UTF-8；时间 ISO 8601 UTC。
-- 认证：后台 JWT；员工 OAuth 登录后由平台签发短期 Access Token + Refresh Token。
+- 认证：平台账号密码或后续外部身份源验证成功后，由平台签发短期 Access Token + Refresh Token；凭据不进入平台 Token。
 - 分页：`page, page_size` 或 cursor；列表响应统一包含 `items, total, page, page_size`。
 - 错误格式：
 
@@ -376,7 +378,7 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 | POST | `/employees/{id}/pending-departure` | 标记待离职 | SUPER_ADMIN |
 | POST | `/employees/{id}/restore` | 恢复正常 | SUPER_ADMIN |
 
-员工 OAuth 回调路径按所选供应商确定；平台统一映射为内部 Employee。
+当前平台账号经 `/api/v1/auth/{application}/login` 完成密码验证；后续若接入外部 OAuth/OIDC，再增加绑定一次性登录事务的回调路径。所有身份来源均映射至稳定平台用户，不自动按用户名/email 合并。
 
 ### 6.2 Provider / Model
 

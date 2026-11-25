@@ -211,6 +211,11 @@ export interface components {
     /** AuditSnapshot */
     readonly AuditSnapshot: {
       /**
+       * Application Access
+       * @default null
+       */
+      readonly application_access: readonly ('chat' | 'admin')[] | null;
+      /**
        * Configuration Id
        * @default null
        */

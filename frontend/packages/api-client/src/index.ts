@@ -334,7 +334,9 @@ export function createApiClient(
         ).json();
         if (
           !isRecord(payload) ||
-          (payload.mode !== 'local' && payload.mode !== 'unavailable')
+          (payload.mode !== 'local' &&
+            payload.mode !== 'platform' &&
+            payload.mode !== 'unavailable')
         )
           throw new Error('Invalid auth configuration');
         return { mode: payload.mode };

@@ -79,6 +79,7 @@ def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | N
             {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins},
             secure_cookies=configuration.environment == "production",
             password_login=iam.password_login,
+            password_login_mode=iam.password_login_mode,
         )
     )
     application.include_router(

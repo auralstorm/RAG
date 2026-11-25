@@ -438,6 +438,8 @@ export interface components {
     readonly AuditRisk: 'LOW' | 'MEDIUM' | 'HIGH';
     /** AuditSnapshot */
     readonly AuditSnapshot: {
+      /** Application Access */
+      readonly application_access?: readonly ('chat' | 'admin')[] | null;
       /** Configuration Id */
       readonly configuration_id?: string | null;
       /** Credential Present */
@@ -464,7 +466,7 @@ export interface components {
        * Mode
        * @enum {string}
        */
-      readonly mode: 'local' | 'unavailable';
+      readonly mode: 'local' | 'platform' | 'unavailable';
     };
     /** AuthSessionResponse */
     readonly AuthSessionResponse: {

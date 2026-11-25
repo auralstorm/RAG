@@ -30,6 +30,7 @@ from scripts.bootstrap_rbac import bootstrap
 from scripts.infrastructure import compose, initialize_config
 from scripts.local_identity import provision
 from scripts.migrate_database import run_migration
+from scripts.platform_account import provision as provision_platform_account
 from scripts.separate_auth_config import separate
 
 pytestmark = pytest.mark.infrastructure
@@ -209,7 +210,7 @@ def test_separate_platform_keys_preserve_existing_sessions_and_do_not_enable_a_s
     platform_only = migrated.model_copy(update={"local_identity_config_ref": None})
     with TestClient(create_app(platform_only)) as client:
         client.cookies.update(cookies)
-        assert client.get("/api/v1/auth/chat/config").json() == {"mode": "unavailable"}
+        assert client.get("/api/v1/auth/chat/config").json() == {"mode": "platform"}
         assert client.get("/api/v1/auth/chat/me").status_code == 200
         assert (
             client.post(
@@ -217,8 +218,79 @@ def test_separate_platform_keys_preserve_existing_sessions_and_do_not_enable_a_s
                 headers={"Origin": ORIGINS["chat"]},
                 json={"username": "fixture", "password": PASSWORD},
             ).status_code
-            == 503
+            == 401
         )
+
+
+def test_platform_accounts_are_chat_default_admin_explicit_and_role_authorized(
+    auth: AuthFixture,
+) -> None:
+    local = auth.settings.local_identity_config_ref
+    assert local is not None
+    platform = local.with_name("platform.json")
+    separate(local, platform)
+    settings = auth.settings.model_copy(
+        update={"local_identity_config_ref": None, "auth_platform_config_ref": platform}
+    )
+    production_settings = settings.model_copy(update={"environment": "production"})
+
+    async def create_account(username: str, *, admin_access: bool = False) -> UUID:
+        return await provision_platform_account(
+            production_settings,
+            username,
+            f"员工-{username}",
+            PASSWORD,
+            admin_access=admin_access,
+        )
+
+    employee_id = asyncio.run(create_account("platform-employee"))
+    admin_id = asyncio.run(create_account("platform-admin", admin_access=True))
+    bootstrap(production_settings, platform, admin_id)
+
+    with TestClient(create_app(settings), client=(uuid4().hex, 50001)) as client:
+        assert client.get("/api/v1/auth/chat/config").json() == {"mode": "platform"}
+        assert client.post(
+            "/api/v1/auth/chat/login",
+            headers={"Origin": ORIGINS["chat"]},
+            json={"username": "PLATFORM-EMPLOYEE", "password": PASSWORD},
+        ).json()["user"]["id"] == str(employee_id)
+        assert (
+            client.post(
+                "/api/v1/auth/admin/login",
+                headers={"Origin": ORIGINS["admin"]},
+                json={"username": "platform-employee", "password": PASSWORD},
+            ).status_code
+            == 401
+        )
+        admin_login = client.post(
+            "/api/v1/auth/admin/login",
+            headers={"Origin": ORIGINS["admin"]},
+            json={"username": "platform-admin", "password": PASSWORD},
+        )
+        assert admin_login.status_code == 200
+        assert admin_login.json()["user"]["id"] == str(admin_id)
+        assert client.get("/api/v1/authorization/admin/me").status_code == 200
+        assert client.post(
+            "/api/v1/auth/chat/login",
+            headers={"Origin": ORIGINS["chat"]},
+            json={"username": "platform-admin", "password": PASSWORD},
+        ).json()["user"]["id"] == str(admin_id)
+
+    with Connection.connect(postgres_conninfo(settings)) as connection:
+        credentials = connection.execute(
+            "SELECT username,password_hash FROM platform_password_credentials ORDER BY username"
+        ).fetchall()
+        assert len(credentials) == 2
+        assert all(row[1].startswith("$argon2id$") and PASSWORD not in row[1] for row in credentials)
+        audit = connection.execute(
+            "SELECT after_snapshot FROM audit_events WHERE object_id=%s AND action='lifecycle.change'",
+            (employee_id,),
+        ).fetchone()
+        assert audit is not None
+        assert audit[0]["application_access"] == ["chat"]
+
+    with pytest.raises(ValueError, match="already exists"):
+        asyncio.run(create_account("PLATFORM-EMPLOYEE"))
 
 
 def test_provisioning_and_bootstrap_keep_platform_keys_out_of_new_identity_files(

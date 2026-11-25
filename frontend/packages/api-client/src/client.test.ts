@@ -62,6 +62,18 @@ it('preserves a configured reverse proxy prefix', async () => {
   );
 });
 
+it('accepts the database-backed platform password login mode', async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response(JSON.stringify({ mode: 'platform' })));
+  await expect(
+    createApiClient('https://api.example/', fetcher).auth.configuration(
+      'chat',
+      new AbortController().signal,
+    ),
+  ).resolves.toEqual({ mode: 'platform' });
+});
+
 it.each(['javascript:alert(1)', 'https://user:password@example.com'])(
   'rejects unsafe API URL %s',
   (url) => {

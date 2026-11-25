@@ -12,7 +12,7 @@ type SessionCoordinator = <T>(
 ) => Promise<T>;
 interface Snapshot {
   readonly state: SessionState;
-  readonly mode: 'local' | 'unavailable';
+  readonly mode: 'local' | 'platform' | 'unavailable';
 }
 
 export function createSessionStore(
@@ -250,8 +250,9 @@ export function createSessionStore(
             publish({ status: 'anonymous' }, 'unavailable');
             return undefined;
           }
-          if (!background) publish({ status: 'checking' }, 'local');
-          else if (snapshot.mode !== 'local') publish(snapshot.state, 'local');
+          if (!background) publish({ status: 'checking' }, config.mode);
+          else if (snapshot.mode !== config.mode)
+            publish(snapshot.state, config.mode);
           // The lock owner re-reads cookies through /me: another tab may already
           // have rotated. Only an expired/near-expiry credential is refreshed.
           return readSession(signal, renewSoon);

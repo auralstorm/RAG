@@ -54,6 +54,34 @@ describe('login forms', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows username and password fields for the platform login mode', async () => {
+    const onLogin = vi.fn().mockResolvedValue(undefined);
+    render(
+      <MemoryRouter>
+        <ChatProviders>
+          <SessionProvider
+            state={{ status: 'anonymous' }}
+            actions={{ mode: 'platform', login: onLogin }}
+          >
+            <ChatLoginPage />
+          </SessionProvider>
+        </ChatProviders>
+      </MemoryRouter>,
+    );
+    expect(screen.getByLabelText('平台账号')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('平台账号'), {
+      target: { value: 'platform-user' },
+    });
+    fireEvent.change(screen.getByLabelText('密码', { exact: true }), {
+      target: { value: 'transient-fixture-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '登录' }));
+    await waitFor(() => expect(onLogin).toHaveBeenCalledTimes(1));
+    expect(onLogin.mock.calls[0]?.[0]).toMatchObject({
+      username: 'platform-user',
+    });
+  });
+
   it('prevents duplicate login and aborts a pending request on unmount', async () => {
     const onLogin = vi
       .fn<(signal: AbortSignal) => Promise<void>>()

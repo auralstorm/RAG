@@ -296,6 +296,25 @@
       "AuditSnapshot": {
         "additionalProperties": false,
         "properties": {
+          "application_access": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "chat",
+                    "admin"
+                  ],
+                  "type": "string"
+                },
+                "maxItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Access"
+          },
           "configuration_id": {
             "anyOf": [
               {
@@ -408,6 +427,7 @@
           "mode": {
             "enum": [
               "local",
+              "platform",
               "unavailable"
             ],
             "title": "Mode",
