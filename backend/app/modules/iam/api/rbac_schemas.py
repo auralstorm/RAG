@@ -17,6 +17,7 @@ class RoleView(HttpContract):
 
 
 class CapabilityView(HttpContract):
+    subject_id: UUID
     application: Application
     policy_version: PolicyVersion
     roles: tuple[Role, ...]

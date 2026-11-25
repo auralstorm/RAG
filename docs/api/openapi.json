@@ -468,9 +468,15 @@
             },
             "title": "Roles",
             "type": "array"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
           }
         },
         "required": [
+          "subject_id",
           "application",
           "policy_version",
           "roles",

@@ -153,6 +153,7 @@ def test_current_fixed_matrix_and_negative_management_api(rbac: RbacFixture) -> 
         client = rbac.clients[code]
         response = client.get("/api/v1/authorization/admin/me")
         assert response.status_code == 200, response.text
+        assert response.json()["subject_id"] == str(rbac.users[code])
         assert frozenset(response.json()["permission_codes"]) == SYSTEM_ROLE_PERMISSIONS[code]
         assert "issuer" not in response.text and "actor_" not in response.text
         assert client.get("/api/v1/admin/roles").status_code == (403 if code == "KB_ADMIN" else 200)

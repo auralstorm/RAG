@@ -60,4 +60,6 @@ PolicyDecision 绑定当前检查对象，不能当作可重放 Token 或替代�
 
 P1-05 的 [执行与迁移记录](../plan/V1.0-MVP/implementation/P1-05.md) 固定 23 个操作码和三个系统角色的矩阵。PolicyEnforcer 从当前数据库事实构造上下文，KB 内容必须同时具备操作能力与目的匹配的显式 Grant；后台角色不授予 Chat 内容。只有不可委派的 acl.manage 可配置第一份 ACL，ACL 明细查询另要求目标 KB 可读。缺组成员事实时 GROUP 持久化/API 拒绝，不能猜测成员关系。自定义角色只接受只读集合；统一授权仍过滤意外的管理权限关系。
 
+当前权限 HTTP 视图 CapabilityView 包含安全的 `subject_id`、application、policy_version、roles 和 permission_codes。subject_id 来自同一次可信授权事务的 User.id；前端与已确认的会话主体、应用匹配后才展示内容，Policy 版本变化清理旧页面状态。该字段作为响应增量随 OpenAPI/TypeScript 更新，不改变内部 AccessContext 或数据库；旧前端兼容新增字段，新前端需先部署新版后端。当前权限视图只用于交互控制，不能替代每次业务请求的授权。
+
 真实企业 OIDC、KB/文档实体及 Policy→Retriever 集成仍按对应主线验收；不能用本地会话和权限范围 ID 测试替代这些交付。完整 P0-04/M0 及 P1/M1 不因上述基础实现自动关闭。

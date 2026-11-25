@@ -1,11 +1,17 @@
 import { Link, Navigate, Outlet } from 'react-router';
-import { SessionBoundary } from '@enterprise-rag/ui';
+import { SessionBoundary, SessionLogoutButton } from '@enterprise-rag/ui';
 
 export function RequireSession() {
   return (
     <SessionBoundary
       loginFallback={<Navigate to="/login" replace />}
-      recoveryAction={<Link to="/login">返回登录</Link>}
+      recoveryAction={
+        <>
+          <SessionLogoutButton />
+          <Link to="/login">返回登录</Link>
+        </>
+      }
+      requiredPermission="dashboard.read"
     >
       <Outlet />
     </SessionBoundary>

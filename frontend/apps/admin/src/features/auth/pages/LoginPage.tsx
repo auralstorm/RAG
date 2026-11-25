@@ -4,6 +4,7 @@ import {
   AccessScreen,
   CredentialForm,
   SessionBoundary,
+  SessionLogoutButton,
   useSessionState,
   useSessionActions,
 } from '@enterprise-rag/ui';
@@ -56,7 +57,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   return (
     <SessionBoundary
       loginFallback={loginForm}
-      recoveryAction={<a href="/login">重新加载</a>}
+      recoveryAction={
+        <>
+          <SessionLogoutButton />
+          <a href="/login">重新加载</a>
+        </>
+      }
     >
       <Navigate to="/admin" replace />
     </SessionBoundary>

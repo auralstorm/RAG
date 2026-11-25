@@ -6,6 +6,10 @@ export type SessionState =
       readonly status: 'authenticated';
       readonly subjectId: string;
       readonly canAccessApplication: boolean;
+      readonly authorization: {
+        readonly policyVersion: string;
+        readonly permissionCodes: readonly string[];
+      };
     }
   | { readonly status: 'forbidden' }
   | { readonly status: 'error'; readonly requestId?: string };

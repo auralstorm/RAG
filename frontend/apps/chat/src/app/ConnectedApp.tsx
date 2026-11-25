@@ -4,7 +4,7 @@ import { createSessionStore } from '@enterprise-rag/api-client';
 import { apiClient } from './api-client';
 import { App } from './App';
 
-const sessionStore = createSessionStore(apiClient.auth, 'chat');
+const sessionStore = createSessionStore(apiClient, 'chat');
 
 export function ConnectedApp({ router }: { readonly router: DataRouter }) {
   const snapshot = useSyncExternalStore(

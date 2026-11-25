@@ -40,19 +40,29 @@ export function SessionBoundary({
   children,
   loginFallback,
   recoveryAction,
+  requiredPermission,
 }: {
   readonly children: ReactNode;
   readonly loginFallback: ReactNode;
   readonly recoveryAction: ReactNode;
+  readonly requiredPermission?: string;
 }) {
   const state = useSessionState();
   if (state.status === 'anonymous') return loginFallback;
   if (
     state.status === 'authenticated' &&
     state.subjectId.trim() &&
-    state.canAccessApplication
+    state.canAccessApplication &&
+    state.authorization?.policyVersion &&
+    Array.isArray(state.authorization.permissionCodes) &&
+    (!requiredPermission ||
+      state.authorization.permissionCodes.includes(requiredPermission))
   ) {
-    return <div key={state.subjectId}>{children}</div>;
+    return (
+      <div key={`${state.subjectId}:${state.authorization.policyVersion}`}>
+        {children}
+      </div>
+    );
   }
   if (state.status === 'checking') {
     return (

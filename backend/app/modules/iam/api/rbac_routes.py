@@ -101,6 +101,7 @@ def create_rbac_router(service: RbacService | None, origins: Mapping[Application
             lambda: current_service().capabilities(application, token(request, application)), response
         )
         return CapabilityView(
+            subject_id=authority.session.user.id,
             application=application,
             policy_version=authority.context.policy_version,
             roles=tuple(item.role for item in authority.roles),

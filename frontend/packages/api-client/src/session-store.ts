@@ -2,7 +2,10 @@ import type { SessionCredentials, SessionState } from '@enterprise-rag/shared';
 import { HttpError } from './index';
 import type { AuthSessionResponse, createApiClient } from './index';
 
-type AuthClient = ReturnType<typeof createApiClient>['auth'];
+type SessionClient = Pick<
+  ReturnType<typeof createApiClient>,
+  'auth' | 'authorization'
+>;
 type SessionCoordinator = <T>(
   operation: () => Promise<T>,
   signal: AbortSignal,
@@ -13,10 +16,11 @@ interface Snapshot {
 }
 
 export function createSessionStore(
-  client: AuthClient,
+  api: SessionClient,
   application: 'chat' | 'admin',
   coordinator?: SessionCoordinator,
 ) {
+  const client = api.auth;
   const browserLocks =
     typeof navigator !== 'undefined' ? navigator.locks : undefined;
   const markerKey = `enterprise-rag-auth-mutation:${application}`;
@@ -46,6 +50,7 @@ export function createSessionStore(
   let pending: Promise<void> | null = null;
   let generation = 0;
   let renewal: ReturnType<typeof setTimeout> | undefined;
+  let expiration: ReturnType<typeof setTimeout> | undefined;
   let csrf = '';
   let hadSession = false;
   let mutating = false;
@@ -93,11 +98,14 @@ export function createSessionStore(
     request = null;
     pending = null;
     clearTimeout(renewal);
+    clearTimeout(expiration);
     csrf = '';
     publish({ status: 'checking' });
   }
   function failure(error: unknown) {
     csrf = '';
+    clearTimeout(renewal);
+    clearTimeout(expiration);
     if (error instanceof HttpError && error.status === 401)
       publish(
         hadSession
@@ -113,14 +121,37 @@ export function createSessionStore(
           : { status: 'error' },
       );
   }
-  function authenticated(response: AuthSessionResponse) {
+  async function authenticated(
+    response: AuthSessionResponse,
+    signal: AbortSignal,
+    revision: number,
+  ) {
+    const capabilities = await api.authorization.capabilities(
+      application,
+      response.user.id,
+      signal,
+    );
+    if (signal.aborted || revision !== generation) return;
+    if (Date.parse(response.expires_at) <= Date.now()) throw new HttpError(401);
     hadSession = true;
     csrf = response.csrf_token;
+    clearTimeout(expiration);
+    expiration = setTimeout(
+      () => {
+        // A slow background check cannot extend the life of visible protected data.
+        publish({ status: 'checking' });
+      },
+      Math.max(0, Date.parse(response.expires_at) - Date.now()),
+    );
     publish(
       {
         status: 'authenticated',
         subjectId: response.user.id,
         canAccessApplication: true,
+        authorization: {
+          policyVersion: capabilities.policy_version,
+          permissionCodes: capabilities.permission_codes,
+        },
       },
       'local',
     );
@@ -129,11 +160,14 @@ export function createSessionStore(
       () => {
         void restore(true, true);
       },
-      Math.max(
-        1000,
-        Date.parse(response.expires_at) -
-          Date.now() -
-          (canRenew && !uncertainRefresh ? 30_000 : 0),
+      Math.min(
+        60_000,
+        Math.max(
+          1000,
+          Date.parse(response.expires_at) -
+            Date.now() -
+            (canRenew && !uncertainRefresh ? 30_000 : 0),
+        ),
       ),
     );
   }
@@ -210,6 +244,7 @@ export function createSessionStore(
           const config = await client.configuration(application, signal);
           if (signal.aborted || revision !== generation) return undefined;
           if (config.mode === 'unavailable') {
+            clearTimeout(expiration);
             csrf = '';
             hadSession = false;
             publish({ status: 'anonymous' }, 'unavailable');
@@ -222,7 +257,7 @@ export function createSessionStore(
           return readSession(signal, renewSoon);
         }, signal);
         if (response && !signal.aborted && revision === generation)
-          authenticated(response);
+          await authenticated(response, signal, revision);
       } catch (error) {
         if (!signal.aborted && revision === generation) failure(error);
       }
@@ -233,21 +268,27 @@ export function createSessionStore(
     if (signal.aborted) return;
     clearTimeout(renewal);
     return perform(async (_signal, revision) => {
-      const response = await coordinate(
-        () => client.login(application, credentials, signal),
-        signal,
-      );
-      if (!signal.aborted && revision === generation) {
-        uncertainRefresh = false;
-        logoutRequested = false;
-        clearMarker();
-        authenticated(response);
+      try {
+        const response = await coordinate(
+          () => client.login(application, credentials, signal),
+          signal,
+        );
+        if (!signal.aborted && revision === generation) {
+          uncertainRefresh = false;
+          logoutRequested = false;
+          clearMarker();
+          await authenticated(response, signal, revision);
+        }
+      } catch (error) {
+        if (!signal.aborted && revision === generation) failure(error);
+        throw error;
       }
     });
   }
   async function logout() {
     if (pending) await pending;
     clearTimeout(renewal);
+    clearTimeout(expiration);
     logoutRequested = true;
     publish({ status: 'checking' });
     return perform(async (signal, revision) => {

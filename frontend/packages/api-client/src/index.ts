@@ -165,24 +165,28 @@ export function createApiClient(
   origin.hash = '';
   if (!origin.pathname.endsWith('/')) origin.pathname += '/';
 
-  async function authRequest(
+  async function privateRequest(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<Response> {
+    const response = await fetcher(new URL(`api/v1/${path}`, origin), {
+      ...init,
+      credentials: 'include',
+      cache: 'no-store',
+      signal: init.signal
+        ? AbortSignal.any([init.signal, AbortSignal.timeout(10_000)])
+        : AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw await responseError(response);
+    return response;
+  }
+
+  function authRequest(
     operation: string,
     application: 'chat' | 'admin',
     init: RequestInit = {},
-  ): Promise<Response> {
-    const response = await fetcher(
-      new URL(`api/v1/auth/${application}/${operation}`, origin),
-      {
-        ...init,
-        credentials: 'include',
-        cache: 'no-store',
-        signal: init.signal
-          ? AbortSignal.any([init.signal, AbortSignal.timeout(10_000)])
-          : AbortSignal.timeout(10_000),
-      },
-    );
-    if (!response.ok) throw await responseError(response);
-    return response;
+  ) {
+    return privateRequest(`auth/${application}/${operation}`, init);
   }
 
   async function sessionResponse(
@@ -229,6 +233,97 @@ export function createApiClient(
   }
 
   return {
+    authorization: {
+      async capabilities(
+        application: 'chat' | 'admin',
+        subjectId: string,
+        signal: AbortSignal,
+      ): Promise<CapabilityView> {
+        const payload: unknown = await (
+          await privateRequest(`authorization/${application}/me`, { signal })
+        ).json();
+        const codes = (value: unknown): value is string[] =>
+          Array.isArray(value) &&
+          value.length <= 1000 &&
+          value.every(
+            (code: unknown) =>
+              typeof code === 'string' &&
+              code.length <= 128 &&
+              /^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(code),
+          ) &&
+          new Set(value).size === value.length;
+        if (
+          !isRecord(payload) ||
+          Object.keys(payload).some(
+            (key) =>
+              ![
+                'subject_id',
+                'application',
+                'policy_version',
+                'permission_codes',
+                'roles',
+              ].includes(key),
+          ) ||
+          payload.application !== application ||
+          typeof payload.subject_id !== 'string' ||
+          !uuidPattern.test(payload.subject_id) ||
+          payload.subject_id.toLowerCase() !== subjectId.toLowerCase() ||
+          typeof payload.policy_version !== 'string' ||
+          !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(payload.policy_version) ||
+          !codes(payload.permission_codes) ||
+          !Array.isArray(payload.roles) ||
+          payload.roles.length > 1000
+        )
+          throw new Error('Invalid capability response');
+        const roles = payload.roles.map((role: unknown): Role => {
+          if (
+            !isRecord(role) ||
+            Object.keys(role).some(
+              (key) =>
+                ![
+                  'id',
+                  'schema_version',
+                  'code',
+                  'name',
+                  'is_system',
+                  'protected',
+                ].includes(key),
+            ) ||
+            role.schema_version !== '1.0' ||
+            typeof role.id !== 'string' ||
+            !uuidPattern.test(role.id) ||
+            typeof role.code !== 'string' ||
+            !/^[A-Z][A-Z0-9_]{0,63}$/.test(role.code) ||
+            typeof role.name !== 'string' ||
+            !role.name.trim() ||
+            role.name.length > 128 ||
+            typeof role.is_system !== 'boolean' ||
+            typeof role.protected !== 'boolean'
+          )
+            throw new Error('Invalid capability response');
+          const system = ['SUPER_ADMIN', 'KB_ADMIN', 'AUDIT_READONLY'].includes(
+            role.code,
+          );
+          if (system ? !role.is_system || !role.protected : role.is_system)
+            throw new Error('Invalid capability response');
+          return {
+            id: role.id,
+            schema_version: '1.0',
+            code: role.code,
+            name: role.name,
+            is_system: role.is_system,
+            protected: role.protected,
+          };
+        });
+        return {
+          subject_id: payload.subject_id,
+          application,
+          policy_version: payload.policy_version,
+          permission_codes: payload.permission_codes,
+          roles,
+        };
+      },
+    },
     auth: {
       async configuration(
         application: 'chat' | 'admin',

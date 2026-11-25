@@ -4,6 +4,7 @@ import { Alert, Button } from 'antd';
 import {
   AccessScreen,
   SessionBoundary,
+  SessionLogoutButton,
   useSessionState,
   useSessionActions,
   CredentialForm,
@@ -100,7 +101,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   return (
     <SessionBoundary
       loginFallback={loginForm}
-      recoveryAction={<a href="/login">重新加载</a>}
+      recoveryAction={
+        <>
+          <SessionLogoutButton />
+          <a href="/login">重新加载</a>
+        </>
+      }
     >
       <Navigate to="/chat" replace />
     </SessionBoundary>

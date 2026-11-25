@@ -482,6 +482,11 @@ export interface components {
       readonly policy_version: components['schemas']['PolicyVersion'];
       /** Roles */
       readonly roles: readonly components['schemas']['Role'][];
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      readonly subject_id: string;
     };
     /** ConfirmedMutation */
     readonly ConfirmedMutation: {
