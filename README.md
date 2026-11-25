@@ -55,6 +55,8 @@ PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运�
 
 需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。RBAC 后端与固定矩阵已由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员需按其中步骤显式配置，不自动提升开发账号。该测试来源不替代企业 OIDC 或生产安全验收。
 
+平台会话/伪名密钥可通过 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF` 与账号来源独立配置；旧组合文件继续兼容。使用 `uv run --locked python -m scripts.separate_auth_config` 复制原密钥，完整参数与切换步骤见 [身份源适配与配置拆分](docs/plan/V1.0-MVP/implementation/P1-04.md#身份源适配调整2026-11-25)。迁移不轮换密钥，不自动建立企业身份关联。
+
 ## 目录与依赖
 
 ```text

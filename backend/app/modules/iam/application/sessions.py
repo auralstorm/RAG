@@ -4,21 +4,18 @@ import hashlib
 import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
-from ipaddress import IPv4Address, IPv6Address
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from app.modules.audit.application.recording import security_event
 from app.modules.audit.domain.contracts import AuditAction, AuditResult
 from app.modules.audit.domain.recording import AuditContext
-from app.modules.iam.domain.contracts import IdentityStatus
+from app.modules.iam.domain.contracts import IdentityKey, IdentityStatus
 from app.modules.iam.domain.sessions import (
     Application,
     AuthenticationDenied,
-    AuthenticationThrottled,
     AuthRepository,
     AuthTransaction,
     CurrentIdentity,
-    IdentityProvider,
     PlatformSession,
     SessionIssue,
     SessionTokens,
@@ -43,14 +40,12 @@ class SessionService:
     def __init__(
         self,
         transactions: AuthTransaction,
-        provider: IdentityProvider,
         tokens: SessionTokens,
         *,
         access_seconds: int = 900,
         session_seconds: int = 86400,
     ) -> None:
         self.transactions = transactions
-        self.provider = provider
         self.tokens = tokens
         self.access_seconds = access_seconds
         self.session_seconds = session_seconds
@@ -71,37 +66,13 @@ class SessionService:
         async with self.transactions() as repository:
             await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
 
-    async def login(
+    async def establish(
         self,
         application: Application,
-        username: str,
-        password: str,
-        *,
-        client_key: str,
-        request_id: UUID,
-        trace_id: str,
-        ip_address: IPv4Address | IPv6Address | None = None,
+        key: IdentityKey,
+        context: AuditContext,
     ) -> SessionIssue:
-        now = datetime.now(UTC)
-        context = AuditContext(request_id, trace_id, ip_address)
-        # HMACs keep account and network identifiers out of the budget table.
-        account_bucket = token_digest(self.tokens.csrf(UUID(int=0)) + application + ":" + username)
-        network_bucket = token_digest(self.tokens.csrf(UUID(int=1)) + client_key)
-        async with self.transactions() as repository:
-            account_ok = await repository.login_budget(account_bucket, now, 5)
-            network_ok = await repository.login_budget(network_bucket, now, 30)
-            if not account_ok or not network_ok:
-                await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
-        if not account_ok or not network_ok:
-            raise AuthenticationThrottled()
-
-        # Credential work is outside the DB transaction, and the Adapter owns hashing.
-        try:
-            key = await self.provider.authenticate(username, password)
-        except AuthenticationDenied:
-            async with self.transactions() as repository:
-                await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
-            raise
+        """Resolve an Adapter-verified key; never expose this input as a browser DTO."""
         denied = False
         issue: SessionIssue | None = None
         async with self.transactions() as repository:

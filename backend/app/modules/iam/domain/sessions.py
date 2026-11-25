@@ -61,10 +61,6 @@ class SessionIssue:
     access_expires_at: datetime
 
 
-class IdentityProvider(Protocol):
-    async def authenticate(self, username: str, password: str) -> IdentityKey: ...
-
-
 class SessionTokens(Protocol):
     def issue(self, session: PlatformSession, now: datetime, expires_at: datetime) -> str: ...
     def verify(self, token: str, application: Application) -> AccessClaims: ...

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"]
     infrastructure_enabled: bool = False
     local_identity_config_ref: Path | None = None
+    auth_platform_config_ref: Path | None = Field(default=None, repr=False)
     auth_access_seconds: int = Field(default=900, ge=60, le=900)
     auth_session_seconds: int = Field(default=86400, ge=900, le=604800)
     auth_chat_origins: list[str] = ["http://127.0.0.1:5173", "http://127.0.0.1:4173"]

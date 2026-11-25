@@ -2,26 +2,45 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 
 from psycopg import Error
 
 from app.adapters.postgres import postgres_transaction
 from app.adapters.rbac import PostgresRbacRepository
 from app.core.config import Settings
+from app.modules.iam.application.login import LoginService
 from app.modules.iam.application.rbac import RbacService
 from app.modules.iam.application.sessions import SessionService
+from app.modules.iam.domain.identity_providers import PasswordCredentials
 from app.modules.iam.domain.rbac import RbacRepository
 from app.modules.iam.domain.sessions import AuthenticationUnavailable, AuthRepository
 from app.modules.iam.infrastructure.local_identity import LocalIdentityProvider, read_private_config
+from app.modules.iam.infrastructure.platform_config import PlatformAuthConfig, read_platform_config
 from app.modules.iam.infrastructure.repositories import PostgresAuthRepository
 from app.modules.iam.infrastructure.tokens import JwtSessionTokens
 from app.modules.policy.application.enforcement import PolicyEnforcer
 
 
-def create_iam_services(settings: Settings) -> tuple[SessionService | None, RbacService | None]:
-    if settings.local_identity_config_ref is None:
-        return None, None
-    configuration = read_private_config(settings.local_identity_config_ref)
+@dataclass(frozen=True)
+class IamServices:
+    sessions: SessionService | None = None
+    rbac: RbacService | None = None
+    password_login: LoginService[PasswordCredentials] | None = None
+
+
+def create_iam_services(settings: Settings) -> IamServices:
+    local = read_private_config(settings.local_identity_config_ref) if settings.local_identity_config_ref else None
+    if settings.auth_platform_config_ref is not None:
+        configuration = read_platform_config(settings.auth_platform_config_ref)
+    elif local is not None and local.signing_key is not None:
+        configuration = PlatformAuthConfig(
+            signing_key=local.signing_key, pseudonymization_key=local.pseudonymization_key
+        )
+    elif local is not None:
+        raise ValueError("Configured identities require a private platform authentication configuration")
+    else:
+        return IamServices()
 
     @asynccontextmanager
     async def transaction() -> AsyncGenerator[AuthRepository]:
@@ -35,13 +54,17 @@ def create_iam_services(settings: Settings) -> tuple[SessionService | None, Rbac
 
     sessions = SessionService(
         transaction,
-        LocalIdentityProvider(configuration),
         JwtSessionTokens(configuration.signing_key.get_secret_value()),
         access_seconds=settings.auth_access_seconds,
         session_seconds=settings.auth_session_seconds,
     )
+    password_login = (
+        LoginService(sessions, LocalIdentityProvider(local), account_key=lambda credentials: credentials.username)
+        if local is not None
+        else None
+    )
     if configuration.pseudonymization_key is None:
-        return sessions, None
+        return IamServices(sessions=sessions, password_login=password_login)
 
     @asynccontextmanager
     async def policy_transaction() -> AsyncGenerator[RbacRepository]:
@@ -53,7 +76,7 @@ def create_iam_services(settings: Settings) -> tuple[SessionService | None, Rbac
         except Error as error:
             raise AuthenticationUnavailable() from error
 
-    return sessions, RbacService(
+    rbac = RbacService(
         policy_transaction,
         PolicyEnforcer(
             sessions,
@@ -61,3 +84,4 @@ def create_iam_services(settings: Settings) -> tuple[SessionService | None, Rbac
             configuration.pseudonymization_key.get_secret_value().encode(),
         ),
     )
+    return IamServices(sessions=sessions, rbac=rbac, password_login=password_login)

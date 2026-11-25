@@ -28,7 +28,8 @@ def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | N
     configuration = settings if settings is not None else load_settings()
     observer = telemetry if telemetry is not None else OpenTelemetry(configuration)
     monitor = InfrastructureMonitor(configuration, observer)
-    sessions, rbac = create_iam_services(configuration)
+    iam = create_iam_services(configuration)
+    sessions, rbac = iam.sessions, iam.rbac
 
     async def sample_metrics() -> None:
         while True:
@@ -77,6 +78,7 @@ def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | N
             sessions,
             {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins},
             secure_cookies=configuration.environment == "production",
+            password_login=iam.password_login,
         )
     )
     application.include_router(

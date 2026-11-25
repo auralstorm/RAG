@@ -67,6 +67,7 @@ def rbac(auth: AuthFixture) -> Iterator[RbacFixture]:
     path = auth.settings.local_identity_config_ref
     assert path is not None
     configuration = read_private_config(path)
+    assert configuration.signing_key is not None
     accounts = [item.model_dump() for item in configuration.accounts]
     users = {"SUPER_ADMIN": auth.user_id}
     identities: dict[str, UUID] = {}
@@ -167,7 +168,7 @@ def test_current_fixed_matrix_and_negative_management_api(rbac: RbacFixture) -> 
 
 
 def test_unified_enforcer_covers_every_fixed_operation(rbac: RbacFixture) -> None:
-    _, service = create_iam_services(rbac.auth.settings)
+    service = create_iam_services(rbac.auth.settings).rbac
     assert service is not None
     for role in SYSTEM_ROLE_PERMISSIONS:
         token = rbac.clients[role].cookies["er_admin_access"]

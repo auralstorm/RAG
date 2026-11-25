@@ -15,7 +15,8 @@ from app.adapters.rbac import PostgresRbacRepository
 from app.core.config import Settings, load_settings
 from app.modules.audit.domain.contracts import AuditAction, AuditEvent, AuditResult, AuditRisk, AuditSnapshot
 from app.modules.iam.domain.rbac import RbacConflict
-from app.modules.iam.infrastructure.local_identity import read_private_config
+from app.modules.iam.infrastructure.local_identity import LocalIdentityConfig, read_private_config
+from app.modules.iam.infrastructure.platform_config import read_platform_config
 
 
 async def appoint_first_admin(settings: Settings, user_id: UUID) -> None:
@@ -57,11 +58,14 @@ async def appoint_first_admin(settings: Settings, user_id: UUID) -> None:
 def bootstrap(settings: Settings, path: Path, user_id: UUID) -> None:
     if settings.environment == "production":
         raise ValueError("Local identity bootstrap is not available in production")
-    path = path.absolute()
+    separate_platform = settings.auth_platform_config_ref is not None
+    path = (settings.auth_platform_config_ref or path).absolute()
     descriptor = os.open(path.with_name(path.name + ".lock"), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "r+") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        configuration = read_private_config(path)
+        configuration = read_platform_config(path) if separate_platform else read_private_config(path)
+        if configuration.signing_key is None:
+            raise ValueError("Configure platform authentication before bootstrapping an administrator")
         if configuration.pseudonymization_key is None:
             temporary = path.with_name(path.name + "." + secrets.token_hex(8))
             try:
@@ -71,7 +75,11 @@ def bootstrap(settings: Settings, path: Path, user_id: UUID) -> None:
                         {
                             "signing_key": configuration.signing_key.get_secret_value(),
                             "pseudonymization_key": secrets.token_hex(48),
-                            "accounts": [account.model_dump() for account in configuration.accounts],
+                            **(
+                                {"accounts": [account.model_dump() for account in configuration.accounts]}
+                                if isinstance(configuration, LocalIdentityConfig)
+                                else {}
+                            ),
                         },
                         output,
                     )

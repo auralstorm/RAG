@@ -318,7 +318,9 @@ def test_pre_authentication_and_origin_denials_are_committed_as_anonymous_events
         )
         config_ref = rbac.auth.settings.local_identity_config_ref
         assert config_ref is not None
-        tokens = JwtSessionTokens(read_private_config(config_ref).signing_key.get_secret_value())
+        configuration = read_private_config(config_ref)
+        assert configuration.signing_key is not None
+        tokens = JwtSessionTokens(configuration.signing_key.get_secret_value())
         unknown_session = tokens.issue(
             PlatformSession(
                 uuid4(), rbac.users["SUPER_ADMIN"], rbac.auth.identity_id, "admin", now + timedelta(hours=1)

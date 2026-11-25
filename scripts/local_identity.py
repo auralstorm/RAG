@@ -18,6 +18,7 @@ from app.modules.iam.infrastructure.local_identity import (
     password_hash,
     read_private_config,
 )
+from app.modules.iam.infrastructure.platform_config import read_platform_config
 from psycopg import Connection
 from pydantic import SecretStr
 
@@ -46,12 +47,19 @@ def _provision_locked(username: str, password: str, applications: list[str], pat
     ):
         raise ValueError("Explicit application permissions and a valid display name are required")
     existing = read_private_config(path) if path.exists() else None
+    if settings.auth_platform_config_ref is not None:
+        read_platform_config(settings.auth_platform_config_ref)
+    elif existing is not None and existing.signing_key is None:
+        raise ValueError("Configure platform authentication before adding local identities")
     if existing and any(account.username == username for account in existing.accounts):
         raise ValueError("The local account already exists; no identity was changed")
     account = LocalAccount(username=username, subject=str(uuid4()), salt=secrets.token_hex(16), password_hash="0" * 64)
     account = account.model_copy(update={"password_hash": password_hash(password, account.salt)})
+    signing_key = existing.signing_key if existing else None
+    if existing is None and settings.auth_platform_config_ref is None:
+        signing_key = SecretStr(secrets.token_hex(48))
     configuration = LocalIdentityConfig(
-        signing_key=existing.signing_key if existing else SecretStr(secrets.token_hex(48)),
+        signing_key=signing_key,
         pseudonymization_key=existing.pseudonymization_key if existing else None,
         accounts=(*(existing.accounts if existing else ()), account),
     )
@@ -63,7 +71,11 @@ def _provision_locked(username: str, password: str, applications: list[str], pat
             output.write(
                 json.dumps(
                     {
-                        "signing_key": configuration.signing_key.get_secret_value(),
+                        **(
+                            {"signing_key": configuration.signing_key.get_secret_value()}
+                            if configuration.signing_key
+                            else {}
+                        ),
                         **(
                             {"pseudonymization_key": configuration.pseudonymization_key.get_secret_value()}
                             if configuration.pseudonymization_key

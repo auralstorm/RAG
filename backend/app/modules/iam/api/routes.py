@@ -9,7 +9,9 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from app.api.audit_context import audit_context
 from app.modules.iam.api.schemas import AuthConfiguration, AuthSessionResponse, CsrfResponse, LoginCredentials
 from app.modules.iam.api.security import guard_origin as enforce_origin
+from app.modules.iam.application.login import LoginService
 from app.modules.iam.application.sessions import SessionService
+from app.modules.iam.domain.identity_providers import PasswordCredentials
 from app.modules.iam.domain.sessions import (
     Application,
     AuthenticationDenied,
@@ -26,6 +28,7 @@ def create_auth_router(
     origins: Mapping[Application, list[str]],
     *,
     secure_cookies: bool,
+    password_login: LoginService[PasswordCredentials] | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
@@ -33,6 +36,11 @@ def create_auth_router(
         if service is None:
             raise HTTPException(503)
         return service
+
+    def current_login() -> LoginService[PasswordCredentials]:
+        if password_login is None:
+            raise AuthenticationUnavailable()
+        return password_login
 
     def guard_origin(request: Request, application: Application, *, mutation: bool = False) -> None:
         enforce_origin(request, application, origins, mutation=mutation)
@@ -75,7 +83,7 @@ def create_auth_router(
     async def configuration(application: Application, request: Request, response: Response) -> AuthConfiguration:
         guard_origin(request, application)
         response.headers["Cache-Control"] = "no-store"
-        return AuthConfiguration(mode="local" if service else "unavailable")
+        return AuthConfiguration(mode="local" if password_login else "unavailable")
 
     @router.post("/{application}/login")
     async def login(
@@ -89,10 +97,9 @@ def create_auth_router(
                 await invoke(lambda: current_service().denied_login(context))
             raise
         issue = await invoke(
-            lambda: current_service().login(
+            lambda: current_login().login(
                 application,
-                payload.username,
-                payload.password.get_secret_value(),
+                PasswordCredentials(payload.username, payload.password.get_secret_value()),
                 client_key=request.client.host if request.client else "unknown",
                 request_id=context.request_id,
                 trace_id=context.trace_id,

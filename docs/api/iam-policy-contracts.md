@@ -17,6 +17,8 @@ V1.0 数据库详设使用 admin_users/employees，完整实施计划 P1-03 使�
 
 [身份解析模块](../../backend/app/modules/iam/application/identity_resolution.py) 提供 resolve_external_identity 与 resolve_legacy_subject，接受可信服务端加载的记录。它只做关联和状态检查；签名、issuer/audience、state/nonce、Token/会话与 Provider 校验由 P1 登录模块先完成。没有记录、重复关联、缺失/重复 User、停用身份或非 ACTIVE 用户均返回稳定 IdentityResolutionCode，不创建用户或会话。错误不包含原始 issuer、subject 或个人信息。
 
+登录来源通过带凭据类型的 [IdentityProvider](../../backend/app/modules/iam/domain/identity_providers.py) 输出可信 IdentityKey，再进入统一平台会话流程；该内部接口不接受浏览器直接提交的身份键。平台签名/伪名密钥可通过独立私密引用配置，保留旧本地组合配置的兼容读取。接口职责、配置迁移与尚未交付的授权码安全协调流程见 [P1-04](../plan/V1.0-MVP/implementation/P1-04.md#身份源适配调整2026-11-25)。本次不修改公共身份 Schema、数据库结构或 HTTP 登录契约。
+
 ## 公共模型
 
 所有 IAM/Policy 对象使用字符串 schema_version="1.0"，当前读者拒绝其他版本和未知字段；此版本独立于产品版本、Policy 事实版本和数据库 revision。P1-03 已为身份、角色及关系落实数据库唯一/FK 约束；DTO 校验不代替事务和真实数据库验证。

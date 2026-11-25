@@ -1,5 +1,6 @@
 """Real PostgreSQL authentication lifecycle and cross-application refusal scenarios."""
 
+import asyncio
 import json
 import os
 import secrets
@@ -13,15 +14,23 @@ from uuid import UUID, uuid4
 
 import pytest
 from app.adapters.postgres import postgres_conninfo
+from app.core.authentication import create_iam_services
 from app.core.config import Settings, load_settings
 from app.main import create_app
+from app.modules.iam.application.login import LoginService
+from app.modules.iam.domain.contracts import IdentityKey
+from app.modules.iam.domain.identity_providers import AuthorizationCodeCredentials
+from app.modules.iam.domain.sessions import AuthenticationDenied
 from app.modules.iam.infrastructure.local_identity import LOCAL_ISSUER, password_hash, read_private_config
+from app.modules.iam.infrastructure.platform_config import read_platform_config
 from fastapi.testclient import TestClient
 from psycopg import Connection, sql
 
+from scripts.bootstrap_rbac import bootstrap
 from scripts.infrastructure import compose, initialize_config
 from scripts.local_identity import provision
 from scripts.migrate_database import run_migration
+from scripts.separate_auth_config import separate
 
 pytestmark = pytest.mark.infrastructure
 PASSWORD = "synthetic-private-password-1234"
@@ -125,6 +134,113 @@ def test_login_stable_mapping_rotation_replay_revocation_and_no_plaintext_storag
     auth.client.cookies.set("er_chat_access", old_access, domain="testserver.local", path="/")
     assert auth.client.get("/api/v1/auth/chat/me").status_code == 401
     assert auth.login().json()["user"]["id"] == str(auth.user_id)
+
+
+def test_two_identity_adapters_share_platform_mapping_sessions_and_current_revocation(auth: AuthFixture) -> None:
+    """The code adapter is synthetic: this tests the port, not OAuth browser security."""
+    assert auth.login().json()["user"]["id"] == str(auth.user_id)
+    sessions = create_iam_services(auth.settings).sessions
+    assert sessions is not None
+    identity_id = uuid4()
+    with Connection.connect(postgres_conninfo(auth.settings)) as connection:
+        connection.execute(
+            "INSERT INTO identities(id,user_id,provider_key,issuer,subject,status) "
+            "VALUES (%s,%s,'synthetic-sso','urn:test:sso','code-subject','ACTIVE')",
+            (identity_id, auth.user_id),
+        )
+        connection.execute(
+            "INSERT INTO identity_applications(identity_id,application) VALUES (%s,'chat')", (identity_id,)
+        )
+
+    class CodeProvider:
+        async def authenticate(self, credentials: AuthorizationCodeCredentials) -> IdentityKey:
+            if credentials.code != "synthetic-valid-code":
+                raise AuthenticationDenied()
+            return IdentityKey(provider_key="synthetic-sso", issuer="urn:test:sso", subject="code-subject")
+
+    login = LoginService(sessions, CodeProvider())
+    credentials = AuthorizationCodeCredentials("synthetic-valid-code", "https://app.example/callback", "nonce", "proof")
+
+    async def run_scenario() -> None:
+        issue = await login.login("chat", credentials, client_key=uuid4().hex, request_id=uuid4(), trace_id="a" * 32)
+        assert issue.user.id == auth.user_id and issue.session.identity_id == identity_id
+        assert (await sessions.current("chat", issue.access_token)).user.id == auth.user_id
+        with Connection.connect(postgres_conninfo(auth.settings)) as connection:
+            connection.execute("UPDATE identities SET status='DISABLED' WHERE id=%s", (identity_id,))
+        with pytest.raises(AuthenticationDenied):
+            await sessions.current("chat", issue.access_token)
+        with pytest.raises(AuthenticationDenied):
+            await login.login("chat", credentials, client_key=uuid4().hex, request_id=uuid4(), trace_id="b" * 32)
+        invalid = AuthorizationCodeCredentials("invalid-code", credentials.redirect_uri, "nonce", "proof")
+        with pytest.raises(AuthenticationDenied):
+            await login.login("chat", invalid, client_key=uuid4().hex, request_id=uuid4(), trace_id="c" * 32)
+
+    asyncio.run(run_scenario())
+    # Revoking the external identity does not revoke an independent local identity.
+    assert auth.client.get("/api/v1/auth/chat/me").status_code == 200
+    with Connection.connect(postgres_conninfo(auth.settings)) as connection:
+        assert connection.execute("SELECT count(*) FROM users").fetchone() == (1,)
+        assert connection.execute("SELECT count(*) FROM auth_sessions").fetchone() == (2,)
+        assert connection.execute("SELECT count(*) FROM audit_events WHERE result='DENIED'").fetchone() == (2,)
+
+
+def test_separate_platform_keys_preserve_existing_sessions_and_do_not_enable_a_source(auth: AuthFixture) -> None:
+    response = auth.login()
+    assert response.status_code == 200
+    local = auth.settings.local_identity_config_ref
+    assert local is not None
+    platform = local.with_name("platform.json")
+    separate(local, platform)
+    accounts = read_private_config(local).accounts
+    local.write_text(json.dumps({"accounts": [account.model_dump() for account in accounts]}))
+    migrated = auth.settings.model_copy(update={"auth_platform_config_ref": platform})
+    with TestClient(create_app(migrated)) as client:
+        client.cookies.update(auth.client.cookies)
+        assert client.get("/api/v1/auth/chat/me").status_code == 200
+        assert client.get("/api/v1/auth/chat/config").json() == {"mode": "local"}
+        assert (
+            client.post(
+                "/api/v1/auth/chat/refresh",
+                headers={"Origin": ORIGINS["chat"], "X-CSRF-Token": response.json()["csrf_token"]},
+            ).status_code
+            == 200
+        )
+        cookies = dict(client.cookies)
+    platform_only = migrated.model_copy(update={"local_identity_config_ref": None})
+    with TestClient(create_app(platform_only)) as client:
+        client.cookies.update(cookies)
+        assert client.get("/api/v1/auth/chat/config").json() == {"mode": "unavailable"}
+        assert client.get("/api/v1/auth/chat/me").status_code == 200
+        assert (
+            client.post(
+                "/api/v1/auth/chat/login",
+                headers={"Origin": ORIGINS["chat"]},
+                json={"username": "fixture", "password": PASSWORD},
+            ).status_code
+            == 503
+        )
+
+
+def test_provisioning_and_bootstrap_keep_platform_keys_out_of_new_identity_files(
+    auth: AuthFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    local = auth.settings.local_identity_config_ref
+    assert local is not None
+    platform = local.with_name("platform.json")
+    separate(local, platform)
+    original_key = read_platform_config(platform).signing_key
+    platform.write_text(json.dumps({"signing_key": original_key.get_secret_value()}))
+    settings = auth.settings.model_copy(update={"auth_platform_config_ref": platform})
+    monkeypatch.setattr("scripts.local_identity.load_settings", lambda: settings)
+    new_source = local.with_name("accounts-only.json")
+    provision("new-fixture", PASSWORD, ["chat"], new_source, "独立本地账号")
+    assert set(json.loads(new_source.read_text())) == {"accounts"}
+    before = new_source.read_bytes()
+    bootstrap(settings, new_source, auth.user_id)
+    assert new_source.read_bytes() == before
+    configuration = read_platform_config(platform)
+    assert configuration.signing_key == original_key and configuration.pseudonymization_key is not None
+    assert create_iam_services(settings).rbac is not None
 
 
 @pytest.mark.parametrize("status", ["DISABLED", "LOCKED", "PENDING_DEPARTURE", "DEPARTED"])
