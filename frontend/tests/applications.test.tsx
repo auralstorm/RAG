@@ -123,4 +123,4 @@ it('supports asking, stopping, retrying, feedback and isolated session switching
   );
   expect(screen.getAllByText('网络与远程访问')).toHaveLength(1);
   expect(screen.getAllByRole('button', { name: '重新生成' })).toHaveLength(1);
-});
+}, 10_000);

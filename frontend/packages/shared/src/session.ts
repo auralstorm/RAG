@@ -11,3 +11,17 @@ export type SessionState =
   | { readonly status: 'error'; readonly requestId?: string };
 
 export const UNCONNECTED_SESSION: SessionState = { status: 'anonymous' };
+
+export interface SessionCredentials {
+  readonly username: string;
+  readonly password: string;
+}
+
+export interface SessionActions {
+  readonly mode: 'local' | 'unavailable';
+  readonly login?: (
+    credentials: SessionCredentials,
+    signal: AbortSignal,
+  ) => Promise<void>;
+  readonly logout?: () => Promise<void>;
+}

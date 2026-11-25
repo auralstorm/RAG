@@ -1,4 +1,9 @@
 import type { components as ApiComponents } from './generated/openapi';
+export { createSessionStore } from './session-store';
+export type AuthSessionResponse =
+  ApiComponents['schemas']['AuthSessionResponse'];
+export type LoginCredentials = ApiComponents['schemas']['LoginCredentials'];
+export type AuthConfiguration = ApiComponents['schemas']['AuthConfiguration'];
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';
@@ -150,7 +155,147 @@ export function createApiClient(
   origin.hash = '';
   if (!origin.pathname.endsWith('/')) origin.pathname += '/';
 
+  async function authRequest(
+    operation: string,
+    application: 'chat' | 'admin',
+    init: RequestInit = {},
+  ): Promise<Response> {
+    const response = await fetcher(
+      new URL(`api/v1/auth/${application}/${operation}`, origin),
+      {
+        ...init,
+        credentials: 'include',
+        cache: 'no-store',
+        signal: init.signal
+          ? AbortSignal.any([init.signal, AbortSignal.timeout(10_000)])
+          : AbortSignal.timeout(10_000),
+      },
+    );
+    if (!response.ok) throw await responseError(response);
+    return response;
+  }
+
+  async function sessionResponse(
+    response: Response,
+    application: 'chat' | 'admin',
+  ): Promise<AuthSessionResponse> {
+    const payload: unknown = await response.json();
+    if (!isRecord(payload) || !isRecord(payload.user))
+      throw new Error('Invalid session response');
+    const user = payload.user;
+    if (
+      payload.application !== application ||
+      typeof payload.csrf_token !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(payload.csrf_token) ||
+      typeof payload.expires_at !== 'string' ||
+      !Number.isFinite(Date.parse(payload.expires_at)) ||
+      typeof user.id !== 'string' ||
+      !uuidPattern.test(user.id) ||
+      user.schema_version !== '1.0' ||
+      typeof user.display_name !== 'string' ||
+      !user.display_name.trim() ||
+      user.display_name.length > 128 ||
+      user.status !== 'ACTIVE' ||
+      typeof user.created_at !== 'string' ||
+      !Number.isFinite(Date.parse(user.created_at)) ||
+      typeof user.updated_at !== 'string' ||
+      !Number.isFinite(Date.parse(user.updated_at))
+    ) {
+      throw new Error('Invalid session response');
+    }
+    return {
+      application,
+      csrf_token: payload.csrf_token,
+      expires_at: payload.expires_at,
+      user: {
+        id: user.id,
+        schema_version: '1.0',
+        display_name: user.display_name,
+        status: user.status,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      },
+    };
+  }
+
   return {
+    auth: {
+      async configuration(
+        application: 'chat' | 'admin',
+        signal: AbortSignal,
+      ): Promise<AuthConfiguration> {
+        const payload: unknown = await (
+          await authRequest('config', application, { signal })
+        ).json();
+        if (
+          !isRecord(payload) ||
+          (payload.mode !== 'local' && payload.mode !== 'unavailable')
+        )
+          throw new Error('Invalid auth configuration');
+        return { mode: payload.mode };
+      },
+      async login(
+        application: 'chat' | 'admin',
+        credentials: LoginCredentials,
+        signal: AbortSignal,
+      ) {
+        return sessionResponse(
+          await authRequest('login', application, {
+            method: 'POST',
+            signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+          }),
+          application,
+        );
+      },
+      async me(application: 'chat' | 'admin', signal: AbortSignal) {
+        return sessionResponse(
+          await authRequest('me', application, { signal }),
+          application,
+        );
+      },
+      async csrf(
+        application: 'chat' | 'admin',
+        signal: AbortSignal,
+      ): Promise<string> {
+        const payload: unknown = await (
+          await authRequest('csrf', application, { signal })
+        ).json();
+        if (
+          !isRecord(payload) ||
+          typeof payload.csrf_token !== 'string' ||
+          !/^[0-9a-f]{64}$/.test(payload.csrf_token)
+        )
+          throw new Error('Invalid CSRF response');
+        return payload.csrf_token;
+      },
+      async refresh(
+        application: 'chat' | 'admin',
+        csrf: string,
+        signal: AbortSignal,
+      ) {
+        return sessionResponse(
+          await authRequest('refresh', application, {
+            method: 'POST',
+            signal,
+            headers: { 'X-CSRF-Token': csrf },
+          }),
+          application,
+        );
+      },
+      async logout(
+        application: 'chat' | 'admin',
+        csrf: string,
+        signal: AbortSignal,
+      ): Promise<void> {
+        await authRequest('logout', application, {
+          method: 'POST',
+          signal,
+          headers: { 'X-CSRF-Token': csrf },
+        });
+      },
+    },
     async getLiveness(signal?: AbortSignal): Promise<LivenessResponse> {
       const response = await fetcher(
         new URL('health/live', origin),

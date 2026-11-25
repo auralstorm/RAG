@@ -1,7 +1,7 @@
 import { Alert, Button, Empty, Table, theme } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { applicationLabels } from '@enterprise-rag/shared';
-import { ApplicationShell } from '@enterprise-rag/ui';
+import { ApplicationShell, SessionLogoutButton } from '@enterprise-rag/ui';
 import { useApiConnection } from '../hooks/use-api-connection';
 import styles from './DashboardPage.module.css';
 
@@ -47,6 +47,7 @@ export function DashboardPage({
         ) : null}
         <div className={styles.toolbar}>
           <h2 id="connection-heading">服务连接</h2>
+          <SessionLogoutButton />
           <Button
             aria-label={state.status === 'error' ? '重试连接' : '检查连接'}
             loading={isLoading}

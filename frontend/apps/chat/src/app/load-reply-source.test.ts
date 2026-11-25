@@ -26,3 +26,8 @@ describe('reply source initialization', () => {
     expect(await loadReplySource()).toBeNull();
   });
 });
+it('never loads developer answers for a protected workspace', async () => {
+  vi.stubEnv('DEV', true);
+  vi.stubEnv('MODE', 'development');
+  expect(await loadReplySource(false)).toBeNull();
+});

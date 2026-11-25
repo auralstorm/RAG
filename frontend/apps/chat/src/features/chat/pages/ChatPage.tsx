@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { MenuOutlined } from '@ant-design/icons';
 import { Alert, Button, Drawer, theme } from 'antd';
+import { SessionLogoutButton } from '@enterprise-rag/ui';
 import { ChatComposer } from '../components/ChatComposer';
 import { ChatWelcome } from '../components/ChatWelcome';
 import { ConversationSidebar } from '../components/ConversationSidebar';
@@ -90,6 +91,7 @@ export function ChatPage({
             onClick={() => setHistoryOpen(true)}
           />
           <h1 title={chat.session.title}>{chat.session.title}</h1>
+          <SessionLogoutButton />
         </header>
         {!chat.canSend && (
           <Alert

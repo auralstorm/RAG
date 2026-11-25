@@ -25,7 +25,16 @@ export function createChatRoutes(): RouteObject[] {
           children: [{ path: 'chat', lazy: workspace }],
         },
         ...(import.meta.env.DEV && import.meta.env.MODE === 'development'
-          ? [{ path: 'preview', lazy: workspace }]
+          ? [
+              {
+                path: 'preview',
+                lazy: async () => {
+                  const { ChatWorkspacePage } =
+                    await import('../features/chat/pages/ChatWorkspacePage');
+                  return { element: <ChatWorkspacePage isPreview /> };
+                },
+              },
+            ]
           : []),
         {
           path: '*',

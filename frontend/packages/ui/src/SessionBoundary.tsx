@@ -2,25 +2,38 @@ import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { Spin } from 'antd';
 import { UNCONNECTED_SESSION } from '@enterprise-rag/shared';
-import type { SessionState } from '@enterprise-rag/shared';
+import type { SessionState, SessionActions } from '@enterprise-rag/shared';
 import { AccessScreen } from './AccessScreen';
 
 const SessionContext = createContext<SessionState>(UNCONNECTED_SESSION);
+const SessionActionsContext = createContext<SessionActions>({
+  mode: 'unavailable',
+});
 
 export function SessionProvider({
   state,
   children,
+  actions,
 }: {
   readonly state: SessionState;
   readonly children: ReactNode;
+  readonly actions?: SessionActions | undefined;
 }) {
   return (
-    <SessionContext.Provider value={state}>{children}</SessionContext.Provider>
+    <SessionActionsContext.Provider value={actions ?? { mode: 'unavailable' }}>
+      <SessionContext.Provider value={state}>
+        {children}
+      </SessionContext.Provider>
+    </SessionActionsContext.Provider>
   );
 }
 
 export function useSessionState() {
   return useContext(SessionContext);
+}
+
+export function useSessionActions() {
+  return useContext(SessionActionsContext);
 }
 
 export function SessionBoundary({

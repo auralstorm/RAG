@@ -1,6 +1,6 @@
 # EnterpriseRag
 
-单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、公共包和工程检查入口。业务功能和身份登录按后续任务交付，基础设施使用本项目的 Docker 编排，对象存储已按 [ADR-0015](docs/adr/0015-rustfs-object-storage.md) 采用 RustFS（S3 协议）。
+单企业内部部署的知识与 AI 平台。本仓库按 V1.0 MVP 的 [实施计划](docs/plan/V1.0-MVP/06-完整研发实施计划与阶段验收标准.md) 推进，当前提供 FastAPI、Chat/Admin 独立应用、可选本地测试登录、公共包和工程检查入口。业务功能和企业身份源按后续任务交付，基础设施使用本项目的 Docker 编排，对象存储已按 [ADR-0015](docs/adr/0015-rustfs-object-storage.md) 采用 RustFS（S3 协议）。
 
 ## 工具链
 
@@ -45,9 +45,11 @@ make dev-admin
 | Chat | <http://127.0.0.1:5173> |
 | Admin | <http://127.0.0.1:5174> |
 
-`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat/Admin 已提供 [登录页面与受保护路由](docs/plan/V1.0-MVP/implementation/P1-02.md)，真实登录服务尚未接入。开发模式下，Chat 的 `/preview` 提供问答演示，Admin 的 `/preview` 提供真实 API 连通性表格；生产均不开放预览。问答来源见 [开发回复说明](docs/plan/V1.0-MVP/implementation/chat-ui.md)。两个应用通过各自的 `VITE_API_BASE_URL` 装配公共客户端，默认 `/backend/` 经同源代理访问后端。独立静态部署与路由回退见 [部署步骤](infra/frontend/README.md)。
+`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat/Admin 的 [登录页面与受保护路由](docs/plan/V1.0-MVP/implementation/P1-02.md) 已接入 [P1-04 本地测试登录、会话恢复与登出](docs/plan/V1.0-MVP/implementation/P1-04.md)；默认没有账号，须显式配置私密身份源，生产拒绝此来源。开发模式下，Chat 的 `/preview` 提供问答演示，Admin 的 `/preview` 提供真实 API 连通性表格；生产均不开放预览。受保护 Chat 不加载模拟回答。两个应用通过各自的 `VITE_API_BASE_URL` 装配公共客户端，默认 `/backend/` 经同源代理访问后端。独立静态部署与路由回退见 [部署步骤](infra/frontend/README.md)。
 
 PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运行 `make db-current` 查看版本。两个命令均可使用 `PROFILE=test` 选择测试库。迁移与事务边界见 [P1-01 实施记录](docs/plan/V1.0-MVP/implementation/P1-01.md)。
+
+需要体验本地登录时，先按 [P1-04 配置步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地配置与迁移) 创建账号，再运行 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF=.poc-results/auth/local.json make dev-backend`。密码通过终端不回显输入，不写命令参数或仓库；没有显式配置时登录按钮保持禁用。该测试来源不替代企业 OIDC、RBAC 或生产安全验收。
 
 ## 目录与依赖
 

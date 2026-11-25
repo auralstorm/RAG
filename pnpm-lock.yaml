@@ -138,7 +138,11 @@ importers:
         specifier: 8.5.3
         version: 8.5.3(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
 
-  frontend/packages/api-client: {}
+  frontend/packages/api-client:
+    dependencies:
+      '@enterprise-rag/shared':
+        specifier: workspace:*
+        version: link:../shared
 
   frontend/packages/api-codegen:
     devDependencies:

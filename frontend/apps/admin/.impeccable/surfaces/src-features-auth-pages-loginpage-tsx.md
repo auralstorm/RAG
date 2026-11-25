@@ -7,7 +7,7 @@ related_targets: []
 
 # Login entry
 
-Mode: Operate. Audience: employees entering Chat and administrators entering Admin. The task is to identify the correct login method, understand availability, and enter the authorized application when a trusted session exists. This P1-02 slice provides the interface and controlled state; live authentication awaits P1-03/P1-04.
+Mode: Operate. Audience: employees entering Chat and administrators entering Admin. The task is to identify the correct login method, understand availability, and enter the authorized application when a trusted session exists. P1-04 now connects the controlled P1-02 interface to an explicitly configured local test source and real platform sessions. Enterprise SSO and full RBAC remain unverified.
 
 ## Direction contract
 
@@ -15,7 +15,7 @@ THESIS: A clear enterprise access gate with one primary login action and an hone
 
 OWN-WORLD: Inherit the current Ant Design light theme, system typography, blue primary controls, white surfaces and restrained spacing. No new brand assets or decorative imagery.
 
-STORY: Chat offers enterprise identity login; Admin offers labeled username/password fields. Loading, failed and denied access remain recoverable. Development Chat preview is labeled and excluded from production.
+STORY: When the server reports local mode, Chat and Admin both offer labeled local account/password fields with a clear development-only disclosure. The unavailable enterprise identity entry remains disabled when no source is configured. Loading, failed and denied access remain recoverable. Development Chat preview is labeled and excluded from production.
 
 FIRST VIEWPORT: EnterpriseRag brand header, centered readable form, prominent heading, instructions, login action and status message. Mobile retains the full action and field labels without horizontal scrolling.
 

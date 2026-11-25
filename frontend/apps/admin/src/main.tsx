@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './app/App';
+import { ConnectedApp } from './app/ConnectedApp';
 import { createBrowserRouter } from 'react-router';
 import { createAdminRoutes } from './routes/routes';
 import './styles/global.css';
@@ -12,6 +12,6 @@ const router = createBrowserRouter(createAdminRoutes());
 
 createRoot(container).render(
   <StrictMode>
-    <App router={router} />
+    <ConnectedApp router={router} />
   </StrictMode>,
 );

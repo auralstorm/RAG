@@ -1,4 +1,8 @@
-export type { SessionState } from './session';
+export type {
+  SessionState,
+  SessionCredentials,
+  SessionActions,
+} from './session';
 export { UNCONNECTED_SESSION } from './session';
 
 export type ApplicationId = 'chat' | 'admin';
