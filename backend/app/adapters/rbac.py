@@ -5,9 +5,7 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from psycopg.errors import CheckViolation, ForeignKeyViolation, UniqueViolation
-from psycopg.types.json import Jsonb
 
-from app.modules.audit.domain.contracts import AuditEvent
 from app.modules.iam.domain.contracts import Permission, Role, SubjectBinding, User
 from app.modules.iam.domain.rbac import RbacConflict, RoleDetails
 from app.modules.iam.domain.sessions import Application
@@ -156,24 +154,3 @@ class PostgresRbacRepository(PostgresAuthRepository):
             "DELETE FROM kb_resource_grants WHERE id=%s AND kb_id=%s RETURNING id", (grant_id, kb_id)
         )
         return await cursor.fetchone() is not None
-
-    async def audit(self, event: AuditEvent) -> None:
-        await self.connection.execute(
-            "INSERT INTO audit_events(id,occurred_at,action,result,risk,request_id,trace_id,actor_user_id,actor_system_roles,actor_role_ids,object_id,before_snapshot,after_snapshot) "
-            "VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-            (
-                event.id,
-                event.occurred_at,
-                event.action.value,
-                event.result.value,
-                event.risk.value,
-                event.request_id,
-                event.trace_id,
-                event.actor_user_id,
-                [role.value for role in event.actor_system_roles],
-                list(event.actor_role_ids),
-                event.object_id,
-                Jsonb(event.before.model_dump(mode="json")) if event.before else None,
-                Jsonb(event.after.model_dump(mode="json")) if event.after else None,
-            ),
-        )

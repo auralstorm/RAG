@@ -4,11 +4,13 @@ import hmac
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from ipaddress import IPv4Address, IPv6Address
 from uuid import UUID, uuid4
 
-from app.modules.audit.domain.contracts import AuditAction, AuditEvent, AuditResult, AuditRisk, AuditSnapshot
-from app.modules.iam.domain.contracts import Permission, Role, SystemRoleCode
+from app.modules.audit.application.recording import security_event
+from app.modules.audit.domain.contracts import AuditAction, AuditEvent, AuditResult, AuditSnapshot
+from app.modules.audit.domain.recording import AuditContext
+from app.modules.iam.domain.contracts import Permission, Role
 from app.modules.iam.domain.rbac import (
     DELEGABLE_PERMISSIONS,
     PERMISSION_CODES,
@@ -19,7 +21,7 @@ from app.modules.iam.domain.rbac import (
     RbacTransaction,
     RoleDetails,
 )
-from app.modules.iam.domain.sessions import Application
+from app.modules.iam.domain.sessions import Application, AuthenticationDenied
 from app.modules.policy.application.enforcement import Authority, PolicyEnforcer
 from app.modules.policy.domain.contracts import AccessPurpose, KnowledgePermission, ResourceGrant, ResourcePrincipalType
 
@@ -30,12 +32,18 @@ class MutationContext:
     request_id: UUID
     trace_id: str
     csrf_token: str = field(repr=False)
+    ip_address: IPv4Address | IPv6Address | None = field(default=None, repr=False)
 
 
 class RbacService:
     def __init__(self, transactions: RbacTransaction, enforcer: PolicyEnforcer) -> None:
         self.transactions = transactions
         self.enforcer = enforcer
+
+    async def denied_mutation(self, context: AuditContext, action: AuditAction, object_id: UUID | None = None) -> None:
+        """Append an anonymous pre-authentication refusal; callers select the operation."""
+        async with self.transactions() as repository:
+            await repository.audit(security_event(context, action, AuditResult.DENIED, object_id=object_id))
 
     def _event(
         self,
@@ -47,17 +55,12 @@ class RbacService:
         before: AuditSnapshot | None = None,
         after: AuditSnapshot | None = None,
     ) -> AuditEvent:
-        return AuditEvent(
-            id=uuid4(),
-            occurred_at=datetime.now(UTC),
-            action=action,
-            result=result,
-            risk=AuditRisk.HIGH,
-            request_id=context.request_id,
-            trace_id=context.trace_id,
+        return security_event(
+            AuditContext(context.request_id, context.trace_id, context.ip_address),
+            action,
+            result,
             actor_user_id=authority.session.user.id,
-            actor_role_ids=tuple(item.role.id for item in authority.roles),
-            actor_system_roles=tuple(SystemRoleCode(item.role.code) for item in authority.roles if item.role.is_system),
+            roles=tuple(item.role for item in authority.roles),
             object_id=object_id,
             before=before,
             after=after,
@@ -65,13 +68,14 @@ class RbacService:
 
     @asynccontextmanager
     async def _write(
-        self, token: str, context: MutationContext, permission: str, action: AuditAction
+        self, token: str, context: MutationContext, permission: str, action: AuditAction, object_id: UUID | None = None
     ) -> AsyncGenerator[tuple[RbacRepository, Authority]]:
-        failure: AuthorizationDenied | RbacConflict | None = None
+        failure: AuthenticationDenied | AuthorizationDenied | RbacConflict | None = None
         async with self.transactions() as repository:
             version = await repository.policy_version(write=True)
-            authority = await self.enforcer.load(repository, "admin", token, version)
+            authority: Authority | None = None
             try:
+                authority = await self.enforcer.load(repository, "admin", token, version)
                 async with repository.savepoint():
                     self.enforcer.require(authority, permission)
                     if not hmac.compare_digest(context.csrf_token, authority.session.csrf_token):
@@ -79,19 +83,23 @@ class RbacService:
                     if context.expected_version != version:
                         raise RbacConflict()
                     yield repository, authority
-                    # Expiration while waiting for a target/audit write must roll back
-                    # both the mutation and its success event before reporting denial.
+                    # Waiting across expiry rolls back the business write and success event.
                     self.enforcer.require(authority, permission)
-            except (AuthorizationDenied, RbacConflict) as error:
+            except (AuthenticationDenied, AuthorizationDenied, RbacConflict) as error:
                 failure = error
-                await repository.audit(
-                    self._event(
-                        authority,
-                        context,
+                result = AuditResult.FAILED if isinstance(error, RbacConflict) else AuditResult.DENIED
+                event = (
+                    self._event(authority, context, action, result, object_id)
+                    if authority is not None
+                    else security_event(
+                        AuditContext(context.request_id, context.trace_id, context.ip_address),
                         action,
-                        AuditResult.DENIED if isinstance(error, AuthorizationDenied) else AuditResult.FAILED,
+                        result,
+                        object_id=object_id,
                     )
                 )
+                await repository.audit(event)
+        # Both authenticated and anonymous refusal facts commit before reporting failure.
         if failure is not None:
             raise failure
 
@@ -157,7 +165,10 @@ class RbacService:
     async def update_role(
         self, token: str, context: MutationContext, role_id: UUID, name: str, codes: tuple[str, ...]
     ) -> RoleDetails:
-        async with self._write(token, context, "role.manage", AuditAction.PERMISSION_CHANGE) as (repository, authority):
+        async with self._write(token, context, "role.manage", AuditAction.PERMISSION_CHANGE, role_id) as (
+            repository,
+            authority,
+        ):
             target = next((item for item in await repository.roles() if item.role.id == role_id), None)
             if target is None or target.role.protected:
                 raise RbacConflict()
@@ -178,7 +189,10 @@ class RbacService:
         return result
 
     async def delete_role(self, token: str, context: MutationContext, role_id: UUID) -> None:
-        async with self._write(token, context, "role.manage", AuditAction.ROLE_CHANGE) as (repository, authority):
+        async with self._write(token, context, "role.manage", AuditAction.ROLE_CHANGE, role_id) as (
+            repository,
+            authority,
+        ):
             target = next((item for item in await repository.roles() if item.role.id == role_id), None)
             if target is None or target.role.protected:
                 raise RbacConflict()
@@ -198,7 +212,10 @@ class RbacService:
     async def assign_roles(
         self, token: str, context: MutationContext, user_id: UUID, role_ids: tuple[UUID, ...]
     ) -> None:
-        async with self._write(token, context, "role.manage", AuditAction.ROLE_CHANGE) as (repository, authority):
+        async with self._write(token, context, "role.manage", AuditAction.ROLE_CHANGE, user_id) as (
+            repository,
+            authority,
+        ):
             roles = await repository.roles()
             selected = [item for item in roles if item.role.id in role_ids]
             target = await repository.user(user_id)
@@ -224,7 +241,10 @@ class RbacService:
     async def put_grant(
         self, token: str, context: MutationContext, application: Application, grant: ResourceGrant
     ) -> None:
-        async with self._write(token, context, "acl.manage", AuditAction.PERMISSION_CHANGE) as (repository, authority):
+        async with self._write(token, context, "acl.manage", AuditAction.PERMISSION_CHANGE, grant.kb_id) as (
+            repository,
+            authority,
+        ):
             if application == "chat" and grant.permission is not KnowledgePermission.READ:
                 raise AuthorizationDenied()
             if grant.principal_type is ResourcePrincipalType.USER and await repository.user(grant.principal_id) is None:
@@ -270,7 +290,10 @@ class RbacService:
             return await repository.all_grants(kb_id)
 
     async def delete_grant(self, token: str, context: MutationContext, kb_id: UUID, grant_id: UUID) -> None:
-        async with self._write(token, context, "acl.manage", AuditAction.PERMISSION_CHANGE) as (repository, authority):
+        async with self._write(token, context, "acl.manage", AuditAction.PERMISSION_CHANGE, kb_id) as (
+            repository,
+            authority,
+        ):
             target = next(
                 ((app, grant) for app, grant in await repository.all_grants(kb_id) if grant.id == grant_id), None
             )

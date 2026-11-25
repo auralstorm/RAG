@@ -1,13 +1,12 @@
 """IAM PostgreSQL facts participate in the application-owned transaction."""
 
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from psycopg import AsyncConnection
-from psycopg.rows import TupleRow
 from pydantic import BaseModel, ConfigDict
 
-from app.modules.iam.domain.contracts import ExternalIdentity, IdentityKey, User
+from app.adapters.audit_writer import PostgresAuditWriter
+from app.modules.iam.domain.contracts import ExternalIdentity, IdentityKey, Role, User
 from app.modules.iam.domain.sessions import Application, CurrentIdentity, PlatformSession
 
 
@@ -24,10 +23,7 @@ class SessionRow(BaseModel):
         return PlatformSession(self.id, self.user_id, self.identity_id, self.application, self.expires_at, self.revoked)
 
 
-class PostgresAuthRepository:
-    def __init__(self, connection: AsyncConnection[TupleRow]) -> None:
-        self.connection = connection
-
+class PostgresAuthRepository(PostgresAuditWriter):
     async def find_identity(self, key: IdentityKey) -> CurrentIdentity | None:
         cursor = await self.connection.execute(
             "SELECT id FROM identities WHERE provider_key = %s AND issuer = %s AND subject = %s "
@@ -115,9 +111,11 @@ class PostgresAuthRepository:
         row = await cursor.fetchone()
         return row is not None and int(row[0]) <= limit
 
-    async def audit_login(self, request_id: UUID, trace_id: str, user_id: UUID | None, succeeded: bool) -> None:
-        await self.connection.execute(
-            "INSERT INTO audit_events(id, occurred_at, action, result, risk, request_id, trace_id, actor_user_id) "
-            "VALUES (%s,CURRENT_TIMESTAMP,'iam.login',%s,'MEDIUM',%s,%s,%s)",
-            (uuid4(), "SUCCEEDED" if succeeded else "DENIED", request_id, trace_id, user_id),
+    async def audit_roles(self, user_id: UUID) -> tuple[Role, ...]:
+        cursor = await self.connection.execute(
+            "SELECT to_jsonb(r)-'created_at'-'updated_at'-'deleted_at' FROM roles r "
+            "JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=%s AND r.deleted_at IS NULL "
+            "ORDER BY r.id FOR SHARE OF r,ur",
+            (user_id,),
         )
+        return tuple(Role.model_validate(row[0]) for row in await cursor.fetchall())

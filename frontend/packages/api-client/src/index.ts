@@ -13,6 +13,7 @@ export type CreateRole = ApiComponents['schemas']['CreateRole'];
 export type UpdateRole = ApiComponents['schemas']['UpdateRole'];
 export type AssignRoles = ApiComponents['schemas']['AssignRoles'];
 export type PutGrant = ApiComponents['schemas']['PutGrant'];
+export type AuditLogView = ApiComponents['schemas']['AuditLogView'];
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';

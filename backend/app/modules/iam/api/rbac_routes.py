@@ -6,8 +6,9 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
-from app.api.errors import request_context
+from app.api.audit_context import audit_context
 from app.api.schemas.common import PageResponse, PaginationQuery
+from app.modules.audit.domain.contracts import AuditAction
 from app.modules.iam.api.rbac_schemas import (
     AssignRoles,
     CapabilityView,
@@ -37,17 +38,18 @@ def create_rbac_router(service: RbacService | None, origins: Mapping[Application
             raise HTTPException(503)
         return service
 
-    def token(request: Request, application: Application = "admin", *, mutation: bool = False) -> str:
-        guard_origin(request, application, origins, mutation=mutation)
+    def token(request: Request, application: Application = "admin") -> str:
+        guard_origin(request, application, origins)
         return request.cookies.get(f"er_{application}_access", "")
 
     def context(request: Request, payload: ConfirmedMutation) -> MutationContext:
-        correlated = request_context(request)
+        correlated = audit_context(request)
         return MutationContext(
             payload.expected_policy_version,
             correlated.request_id,
             correlated.trace_id,
             request.headers.get("X-CSRF-Token", ""),
+            correlated.ip_address,
         )
 
     async def invoke(operation: Callable[[], Awaitable[ResultT]], response: Response) -> ResultT:
@@ -62,6 +64,24 @@ def create_rbac_router(service: RbacService | None, origins: Mapping[Application
             raise HTTPException(409) from error
         except AuthenticationUnavailable as error:
             raise HTTPException(503) from error
+
+    async def invoke_mutation(
+        operation: Callable[[str], Awaitable[ResultT]],
+        response: Response,
+        request: Request,
+        action: AuditAction,
+        object_id: UUID | None = None,
+    ) -> ResultT:
+        async def execute() -> ResultT:
+            try:
+                guard_origin(request, "admin", origins, mutation=True)
+            except HTTPException:
+                if service is not None:
+                    await service.denied_mutation(audit_context(request), action, object_id)
+                raise
+            return await operation(request.cookies.get("er_admin_access", ""))
+
+        return await invoke(execute, response)
 
     def role_view(details: RoleDetails) -> RoleView:
         return RoleView(role=details.role, permission_codes=tuple(sorted(details.permission_codes)))
@@ -119,46 +139,55 @@ def create_rbac_router(service: RbacService | None, origins: Mapping[Application
 
     @router.post("/admin/roles", status_code=201)
     async def create(payload: CreateRole, request: Request, response: Response) -> RoleView:
-        result = await invoke(
-            lambda: current_service().create_role(
-                token(request, mutation=True),
+        result = await invoke_mutation(
+            lambda access: current_service().create_role(
+                access,
                 context(request, payload),
                 payload.code,
                 payload.name,
                 payload.permission_codes,
             ),
             response,
+            request,
+            AuditAction.ROLE_CHANGE,
         )
         return role_view(result)
 
     @router.patch("/admin/roles/{role_id}")
     async def update(role_id: UUID, payload: UpdateRole, request: Request, response: Response) -> RoleView:
-        result = await invoke(
-            lambda: current_service().update_role(
-                token(request, mutation=True),
+        result = await invoke_mutation(
+            lambda access: current_service().update_role(
+                access,
                 context(request, payload),
                 role_id,
                 payload.name,
                 payload.permission_codes,
             ),
             response,
+            request,
+            AuditAction.PERMISSION_CHANGE,
+            role_id,
         )
         return role_view(result)
 
     @router.delete("/admin/roles/{role_id}", status_code=204)
     async def delete(role_id: UUID, payload: ConfirmedMutation, request: Request, response: Response) -> None:
-        await invoke(
-            lambda: current_service().delete_role(token(request, mutation=True), context(request, payload), role_id),
+        await invoke_mutation(
+            lambda access: current_service().delete_role(access, context(request, payload), role_id),
             response,
+            request,
+            AuditAction.ROLE_CHANGE,
+            role_id,
         )
 
     @router.put("/admin/users/{user_id}/roles", status_code=204)
     async def assign(user_id: UUID, payload: AssignRoles, request: Request, response: Response) -> None:
-        await invoke(
-            lambda: current_service().assign_roles(
-                token(request, mutation=True), context(request, payload), user_id, payload.role_ids
-            ),
+        await invoke_mutation(
+            lambda access: current_service().assign_roles(access, context(request, payload), user_id, payload.role_ids),
             response,
+            request,
+            AuditAction.ROLE_CHANGE,
+            user_id,
         )
 
     @router.get("/admin/kb-access/{kb_id}")
@@ -177,22 +206,24 @@ def create_rbac_router(service: RbacService | None, origins: Mapping[Application
             principal_id=payload.principal_id,
             permission=payload.permission,
         )
-        await invoke(
-            lambda: current_service().put_grant(
-                token(request, mutation=True), context(request, payload), payload.application, grant
-            ),
+        await invoke_mutation(
+            lambda access: current_service().put_grant(access, context(request, payload), payload.application, grant),
             response,
+            request,
+            AuditAction.PERMISSION_CHANGE,
+            kb_id,
         )
 
     @router.delete("/admin/kb-access/{kb_id}/{grant_id}", status_code=204)
     async def delete_grant(
         kb_id: UUID, grant_id: UUID, payload: ConfirmedMutation, request: Request, response: Response
     ) -> None:
-        await invoke(
-            lambda: current_service().delete_grant(
-                token(request, mutation=True), context(request, payload), kb_id, grant_id
-            ),
+        await invoke_mutation(
+            lambda access: current_service().delete_grant(access, context(request, payload), kb_id, grant_id),
             response,
+            request,
+            AuditAction.PERMISSION_CHANGE,
+            kb_id,
         )
 
     return router

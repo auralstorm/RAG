@@ -4,8 +4,12 @@ import hashlib
 import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
+from ipaddress import IPv4Address, IPv6Address
 from uuid import UUID, uuid4
 
+from app.modules.audit.application.recording import security_event
+from app.modules.audit.domain.contracts import AuditAction, AuditResult
+from app.modules.audit.domain.recording import AuditContext
 from app.modules.iam.domain.contracts import IdentityStatus
 from app.modules.iam.domain.sessions import (
     Application,
@@ -62,6 +66,11 @@ class SessionService:
             expires,
         )
 
+    async def denied_login(self, context: AuditContext) -> None:
+        """Record an Origin refusal without attributing the supplied account or cookies."""
+        async with self.transactions() as repository:
+            await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
+
     async def login(
         self,
         application: Application,
@@ -71,8 +80,10 @@ class SessionService:
         client_key: str,
         request_id: UUID,
         trace_id: str,
+        ip_address: IPv4Address | IPv6Address | None = None,
     ) -> SessionIssue:
         now = datetime.now(UTC)
+        context = AuditContext(request_id, trace_id, ip_address)
         # HMACs keep account and network identifiers out of the budget table.
         account_bucket = token_digest(self.tokens.csrf(UUID(int=0)) + application + ":" + username)
         network_bucket = token_digest(self.tokens.csrf(UUID(int=1)) + client_key)
@@ -80,7 +91,7 @@ class SessionService:
             account_ok = await repository.login_budget(account_bucket, now, 5)
             network_ok = await repository.login_budget(network_bucket, now, 30)
             if not account_ok or not network_ok:
-                await repository.audit_login(request_id, trace_id, None, False)
+                await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
         if not account_ok or not network_ok:
             raise AuthenticationThrottled()
 
@@ -89,7 +100,7 @@ class SessionService:
             key = await self.provider.authenticate(username, password)
         except AuthenticationDenied:
             async with self.transactions() as repository:
-                await repository.audit_login(request_id, trace_id, None, False)
+                await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
             raise
         denied = False
         issue: SessionIssue | None = None
@@ -98,7 +109,7 @@ class SessionService:
                 facts = require_identity(await repository.find_identity(key), application)
             except AuthenticationDenied:
                 denied = True
-                await repository.audit_login(request_id, trace_id, None, False)
+                await repository.audit(security_event(context, AuditAction.LOGIN, AuditResult.DENIED))
             else:
                 now = datetime.now(UTC)
                 session = PlatformSession(
@@ -110,7 +121,15 @@ class SessionService:
                 )
                 refresh = secrets.token_urlsafe(48)
                 await repository.insert_session(session, token_digest(refresh))
-                await repository.audit_login(request_id, trace_id, facts.user.id, True)
+                await repository.audit(
+                    security_event(
+                        context,
+                        AuditAction.LOGIN,
+                        AuditResult.SUCCEEDED,
+                        actor_user_id=facts.user.id,
+                        roles=await repository.audit_roles(facts.user.id),
+                    )
+                )
                 issue = self._issue(session, facts, refresh, now)
         if denied or issue is None:
             raise AuthenticationDenied()

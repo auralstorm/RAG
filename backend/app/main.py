@@ -11,8 +11,10 @@ from app.api.errors import common_error_responses, install_error_handlers
 from app.api.health import create_health_router
 from app.api.middleware.request_context import RequestContextMiddleware
 from app.api.v1.router import router as api_router
+from app.core.auditing import create_audit_service
 from app.core.authentication import create_iam_services
 from app.core.config import Settings, load_settings
+from app.modules.audit.api.routes import create_audit_router
 from app.modules.iam.api.rbac_routes import create_rbac_router
 from app.modules.iam.api.routes import create_auth_router
 
@@ -55,6 +57,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.include_router(
         create_rbac_router(rbac, {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins})
+    )
+    application.include_router(
+        create_audit_router(
+            create_audit_service(configuration, rbac),
+            {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins},
+        )
     )
     return application
 

@@ -6,7 +6,7 @@ from typing import TypeVar
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from app.api.errors import request_context
+from app.api.audit_context import audit_context
 from app.modules.iam.api.schemas import AuthConfiguration, AuthSessionResponse, CsrfResponse, LoginCredentials
 from app.modules.iam.api.security import guard_origin as enforce_origin
 from app.modules.iam.application.sessions import SessionService
@@ -81,8 +81,13 @@ def create_auth_router(
     async def login(
         application: Application, payload: LoginCredentials, request: Request, response: Response
     ) -> AuthSessionResponse:
-        guard_origin(request, application, mutation=True)
-        context = request_context(request)
+        context = audit_context(request)
+        try:
+            guard_origin(request, application, mutation=True)
+        except HTTPException:
+            if service is not None:
+                await invoke(lambda: current_service().denied_login(context))
+            raise
         issue = await invoke(
             lambda: current_service().login(
                 application,
@@ -91,6 +96,7 @@ def create_auth_router(
                 client_key=request.client.host if request.client else "unknown",
                 request_id=context.request_id,
                 trace_id=context.trace_id,
+                ip_address=context.ip_address,
             )
         )
         return public_session(issue, response, set_credentials=True)

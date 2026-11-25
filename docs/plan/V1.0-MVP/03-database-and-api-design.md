@@ -307,6 +307,8 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 
 审计日志不可由普通业务 API 删除。敏感快照需字段脱敏、访问受限。
 
+**实施落实（2026-11-25）：** 实际沿用 0002 的 audit_events，而非新增 audit_logs；[P1-06](implementation/P1-06.md) 提供统一追加 Writer 与 audit.read 保护的 `/api/v1/admin/audit-logs` 查询。当前角色/IP、动作前缀派生的 module、目标与请求关联及强类型摘要以实际 AuditEvent/AuditLogView 为准，protected_reason_ref 不进入公开投影。没有新 DDL 或历史回填，数据库版本保持 0004。
+
 #### `lifecycle_jobs`
 记录待离职标记、恢复、到期清理、清理结果和关联审计事件。会话正文清理、身份映射清理、匿名指标保留和合规审计保留必须分别定义规则。
 

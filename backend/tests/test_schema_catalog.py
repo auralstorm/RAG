@@ -36,6 +36,7 @@ def test_internal_identity_and_policy_schemas_are_not_exported_to_frontend() -> 
         "/api/v1/authorization/{application}/knowledge-bases",
         "/api/v1/authorization/{application}/knowledge-bases/{kb_id}",
         "/api/v1/admin/roles",
+        "/api/v1/admin/audit-logs",
         "/api/v1/admin/roles/{role_id}",
         "/api/v1/admin/permissions",
         "/api/v1/admin/users/{user_id}/roles",
