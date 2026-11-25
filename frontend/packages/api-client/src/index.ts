@@ -139,11 +139,21 @@ export function createApiClient(
   fetcher: typeof fetch = fetch,
 ) {
   const origin = new URL(baseUrl);
+  if (
+    !['http:', 'https:'].includes(origin.protocol) ||
+    origin.username ||
+    origin.password
+  ) {
+    throw new Error('Invalid API base URL');
+  }
+  origin.search = '';
+  origin.hash = '';
+  if (!origin.pathname.endsWith('/')) origin.pathname += '/';
 
   return {
     async getLiveness(signal?: AbortSignal): Promise<LivenessResponse> {
       const response = await fetcher(
-        new URL('/health/live', origin),
+        new URL('health/live', origin),
         signal ? { signal } : {},
       );
       if (!response.ok) throw await responseError(response);

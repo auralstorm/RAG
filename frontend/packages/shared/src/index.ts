@@ -1,3 +1,6 @@
+export type { SessionState } from './session';
+export { UNCONNECTED_SESSION } from './session';
+
 export type ApplicationId = 'chat' | 'admin';
 
 export const applicationLabels: Readonly<Record<ApplicationId, string>> = {

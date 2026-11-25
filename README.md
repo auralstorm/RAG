@@ -45,7 +45,7 @@ make dev-admin
 | Chat | <http://127.0.0.1:5173> |
 | Admin | <http://127.0.0.1:5174> |
 
-`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat 当前提供 [IT 知识助手页面与开发回复来源](docs/plan/V1.0-MVP/implementation/chat-ui.md)，Admin 保留独立启动壳；应用层后续通过公共客户端和各自 `VITE_API_BASE_URL` 接入业务 API。
+`/health/live` 仅表示 API 进程能够响应请求。依赖启动与就绪检查见 [基础设施说明](infra/README.md)，使用 `make infra-up` 启动本项目依赖，再启动后端。Chat/Admin 已提供 [登录页面与受保护路由](docs/plan/V1.0-MVP/implementation/P1-02.md)，真实登录服务尚未接入。开发模式下，Chat 的 `/preview` 提供问答演示，Admin 的 `/preview` 提供真实 API 连通性表格；生产均不开放预览。问答来源见 [开发回复说明](docs/plan/V1.0-MVP/implementation/chat-ui.md)。两个应用通过各自的 `VITE_API_BASE_URL` 装配公共客户端，默认 `/backend/` 经同源代理访问后端。独立静态部署与路由回退见 [部署步骤](infra/frontend/README.md)。
 
 PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运行 `make db-current` 查看版本。两个命令均可使用 `PROFILE=test` 选择测试库。迁移与事务边界见 [P1-01 实施记录](docs/plan/V1.0-MVP/implementation/P1-01.md)。
 
@@ -64,7 +64,7 @@ scripts/                   # 仓库检查脚本
 docs/                      # 设计、计划、规范与实施证据
 ```
 
-前端采用 create-vite 9.3.4 的 React TS 模板，React 19.3.1、Vite 8.3.6、TypeScript 6.0.3 和 Ant Design 6.7.2；基础 UI 在公共包统一维护。Chat 页面接入 Ant Design X / X Markdown 2.10.0。业务路由、数据缓存、全局状态与 ProComponents 在对应功能有实际需求时落实，版本与接口随实现记录。
+前端采用 create-vite 9.3.4 的 React TS 模板，React 19.3.1、Vite 8.3.6、TypeScript 6.0.3 和 Ant Design 6.7.2；基础 UI 在公共包统一维护。Chat 页面接入 Ant Design X / X Markdown 2.10.0。路由使用 React Router 8.5.3；数据缓存、全局状态与 ProComponents 在对应功能有实际需求时落实，版本与接口随实现记录。
 
 应用通过公共包的正式 exports 使用能力。ESLint 检查应用间直接导入和公共包反向依赖应用；改公共包时，统一检查与构建会覆盖两个消费者。
 

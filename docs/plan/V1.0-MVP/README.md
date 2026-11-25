@@ -42,6 +42,7 @@
 - [P0-02 Docker 开发环境与就绪检查](implementation/P0-02.md)：记录依赖启动、持久化、故障恢复和重置验证。
 - 试点口径、问答样例和 Chat/Admin 验收流程见 [P0-05 MVP 需求与验收口径](implementation/P0-05.md)。
 - [P1-01 后端工程底座](implementation/P1-01.md) 记录数据库迁移、事务边界和模块依赖验证。
+- [P1-02 前端基础交付](implementation/P1-02.md) 记录双应用登录/路由、受控状态、基础表格、真实 API 连通性及本地静态部署验收；完整任务待 P1-04/P1-05 联调，不代表真实认证闭环。
 - [Chat 页面与开发回复来源](implementation/chat-ui.md) 记录目录整改、会话交互、开发 mocks 隔离及生产未接入状态；正式登录、RAG 与会话持久化继续按实施计划交付。
 
 对象存储已按用户确认采用 RustFS，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md) 与 [替换实施记录](implementation/rustfs-object-storage.md)。选型和开发验收已分开记录，POC-08 的生产准入检查继续在 P0-03 完成。

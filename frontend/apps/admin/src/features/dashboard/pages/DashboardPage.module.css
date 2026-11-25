@@ -1,0 +1,24 @@
+.connection {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.toolbar h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.description {
+  margin: 0;
+  line-height: 1.6;
+  max-width: 70ch;
+}

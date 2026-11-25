@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@enterprise-rag/shared": "workspace:*",
     "antd": "6.7.2"
   },
   "peerDependencies": {

@@ -1,36 +1,22 @@
-import { useEffect, useState } from 'react';
-import { ChatPage } from '../features/chat/pages/ChatPage';
-import type { ChatReplySource } from '../features/chat/types';
+import { RouterProvider } from 'react-router';
+import type { DataRouter } from 'react-router';
+import { UNCONNECTED_SESSION } from '@enterprise-rag/shared';
+import type { SessionState } from '@enterprise-rag/shared';
+import { SessionProvider } from '@enterprise-rag/ui';
 import { AppProviders } from './AppProviders';
-import { loadReplySource } from './load-reply-source';
 
-export function App() {
-  const [replySource, setReplySource] = useState<ChatReplySource | null>();
-  const [initializationFailed, setInitializationFailed] = useState(false);
-  useEffect(() => {
-    let active = true;
-    void loadReplySource().then(
-      (source) => {
-        if (active) setReplySource(source);
-      },
-      () => {
-        if (active) {
-          setReplySource(null);
-          setInitializationFailed(true);
-        }
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, []);
+export function App({
+  router,
+  session = UNCONNECTED_SESSION,
+}: {
+  readonly router: DataRouter;
+  readonly session?: SessionState;
+}) {
   return (
     <AppProviders>
-      <ChatPage
-        replySource={replySource ?? null}
-        isInitializing={replySource === undefined}
-        initializationFailed={initializationFailed}
-      />
+      <SessionProvider state={session}>
+        <RouterProvider router={router} />
+      </SessionProvider>
     </AppProviders>
   );
 }

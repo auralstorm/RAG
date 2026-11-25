@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { App } from './App';
-import { loadReplySource } from './load-reply-source';
+import { ChatWorkspacePage } from './ChatWorkspacePage';
+import { AppProviders } from '../../../app/AppProviders';
+import { loadReplySource } from '../../../app/load-reply-source';
 
-vi.mock('./load-reply-source', () => ({ loadReplySource: vi.fn() }));
+vi.mock('../../../app/load-reply-source', () => ({ loadReplySource: vi.fn() }));
 beforeEach(() => {
   vi.mocked(loadReplySource).mockReset();
 });
@@ -12,7 +13,11 @@ beforeEach(() => {
 describe('application initialization', () => {
   it('disables submission while the reply source is loading', () => {
     vi.mocked(loadReplySource).mockReturnValue(new Promise(() => {}));
-    render(<App />);
+    render(
+      <AppProviders>
+        <ChatWorkspacePage />
+      </AppProviders>,
+    );
     expect(screen.getByText('正在初始化问答服务')).toBeInTheDocument();
     expect(
       screen.getByRole('textbox', { name: '输入你的 IT 问题' }),
@@ -23,7 +28,11 @@ describe('application initialization', () => {
     vi.mocked(loadReplySource).mockRejectedValue(
       new Error('private-module-details'),
     );
-    render(<App />);
+    render(
+      <AppProviders>
+        <ChatWorkspacePage />
+      </AppProviders>,
+    );
     await waitFor(() =>
       expect(
         screen.getByText('问答服务初始化失败，请刷新页面重试。'),

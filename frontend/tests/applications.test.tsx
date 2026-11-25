@@ -6,6 +6,10 @@ import {
   within,
 } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { createMemoryRouter } from 'react-router';
+import { createChatRoutes } from '../apps/chat/src/routes/routes';
+import { createAdminRoutes } from '../apps/admin/src/routes/routes';
+import { ChatWorkspacePage } from '../apps/chat/src/features/chat/pages/ChatWorkspacePage';
 import { App as ChatApp } from '../apps/chat/src/app/App';
 import { App as AdminApp } from '../apps/admin/src/app/App';
 import { AppProviders } from '../apps/chat/src/app/AppProviders';
@@ -13,11 +17,16 @@ import { ChatPage } from '../apps/chat/src/features/chat/pages/ChatPage';
 import { mockReplySource } from '../apps/chat/src/mocks/chat-reply-source';
 
 describe.each([
-  ['员工端', ChatApp, '新对话'],
-  ['管理端', AdminApp, '企业知识管理'],
-] as const)('%s application', (_label, App, title) => {
-  it('renders its own accessible heading and main landmark', () => {
-    render(<App />);
+  ['员工端', ChatApp, '登录企业知识助手', createChatRoutes],
+  ['管理端', AdminApp, '登录企业知识管理', createAdminRoutes],
+] as const)('%s application', (_label, App, title, createRoutes) => {
+  it('redirects to its own accessible login page', async () => {
+    const router = createMemoryRouter(createRoutes(), {
+      initialEntries: ['/'],
+    });
+    render(<App router={router} />);
+    await screen.findByRole('heading', { level: 1, name: title });
+    expect(router.state.location.pathname).toBe('/login');
     expect(
       screen.getByRole('heading', { level: 1, name: title }),
     ).toBeVisible();
@@ -26,7 +35,11 @@ describe.each([
 });
 
 it('shows the unavailable interface state with submission disabled', async () => {
-  render(<ChatApp />);
+  render(
+    <AppProviders>
+      <ChatWorkspacePage />
+    </AppProviders>,
+  );
   await waitFor(() => {
     expect(screen.getAllByText('知识问答接口尚未接入').length).toBeGreaterThan(
       0,

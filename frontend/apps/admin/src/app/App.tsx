@@ -1,13 +1,22 @@
-import { applicationLabels } from '@enterprise-rag/shared';
-import { ApplicationShell } from '@enterprise-rag/ui';
+import { RouterProvider } from 'react-router';
+import type { DataRouter } from 'react-router';
+import { UNCONNECTED_SESSION } from '@enterprise-rag/shared';
+import type { SessionState } from '@enterprise-rag/shared';
+import { SessionProvider } from '@enterprise-rag/ui';
+import { AppProviders } from './AppProviders';
 
-export function App() {
+export function App({
+  router,
+  session = UNCONNECTED_SESSION,
+}: {
+  readonly router: DataRouter;
+  readonly session?: SessionState;
+}) {
   return (
-    <ApplicationShell
-      title={applicationLabels.admin}
-      description="统一配置模型、管理知识库与查看运行记录。"
-    >
-      <p>知识管理功能即将开放。</p>
-    </ApplicationShell>
+    <AppProviders>
+      <SessionProvider state={session}>
+        <RouterProvider router={router} />
+      </SessionProvider>
+    </AppProviders>
   );
 }
