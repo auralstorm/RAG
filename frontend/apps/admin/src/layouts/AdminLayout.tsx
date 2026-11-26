@@ -1,18 +1,21 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  ReadOutlined,
+} from '@ant-design/icons';
 import { ProLayout } from '@ant-design/pro-components/layout';
 import { Button } from 'antd';
 import { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router';
 
 import { ADMIN_PAGES } from '@admin/routes/admin-pages';
 import { SessionLogoutButton, useSessionState } from '@enterprise-rag/ui';
-
-import { EnterpriseBrand } from '../components/EnterpriseBrand';
 
 import styles from './admin.module.css';
 
 export function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const session = useSessionState();
   const [collapsed, setCollapsed] = useState(false);
   const pages = ADMIN_PAGES.filter(
@@ -27,7 +30,7 @@ export function AdminLayout() {
       </a>
       <ProLayout
         title="EnterpriseRag"
-        logo={false}
+        logo={<ReadOutlined aria-hidden />}
         layout="mix"
         navTheme="light"
         contentWidth="Fluid"
@@ -51,34 +54,26 @@ export function AdminLayout() {
         }}
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        collapsedButtonRender={false}
-        headerRender={(props) => (
-          <div className={styles.header}>
-            <Button
-              type="text"
-              aria-label={collapsed ? '展开导航' : '收起导航'}
-              aria-expanded={!collapsed}
-              aria-controls="admin-navigation"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
-            />
-            <EnterpriseBrand />
-            <span className={styles.headerLabel}>管理工作台</span>
-            <div className={styles.headerActions}>
-              <SessionLogoutButton />
-            </div>
-            {props.isMobile ? null : (
-              <span className={styles.internal}>企业内部</span>
-            )}
-          </div>
+        onMenuHeaderClick={() => navigate('/admin')}
+        collapsedButtonRender={(isCollapsed) => (
+          <Button
+            type="text"
+            aria-label={isCollapsed ? '展开导航' : '收起导航'}
+            aria-expanded={!isCollapsed}
+            aria-controls="admin-navigation"
+            icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!isCollapsed)}
+          />
         )}
-        menuHeaderRender={(_, __, props) =>
-          props?.isMobile ? <EnterpriseBrand /> : null
-        }
-        menuExtraRender={(props) =>
-          props.isMobile ? (
-            <Button onClick={() => setCollapsed(true)}>关闭导航</Button>
-          ) : null
+        actionsRender={(props) =>
+          [
+            !props.isMobile && (
+              <span key="internal" className={styles.internal}>
+                企业内部
+              </span>
+            ),
+            <SessionLogoutButton key="logout" />,
+          ].filter(Boolean)
         }
         menuContentRender={(_, dom) => (
           <nav id="admin-navigation" aria-label="管理导航">
