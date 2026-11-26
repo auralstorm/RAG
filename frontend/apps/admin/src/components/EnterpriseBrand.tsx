@@ -1,6 +1,7 @@
 import { ReadOutlined } from '@ant-design/icons';
 import { Link } from 'react-router';
-import styles from './admin.module.css';
+
+import styles from '../layouts/admin.module.css';
 
 export function EnterpriseBrand() {
   return (

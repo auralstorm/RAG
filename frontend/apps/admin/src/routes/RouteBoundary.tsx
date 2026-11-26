@@ -1,6 +1,7 @@
 import { Link, Navigate, Outlet } from 'react-router';
+
+import { AdminSessionStatus } from '@admin/components/AdminStatusScreen';
 import { SessionBoundary, SessionLogoutButton } from '@enterprise-rag/ui';
-import { AdminSessionStatus } from '@admin/app/AdminStatusScreen';
 
 export function RequireSession({
   requiredPermission,

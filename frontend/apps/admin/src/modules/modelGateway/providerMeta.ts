@@ -1,5 +1,5 @@
-import { createElement } from 'react';
 import { ApiOutlined } from '@ant-design/icons';
+import { createElement } from 'react';
 
 export const PROVIDER_PAGE = {
   path: '/admin/providers',

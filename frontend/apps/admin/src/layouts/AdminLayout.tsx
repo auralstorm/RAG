@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router';
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { ProLayout } from '@ant-design/pro-components/layout';
 import { Button } from 'antd';
-import { SessionLogoutButton, useSessionState } from '@enterprise-rag/ui';
+import { useState } from 'react';
+import { Link, Outlet, useLocation } from 'react-router';
+
 import { ADMIN_PAGES } from '@admin/routes/admin-pages';
-import { EnterpriseBrand } from './EnterpriseBrand';
+import { SessionLogoutButton, useSessionState } from '@enterprise-rag/ui';
+
+import { EnterpriseBrand } from '../components/EnterpriseBrand';
+
 import styles from './admin.module.css';
 
 export function AdminLayout() {

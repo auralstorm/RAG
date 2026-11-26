@@ -1,7 +1,9 @@
 import { Alert, Checkbox, Form, Input, InputNumber, Modal } from 'antd';
+
 import type { ProviderAdminView } from '@enterprise-rag/api-client';
-import type { ProviderFormValues } from './useProviderManagement';
+
 import styles from './provider.module.css';
+import type { ProviderFormValues } from './useProviderManagement';
 
 export function ProviderEditor({
   provider,

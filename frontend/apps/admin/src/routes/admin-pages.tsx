@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
+
 import { DASHBOARD_PAGE } from '@admin/modules/dashboard';
 import { PROVIDER_PAGE } from '@admin/modules/modelGateway';
 

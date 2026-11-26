@@ -1,9 +1,11 @@
 import { Link, Navigate } from 'react-router';
 import type { RouteObject } from 'react-router';
-import { RequireSession } from './RouteBoundary';
-import { ADMIN_PAGES } from './admin-pages';
-import { AdminStatusScreen } from '@admin/app/AdminStatusScreen';
+
+import { AdminStatusScreen } from '@admin/components/AdminStatusScreen';
 import { LoginPage } from '@admin/pages/auth/LoginPage';
+
+import { ADMIN_PAGES } from './admin-pages';
+import { RequireSession } from './RouteBoundary';
 
 export function createAdminRoutes(): RouteObject[] {
   return [
@@ -35,7 +37,7 @@ export function createAdminRoutes(): RouteObject[] {
             {
               path: page.path,
               lazy: async () => {
-                const { AdminLayout } = await import('../app/AdminLayout');
+                const { AdminLayout } = await import('../layouts/AdminLayout');
                 return { Component: AdminLayout };
               },
               children: [{ index: true, lazy: page.load }],

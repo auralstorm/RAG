@@ -1,10 +1,12 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { expect, it, vi } from 'vitest';
+
 import type { SessionState } from '@enterprise-rag/shared';
-import { App } from './App';
-import { createAdminRoutes } from '../routes/routes';
+
 import { waitForRouter } from '../../../../tests/router';
+import { App } from '../app/App';
+import { createAdminRoutes } from '../routes/routes';
 
 const session: SessionState = {
   status: 'authenticated',

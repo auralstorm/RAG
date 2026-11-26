@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { HttpError } from '@enterprise-rag/api-client';
+
 import { apiClient } from '@admin/api/apiClient';
+import { HttpError } from '@enterprise-rag/api-client';
 
 type ConnectionState =
   | { readonly status: 'idle' | 'loading' | 'connected' }

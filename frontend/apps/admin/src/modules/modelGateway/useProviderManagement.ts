@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+
+import { apiClient } from '@admin/api/apiClient';
 import {
   HttpError,
   type ProviderAdminView,
@@ -6,7 +8,7 @@ import {
   type UpdateProvider,
 } from '@enterprise-rag/api-client';
 import { useSessionActions, useSessionState } from '@enterprise-rag/ui';
-import { apiClient } from '@admin/api/apiClient';
+
 import { useProviderList, type ProviderListQuery } from './useProviderList';
 
 export interface ProviderFormValues {

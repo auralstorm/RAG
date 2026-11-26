@@ -1,5 +1,5 @@
-import { createElement } from 'react';
 import { DashboardOutlined } from '@ant-design/icons';
+import { createElement } from 'react';
 
 export const DASHBOARD_PAGE = {
   path: '/admin',

@@ -1,8 +1,10 @@
+import { PageContainer } from '@ant-design/pro-components/layout';
 import { Alert, Button, Empty, Table, theme } from 'antd';
 import type { TableColumnsType } from 'antd';
-import { PageContainer } from '@ant-design/pro-components/layout';
+
+import layoutStyles from '@admin/layouts/admin.module.css';
 import { DASHBOARD_PAGE, useApiConnection } from '@admin/modules/dashboard';
-import layoutStyles from '@admin/app/admin.module.css';
+
 import styles from './DashboardPage.module.css';
 
 interface ServiceRow {

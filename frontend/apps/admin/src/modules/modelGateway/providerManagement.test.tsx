@@ -1,9 +1,11 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
+
+import { apiClient } from '@admin/api/apiClient';
 import { HttpError, type ProviderAdminView } from '@enterprise-rag/api-client';
 import { SessionProvider } from '@enterprise-rag/ui';
-import { apiClient } from '@admin/api/apiClient';
+
 import { useProviderList } from './useProviderList';
 import { useProviderManagement } from './useProviderManagement';
 

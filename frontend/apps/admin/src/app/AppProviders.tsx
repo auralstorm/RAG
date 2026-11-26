@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
 import { ConfigProvider, theme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import type { CSSProperties, ReactNode } from 'react';
 
 const THEME = {
   token: {

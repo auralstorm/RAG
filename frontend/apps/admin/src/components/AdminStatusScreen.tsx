@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react';
 import { Result } from 'antd';
+import type { ReactNode } from 'react';
+
 import type { SessionStatusProps } from '@enterprise-rag/ui';
+
+import styles from '../layouts/admin.module.css';
+
 import { EnterpriseBrand } from './EnterpriseBrand';
-import styles from './admin.module.css';
 
 export function AdminStatusScreen({
   title,

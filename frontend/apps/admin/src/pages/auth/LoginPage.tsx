@@ -1,5 +1,10 @@
-import { Link, Navigate } from 'react-router';
 import { Alert } from 'antd';
+import { Link, Navigate } from 'react-router';
+
+import { AdminSessionStatus } from '@admin/components/AdminStatusScreen';
+import { EnterpriseBrand } from '@admin/components/EnterpriseBrand';
+import styles from '@admin/layouts/admin.module.css';
+import type { LoginCredentials } from '@admin/modules/auth';
 import {
   CredentialForm,
   SessionBoundary,
@@ -7,10 +12,6 @@ import {
   useSessionState,
   useSessionActions,
 } from '@enterprise-rag/ui';
-import { AdminSessionStatus } from '@admin/app/AdminStatusScreen';
-import { EnterpriseBrand } from '@admin/app/EnterpriseBrand';
-import styles from '@admin/app/admin.module.css';
-import type { LoginCredentials } from '@admin/modules/auth';
 
 interface LoginPageProps {
   readonly onLogin?: (

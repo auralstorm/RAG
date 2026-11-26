@@ -1,8 +1,10 @@
 import { RouterProvider } from 'react-router';
 import type { DataRouter } from 'react-router';
+
 import { UNCONNECTED_SESSION } from '@enterprise-rag/shared';
 import type { SessionState, SessionActions } from '@enterprise-rag/shared';
 import { SessionProvider } from '@enterprise-rag/ui';
+
 import { AppProviders } from './AppProviders';
 
 export function App({

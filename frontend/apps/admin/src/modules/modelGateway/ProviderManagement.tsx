@@ -1,3 +1,5 @@
+import { PlusOutlined } from '@ant-design/icons';
+import { ProTable, type ProColumns } from '@ant-design/pro-components/table';
 import {
   Alert,
   Button,
@@ -8,12 +10,12 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { ProTable, type ProColumns } from '@ant-design/pro-components/table';
+
 import type { ProviderAdminView } from '@enterprise-rag/api-client';
+
+import styles from './provider.module.css';
 import { ProviderEditor } from './ProviderEditor';
 import { useProviderManagement } from './useProviderManagement';
-import styles from './provider.module.css';
 
 interface ProviderSearch {
   readonly name?: string;

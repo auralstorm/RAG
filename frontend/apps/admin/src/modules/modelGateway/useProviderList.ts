@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { HttpError, type ProviderAdminView } from '@enterprise-rag/api-client';
+
 import { apiClient } from '@admin/api/apiClient';
+import { HttpError, type ProviderAdminView } from '@enterprise-rag/api-client';
 
 export interface ProviderListQuery {
   readonly page: number;
