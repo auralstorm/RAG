@@ -1,4 +1,5 @@
 import type { ChatReplySource } from '../chat.types';
+
 import { getMockAnswer } from './chatAnswers';
 
 function waitForChunk(signal: AbortSignal): Promise<void> {

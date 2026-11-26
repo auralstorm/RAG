@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest';
+
 import { createApiClient } from './index';
 
 const SUBJECT = '12345678-1234-4321-8123-123456789abc';

@@ -4,6 +4,7 @@ import {
   ToolOutlined,
 } from '@ant-design/icons';
 import { Prompts, Welcome } from '@ant-design/x';
+
 import { PROMPT_GROUPS } from '../prompts';
 import styles from '../styles/chat.module.css';
 

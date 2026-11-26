@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import type { ComponentProps } from 'react';
 import { PaperClipOutlined } from '@ant-design/icons';
 import { Attachments, Prompts, Sender } from '@ant-design/x';
 import { Button } from 'antd';
+import { useState } from 'react';
+import type { ComponentProps } from 'react';
+
 import styles from '../styles/chat.module.css';
 
 const SHORTCUTS = ['如何申请 VPN 访问？', '如何提交 IT 工单？'];

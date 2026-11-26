@@ -1,8 +1,10 @@
+import { Spin } from 'antd';
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { Spin } from 'antd';
+
 import { UNCONNECTED_SESSION } from '@enterprise-rag/shared';
 import type { SessionState, SessionActions } from '@enterprise-rag/shared';
+
 import { AccessScreen } from './AccessScreen';
 
 const SessionContext = createContext<SessionState>(UNCONNECTED_SESSION);

@@ -1,5 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
 import { theme } from 'antd';
+import type { CSSProperties, ReactNode } from 'react';
+
 import styles from './AccessScreen.module.css';
 
 interface AccessScreenProps {

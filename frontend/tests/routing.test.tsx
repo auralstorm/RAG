@@ -1,12 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import type { SessionState } from '@enterprise-rag/shared';
-import { App as ChatApp } from '@chat/app/App';
-import { App as AdminApp } from '@admin/app/App';
-import { createChatRoutes } from '@chat/routes/routes';
-import { createAdminRoutes } from '@admin/routes/routes';
+
 import { apiClient as adminApiClient } from '@admin/api/apiClient';
+import { App as AdminApp } from '@admin/app/App';
+import { createAdminRoutes } from '@admin/routes/routes';
+import { App as ChatApp } from '@chat/app/App';
+import { createChatRoutes } from '@chat/routes/routes';
+import type { SessionState } from '@enterprise-rag/shared';
+
 import { waitForRouter } from './router';
 
 it('uses operation permissions for Admin access and leaves Chat accessible without a KB grant', async () => {

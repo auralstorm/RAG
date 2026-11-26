@@ -1,14 +1,16 @@
-import { useState } from 'react';
-import type { CSSProperties } from 'react';
 import { MenuOutlined } from '@ant-design/icons';
 import { Alert, Button, Drawer, theme } from 'antd';
+import { useState } from 'react';
+import type { CSSProperties } from 'react';
+
 import { SessionLogoutButton } from '@enterprise-rag/ui';
+
+import type { ChatReplySource } from './chat.types';
 import { ChatComposer } from './components/ChatComposer';
 import { ChatWelcome } from './components/ChatWelcome';
 import { ConversationSidebar } from './components/ConversationSidebar';
 import { MessageTimeline } from './components/MessageTimeline';
 import { useChat } from './hooks/useChat';
-import type { ChatReplySource } from './chat.types';
 import styles from './styles/chat.module.css';
 
 interface ChatPageProps {

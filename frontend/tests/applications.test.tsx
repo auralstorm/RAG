@@ -5,15 +5,17 @@ import {
   waitFor,
   within,
 } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
 import { createMemoryRouter } from 'react-router';
-import { createChatRoutes } from '@chat/routes/routes';
-import { createAdminRoutes } from '@admin/routes/routes';
-import { ChatWorkspacePage } from '@chat/pages/chat/ChatWorkspacePage';
-import { App as ChatApp } from '@chat/app/App';
+import { describe, expect, it } from 'vitest';
+
 import { App as AdminApp } from '@admin/app/App';
+import { createAdminRoutes } from '@admin/routes/routes';
+import { App as ChatApp } from '@chat/app/App';
 import { AppProviders } from '@chat/app/AppProviders';
 import { ChatPage } from '@chat/modules/chat';
+import { ChatWorkspacePage } from '@chat/pages/chat/ChatWorkspacePage';
+import { createChatRoutes } from '@chat/routes/routes';
+
 import { waitForRouter } from './router';
 
 const mockReplySource = {

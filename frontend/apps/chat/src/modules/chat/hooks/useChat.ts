@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import type { ChatReplySource, ChatSession, ChatTurn } from '../chat.types';
 
 const EMPTY_SESSION: ChatSession = {

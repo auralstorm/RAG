@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import { SessionProvider } from '@enterprise-rag/ui';
-import { LoginPage as ChatLoginPage } from '@chat/pages/auth/LoginPage';
+
+import { AppProviders as AdminProviders } from '@admin/app/AppProviders';
 import { LoginPage as AdminLoginPage } from '@admin/pages/auth/LoginPage';
 import { AppProviders as ChatProviders } from '@chat/app/AppProviders';
-import { AppProviders as AdminProviders } from '@admin/app/AppProviders';
+import { LoginPage as ChatLoginPage } from '@chat/pages/auth/LoginPage';
+import { SessionProvider } from '@enterprise-rag/ui';
 
 describe('login forms', () => {
   it('requires admin credentials and does not persist the password', async () => {

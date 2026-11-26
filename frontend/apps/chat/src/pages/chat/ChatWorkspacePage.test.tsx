@@ -1,9 +1,11 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatWorkspacePage } from './ChatWorkspacePage';
+
 import { AppProviders } from '@chat/app/AppProviders';
 import { loadReplySource } from '@chat/modules/chat';
+
+import { ChatWorkspacePage } from './ChatWorkspacePage';
 
 vi.mock('@chat/modules/chat', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@chat/modules/chat')>()),

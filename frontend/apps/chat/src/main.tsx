@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ConnectedApp } from './app/ConnectedApp';
 import { createBrowserRouter } from 'react-router';
+
+import { ConnectedApp } from './app/ConnectedApp';
 import { createChatRoutes } from './routes/routes';
 import './styles/global.css';
 

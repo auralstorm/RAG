@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   CommentOutlined,
   DeleteOutlined,
@@ -9,6 +8,8 @@ import {
 } from '@ant-design/icons';
 import { Conversations } from '@ant-design/x';
 import { Button, Input, Modal } from 'antd';
+import { useState } from 'react';
+
 import type { ChatSession } from '../chat.types';
 import styles from '../styles/chat.module.css';
 

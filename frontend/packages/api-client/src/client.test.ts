@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { createServer } from 'node:http';
+
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
+
 import { createApiClient } from './index';
 
 let status = 200;

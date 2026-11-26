@@ -8,6 +8,7 @@ import { Actions, Bubble, ThoughtChain } from '@ant-design/x';
 import XMarkdown from '@ant-design/x-markdown';
 import '@ant-design/x-markdown/themes/light.css';
 import { Alert, Avatar, Button } from 'antd';
+
 import type { ChatTurn } from '../chat.types';
 import styles from '../styles/chat.module.css';
 

@@ -1,4 +1,5 @@
 import type { SessionCredentials, SessionState } from '@enterprise-rag/shared';
+
 import { HttpError } from './index';
 import type { AuthSessionResponse, createApiClient } from './index';
 

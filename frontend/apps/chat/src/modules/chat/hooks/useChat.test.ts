@@ -1,9 +1,11 @@
-import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { ChatReplySource } from '../chat.types';
 import { getMockAnswer } from '../mocks/chatAnswers';
 import { MOCK_REPLY_SOURCE } from '../mocks/chatReplySource';
-import type { ChatReplySource } from '../chat.types';
+
 import { useChat } from './useChat';
 
 const useTestChat = () => useChat(MOCK_REPLY_SOURCE);

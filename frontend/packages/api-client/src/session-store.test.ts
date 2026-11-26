@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { createApiClient, createSessionStore } from './index';
 
 function json(body: unknown, status = 200) {

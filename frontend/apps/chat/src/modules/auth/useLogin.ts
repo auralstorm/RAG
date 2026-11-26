@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import type { LoginAction } from './auth.types';
 
 export function useLogin(onLogin?: LoginAction) {

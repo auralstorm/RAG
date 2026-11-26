@@ -1,5 +1,8 @@
-import { Link, Navigate } from 'react-router';
 import { Alert, Button } from 'antd';
+import { Link, Navigate } from 'react-router';
+
+import { useLogin } from '@chat/modules/auth';
+import type { LoginAction } from '@chat/modules/auth';
 import {
   AccessScreen,
   SessionBoundary,
@@ -8,8 +11,6 @@ import {
   useSessionActions,
   CredentialForm,
 } from '@enterprise-rag/ui';
-import { useLogin } from '@chat/modules/auth';
-import type { LoginAction } from '@chat/modules/auth';
 
 interface LoginPageProps {
   readonly onLogin?: LoginAction;
