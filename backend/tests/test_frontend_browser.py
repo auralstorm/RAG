@@ -20,6 +20,8 @@ from tests.test_auth_postgres import postgres_settings as postgres_settings
 from tests.test_rbac_postgres import RbacFixture
 from tests.test_rbac_postgres import rbac as rbac
 
+from scripts.initialize_provider_secrets import initialize as initialize_provider_secrets
+
 pytestmark = [pytest.mark.infrastructure, pytest.mark.frontend_e2e]
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -61,8 +63,15 @@ def test_admin_production_browser(rbac: RbacFixture, tmp_path: Path) -> None:
     assert mime_path.is_file(), "Install the Nginx MIME types alongside nginx.conf"
     api_port, chat_port, admin_port = available_port(), available_port(), available_port()
     chat_origin, admin_origin = f"http://127.0.0.1:{chat_port}", f"http://127.0.0.1:{admin_port}"
+    secret_keys = tmp_path / "provider-keys.json"
+    initialize_provider_secrets(secret_keys)
     settings = rbac.auth.settings.model_copy(
-        update={"auth_chat_origins": [chat_origin], "auth_admin_origins": [admin_origin], "telemetry_enabled": False}
+        update={
+            "auth_chat_origins": [chat_origin],
+            "auth_admin_origins": [admin_origin],
+            "telemetry_enabled": False,
+            "provider_secrets_config_ref": secret_keys,
+        }
     )
     with Connection.connect(postgres_conninfo(settings)) as connection:
         connection.execute("DELETE FROM kb_resource_grants WHERE purpose='chat'")
@@ -117,5 +126,5 @@ def test_admin_production_browser(rbac: RbacFixture, tmp_path: Path) -> None:
                 "ENTERPRISE_RAG_E2E_ADMIN_ORIGIN": admin_origin,
             },
             check=True,
-            timeout=180,
+            timeout=300,
         )

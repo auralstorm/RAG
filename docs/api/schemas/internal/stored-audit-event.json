@@ -266,6 +266,18 @@
           "default": null,
           "title": "Permission Ids"
         },
+        "proxy_configured": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proxy Configured"
+        },
         "resource_grant": {
           "anyOf": [
             {

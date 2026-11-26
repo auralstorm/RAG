@@ -47,6 +47,7 @@
 - [P1-05 RBAC 与权限执行](implementation/P1-05.md) 记录固定矩阵、自定义角色边界、目的隔离 ACL、即时撤权、确认/审计与显式首位管理员配置。
 - [P1-06 操作审计基础能力](implementation/P1-06.md) 记录统一追加写入、登录及权限变更定位、受保护查询、防修改与审计失败回滚。
 - [P1-07 基础健康检查与可观测性](implementation/P1-07.md) 记录受控日志、SDK 指标、认证 Phoenix 导出、实际依赖观测与传播/隐私边界。
+- [P2-01 Provider 管理](implementation/P2-01.md) 记录供应商 CRUD、当前权限、加密凭据、配置并发保护、软删除与 Admin ProTable 页面；模型调用联动继续由 P2-02 验收。
 - [Chat 页面与开发回复来源](implementation/chat-ui.md) 记录目录整改、会话交互、开发 mocks 隔离及生产未接入状态；正式登录、RAG 与会话持久化继续按实施计划交付。
 - [Admin Pro 风格框架](implementation/admin-pro-ui.md) 记录保留 Vite 的 ProComponents 布局、现有页面迁移与隔离浏览器验收；后续管理业务按原计划推进。
 

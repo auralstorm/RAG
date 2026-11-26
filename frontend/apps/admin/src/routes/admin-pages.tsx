@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 import { DASHBOARD_PAGE } from '@admin/modules/dashboard';
+import { PROVIDER_PAGE } from '@admin/modules/modelGateway';
 
 interface AdminPage {
   readonly path: string;
@@ -21,4 +22,16 @@ const DASHBOARD_ROUTE: AdminPage = {
   },
 };
 
-export const ADMIN_PAGES: readonly AdminPage[] = [DASHBOARD_ROUTE];
+const PROVIDER_ROUTE: AdminPage = {
+  ...PROVIDER_PAGE,
+  load: async () => {
+    const { ProviderPage } =
+      await import('@admin/pages/providers/ProviderPage');
+    return { Component: ProviderPage };
+  },
+};
+
+export const ADMIN_PAGES: readonly AdminPage[] = [
+  DASHBOARD_ROUTE,
+  PROVIDER_ROUTE,
+];

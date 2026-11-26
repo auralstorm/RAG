@@ -38,6 +38,7 @@ class AuditRisk(StrEnum):
 
 class AuditSnapshot(VersionedContract):
     enabled: bool | None = Field(default=None, strict=True)
+    proxy_configured: bool | None = Field(default=None, strict=True)
     user_status: UserStatus | None = None
     application_access: tuple[Literal["chat", "admin"], ...] | None = Field(default=None, max_length=2)
     role_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)

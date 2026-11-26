@@ -69,6 +69,43 @@ export interface paths {
     readonly patch?: never;
     readonly trace?: never;
   };
+  readonly '/api/v1/admin/providers': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** List Providers */
+    readonly get: operations['list_providers_api_v1_admin_providers_get'];
+    readonly put?: never;
+    /** Create */
+    readonly post: operations['create_api_v1_admin_providers_post'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/api/v1/admin/providers/{provider_id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Get */
+    readonly get: operations['get_api_v1_admin_providers__provider_id__get'];
+    readonly put?: never;
+    readonly post?: never;
+    /** Delete */
+    readonly delete: operations['delete_api_v1_admin_providers__provider_id__delete'];
+    readonly options?: never;
+    readonly head?: never;
+    /** Update */
+    readonly patch: operations['update_api_v1_admin_providers__provider_id__patch'];
+    readonly trace?: never;
+  };
   readonly '/api/v1/admin/roles': {
     readonly parameters: {
       readonly query?: never;
@@ -448,6 +485,8 @@ export interface components {
       readonly enabled?: boolean | null;
       /** Permission Ids */
       readonly permission_ids?: readonly string[] | null;
+      /** Proxy Configured */
+      readonly proxy_configured?: boolean | null;
       readonly resource_grant?: components['schemas']['ResourceGrant'] | null;
       readonly resource_purpose?: components['schemas']['AccessPurpose'] | null;
       /** Role Ids */
@@ -490,6 +529,7 @@ export interface components {
        */
       readonly subject_id: string;
     };
+    readonly ConfigurationVersion: string;
     /** ConfirmedMutation */
     readonly ConfirmedMutation: {
       /**
@@ -498,6 +538,35 @@ export interface components {
        */
       readonly confirm: true;
       readonly expected_policy_version: components['schemas']['PolicyVersion'];
+    };
+    /** CreateProvider */
+    readonly CreateProvider: {
+      /**
+       * Base Url
+       * Format: uri
+       */
+      readonly base_url: string;
+      /**
+       * Confirm
+       * @constant
+       */
+      readonly confirm: true;
+      /** Credential */
+      readonly credential?: string | null;
+      readonly expected_policy_version: components['schemas']['PolicyVersion'];
+      /** Name */
+      readonly name: string;
+      /** Provider Type */
+      readonly provider_type: string;
+      /** Proxy Url */
+      readonly proxy_url?: string | null;
+      /**
+       * Remarks
+       * @default
+       */
+      readonly remarks: string;
+      /** Timeout Seconds */
+      readonly timeout_seconds: number;
     };
     /** CreateRole */
     readonly CreateRole: {
@@ -638,6 +707,69 @@ export interface components {
     };
     readonly PermissionCode: string;
     readonly PolicyVersion: string;
+    /**
+     * ProviderAdminView
+     * @description Permission-bound management projection; secrets and opaque references stay private.
+     */
+    readonly ProviderAdminView: {
+      /**
+       * Base Url
+       * Format: uri
+       */
+      readonly base_url: string;
+      readonly config_version: components['schemas']['ConfigurationVersion'];
+      readonly created_at: components['schemas']['UtcTimestamp'];
+      /** Has Credential */
+      readonly has_credential: boolean;
+      /**
+       * Id
+       * Format: uuid
+       */
+      readonly id: string;
+      /** Name */
+      readonly name: string;
+      /** Provider Type */
+      readonly provider_type: string;
+      /** Proxy Configured */
+      readonly proxy_configured: boolean;
+      /** Remarks */
+      readonly remarks: string;
+      /**
+       * Schema Version
+       * @default 1.0
+       * @constant
+       */
+      readonly schema_version: '1.0';
+      readonly status: components['schemas']['RegistryStatus'];
+      /** Timeout Seconds */
+      readonly timeout_seconds: number;
+      readonly updated_at: components['schemas']['UtcTimestamp'];
+    };
+    /** ProviderPageResponse */
+    readonly ProviderPageResponse: {
+      /** Items */
+      readonly items: readonly components['schemas']['ProviderAdminView'][];
+      /** Page */
+      readonly page: number;
+      /** Page Size */
+      readonly page_size: number;
+      /** Total */
+      readonly total: number;
+    };
+    /** ProviderVersionMutation */
+    readonly ProviderVersionMutation: {
+      /**
+       * Confirm
+       * @constant
+       */
+      readonly confirm: true;
+      /**
+       * Expected Config Version
+       * Format: uuid
+       */
+      readonly expected_config_version: string;
+      readonly expected_policy_version: components['schemas']['PolicyVersion'];
+    };
     /** PutGrant */
     readonly PutGrant: {
       readonly application: components['schemas']['Application'];
@@ -671,6 +803,11 @@ export interface components {
        */
       readonly status: 'ready' | 'not_ready';
     };
+    /**
+     * RegistryStatus
+     * @enum {string}
+     */
+    readonly RegistryStatus: 'ACTIVE' | 'DISABLED';
     /**
      * ResourceGrant
      * @description Explicit KB capability; source profile types require a verified SubjectBinding.
@@ -743,6 +880,40 @@ export interface components {
      */
     readonly SystemRoleCode: 'SUPER_ADMIN' | 'KB_ADMIN' | 'AUDIT_READONLY';
     readonly TraceId: string;
+    /** UpdateProvider */
+    readonly UpdateProvider: {
+      /** Base Url */
+      readonly base_url?: string | null;
+      /**
+       * Clear Proxy
+       * @default false
+       */
+      readonly clear_proxy: boolean;
+      /**
+       * Confirm
+       * @constant
+       */
+      readonly confirm: true;
+      /** Credential */
+      readonly credential?: string | null;
+      /**
+       * Expected Config Version
+       * Format: uuid
+       */
+      readonly expected_config_version: string;
+      readonly expected_policy_version: components['schemas']['PolicyVersion'];
+      /** Name */
+      readonly name?: string | null;
+      /** Provider Type */
+      readonly provider_type?: string | null;
+      /** Proxy Url */
+      readonly proxy_url?: string | null;
+      /** Remarks */
+      readonly remarks?: string | null;
+      readonly status?: components['schemas']['RegistryStatus'] | null;
+      /** Timeout Seconds */
+      readonly timeout_seconds?: number | null;
+    };
     /** UpdateRole */
     readonly UpdateRole: {
       /**
@@ -1425,6 +1596,758 @@ export interface operations {
         };
         content: {
           readonly 'application/json': components['schemas']['PageResponse_Permission_'];
+        };
+      };
+      /** @description 请求格式不正确 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请先登录 */
+      readonly 401: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 没有访问此资源的权限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求的资源不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 此资源不支持该请求方法 */
+      readonly 405: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 资源状态冲突，请刷新后重试 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求内容超过允许大小 */
+      readonly 413: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 不支持该内容类型 */
+      readonly 415: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求参数不合法 */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求过于频繁，请稍后重试 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时无法完成请求 */
+      readonly 500: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务暂时不可用 */
+      readonly 502: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时不可用 */
+      readonly 503: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务响应超时 */
+      readonly 504: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+    };
+  };
+  readonly list_providers_api_v1_admin_providers_get: {
+    readonly parameters: {
+      readonly query?: {
+        readonly page?: components['schemas']['PageNumber'];
+        readonly page_size?: components['schemas']['PageSize'];
+        readonly name?: string | null;
+        readonly provider_type?: string | null;
+        readonly status?: components['schemas']['RegistryStatus'] | null;
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ProviderPageResponse'];
+        };
+      };
+      /** @description 请求格式不正确 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请先登录 */
+      readonly 401: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 没有访问此资源的权限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求的资源不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 此资源不支持该请求方法 */
+      readonly 405: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 资源状态冲突，请刷新后重试 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求内容超过允许大小 */
+      readonly 413: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 不支持该内容类型 */
+      readonly 415: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求参数不合法 */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求过于频繁，请稍后重试 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时无法完成请求 */
+      readonly 500: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务暂时不可用 */
+      readonly 502: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时不可用 */
+      readonly 503: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务响应超时 */
+      readonly 504: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+    };
+  };
+  readonly create_api_v1_admin_providers_post: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['CreateProvider'];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ProviderAdminView'];
+        };
+      };
+      /** @description 请求格式不正确 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请先登录 */
+      readonly 401: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 没有访问此资源的权限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求的资源不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 此资源不支持该请求方法 */
+      readonly 405: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 资源状态冲突，请刷新后重试 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求内容超过允许大小 */
+      readonly 413: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 不支持该内容类型 */
+      readonly 415: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求参数不合法 */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求过于频繁，请稍后重试 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时无法完成请求 */
+      readonly 500: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务暂时不可用 */
+      readonly 502: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时不可用 */
+      readonly 503: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务响应超时 */
+      readonly 504: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+    };
+  };
+  readonly get_api_v1_admin_providers__provider_id__get: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly provider_id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ProviderAdminView'];
+        };
+      };
+      /** @description 请求格式不正确 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请先登录 */
+      readonly 401: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 没有访问此资源的权限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求的资源不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 此资源不支持该请求方法 */
+      readonly 405: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 资源状态冲突，请刷新后重试 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求内容超过允许大小 */
+      readonly 413: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 不支持该内容类型 */
+      readonly 415: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求参数不合法 */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求过于频繁，请稍后重试 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时无法完成请求 */
+      readonly 500: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务暂时不可用 */
+      readonly 502: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时不可用 */
+      readonly 503: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务响应超时 */
+      readonly 504: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+    };
+  };
+  readonly delete_api_v1_admin_providers__provider_id__delete: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly provider_id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['ProviderVersionMutation'];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 204: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 请求格式不正确 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请先登录 */
+      readonly 401: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 没有访问此资源的权限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求的资源不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 此资源不支持该请求方法 */
+      readonly 405: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 资源状态冲突，请刷新后重试 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求内容超过允许大小 */
+      readonly 413: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 不支持该内容类型 */
+      readonly 415: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求参数不合法 */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 请求过于频繁，请稍后重试 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时无法完成请求 */
+      readonly 500: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务暂时不可用 */
+      readonly 502: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 服务暂时不可用 */
+      readonly 503: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+      /** @description 上游服务响应超时 */
+      readonly 504: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiErrorEnvelope'];
+        };
+      };
+    };
+  };
+  readonly update_api_v1_admin_providers__provider_id__patch: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly provider_id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['UpdateProvider'];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ProviderAdminView'];
         };
       };
       /** @description 请求格式不正确 */

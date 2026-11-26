@@ -23,6 +23,7 @@ dependencies = [
     "opentelemetry-proto==1.45.2",
     "opentelemetry-exporter-otlp-proto-common==1.45.2",
     "argon2-cffi==25.1.0",
+    "cryptography==48.0.1",
 ]
 
 [build-system]

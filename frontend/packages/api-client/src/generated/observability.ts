@@ -235,6 +235,11 @@ export interface components {
        * @default null
        */
       readonly permission_ids: readonly string[] | null;
+      /**
+       * Proxy Configured
+       * @default null
+       */
+      readonly proxy_configured: boolean | null;
       /** @default null */
       readonly resource_grant: components['schemas']['ResourceGrant'] | null;
       /** @default null */

@@ -53,6 +53,8 @@ PostgreSQL 启动后，运行 `make db-upgrade` 应用开发库迁移，再运�
 
 [P1-07 可观测性](docs/plan/V1.0-MVP/implementation/P1-07.md) 在现有健康检查上补齐受控 JSON 请求日志、OpenTelemetry 基础指标及 HTTP/依赖/数据库 Trace。`make dev-backend` 已使用脱敏日志配置并关闭原始访问日志；Phoenix 网络导出需显式启用及私密服务凭据引用，配置、指标读法和验证边界见实施记录。
 
+[P2-01 Provider 管理](docs/plan/V1.0-MVP/implementation/P2-01.md) 提供 `/admin/providers` 列表和编辑，以及对应 CRUD API。使用前应用数据库迁移并配置私密 `ENTERPRISE_RAG_PROVIDER_SECRETS_CONFIG_REF`；API Key/代理只写不回显，操作按当前权限和配置版本检查。模型注册和真实调用联动继续按 P2-02 推进。
+
 开发测试登录仍可按 [P1-04 本地测试身份步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#本地测试身份与兼容配置) 创建，并显式设置 `ENTERPRISE_RAG_LOCAL_IDENTITY_CONFIG_REF` 启动后端。正式平台账号先设置私密 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF`，按 [P1-04 CLI 步骤](docs/plan/V1.0-MVP/implementation/P1-04.md#正式平台账号与运维初始化) 初始化密钥和数据库账号；密码从终端不回显输入，不写命令参数或仓库。RBAC 固定矩阵由 [P1-05](docs/plan/V1.0-MVP/implementation/P1-05.md) 交付，首位管理员必须明确授予 Admin 入口并执行初始化，不自动提升任何账号。
 
 平台会话/伪名密钥可通过 `ENTERPRISE_RAG_AUTH_PLATFORM_CONFIG_REF` 独立配置；旧组合文件继续兼容。使用 `uv run --locked python -m scripts.separate_auth_config` 可复制现有密钥而不轮换；正式平台账号配置和初始化见 [P1-04 实施记录](docs/plan/V1.0-MVP/implementation/P1-04.md)。飞书等外部身份源暂缓，未来须显式关联平台用户。

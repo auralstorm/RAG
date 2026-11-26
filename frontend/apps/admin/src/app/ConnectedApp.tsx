@@ -28,7 +28,8 @@ export function ConnectedApp({ router }: { readonly router: DataRouter }) {
       session={snapshot.state}
       actions={{
         mode: snapshot.mode,
-        ...(snapshot.mode === 'local'
+        revalidate: () => sessionStore.restore(),
+        ...(snapshot.mode === 'local' || snapshot.mode === 'platform'
           ? { login: sessionStore.login, logout: sessionStore.logout }
           : {}),
       }}

@@ -28,4 +28,5 @@ export interface SessionActions {
     signal: AbortSignal,
   ) => Promise<void>;
   readonly logout?: () => Promise<void>;
+  readonly revalidate?: () => Promise<void>;
 }

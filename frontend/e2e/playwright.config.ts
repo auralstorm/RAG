@@ -10,6 +10,8 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: 'list',
   use: {
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
     browserName: 'chromium',
     headless: true,
     ...(process.env['ENTERPRISE_RAG_BROWSER_EXECUTABLE']

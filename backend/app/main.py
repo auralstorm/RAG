@@ -18,9 +18,11 @@ from app.api.v1.router import router as api_router
 from app.core.auditing import create_audit_service
 from app.core.authentication import create_iam_services
 from app.core.config import Settings, load_settings
+from app.core.provider_registry import create_provider_registry
 from app.modules.audit.api.routes import create_audit_router
 from app.modules.iam.api.rbac_routes import create_rbac_router
 from app.modules.iam.api.routes import create_auth_router
+from app.modules.model_gateway.api.routes import create_provider_router
 
 
 def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | None = None) -> FastAPI:
@@ -30,6 +32,7 @@ def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | N
     monitor = InfrastructureMonitor(configuration, observer)
     iam = create_iam_services(configuration)
     sessions, rbac = iam.sessions, iam.rbac
+    providers = create_provider_registry(configuration, rbac)
 
     async def sample_metrics() -> None:
         while True:
@@ -88,6 +91,12 @@ def create_app(settings: Settings | None = None, *, telemetry: OpenTelemetry | N
     application.include_router(
         create_audit_router(
             create_audit_service(configuration, rbac),
+            {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins},
+        )
+    )
+    application.include_router(
+        create_provider_router(
+            providers,
             {"chat": configuration.auth_chat_origins, "admin": configuration.auth_admin_origins},
         )
     )

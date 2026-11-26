@@ -37,6 +37,8 @@ def test_internal_identity_and_policy_schemas_are_not_exported_to_frontend() -> 
         "/api/v1/authorization/{application}/knowledge-bases/{kb_id}",
         "/api/v1/admin/roles",
         "/api/v1/admin/audit-logs",
+        "/api/v1/admin/providers",
+        "/api/v1/admin/providers/{provider_id}",
         "/api/v1/admin/roles/{role_id}",
         "/api/v1/admin/permissions",
         "/api/v1/admin/users/{user_id}/roles",
@@ -94,6 +96,11 @@ def test_model_registry_types_exclude_credentials_vendor_routes_and_prompt_proto
     ):
         assert f"readonly {field}:" not in generated
     assert "readonly Provider:" in generated and "readonly ModelUsage:" in generated
+    components = create_app(Settings(infrastructure_enabled=False)).openapi()["components"]["schemas"]
+    assert not {"RegisteredProvider", "StoredProvider", "SecretReference"} & components.keys()
+    readable = components["ProviderAdminView"]["properties"]
+    assert not {"credential", "proxy_url", "credential_ref", "secret_id", "ciphertext", "proxy_ref"} & readable.keys()
+    assert components["CreateProvider"]["properties"]["credential"]["anyOf"][0]["writeOnly"] is True
 
 
 def test_chat_types_exclude_private_owner_and_evidence_dependencies() -> None:

@@ -14,6 +14,17 @@ export type UpdateRole = ApiComponents['schemas']['UpdateRole'];
 export type AssignRoles = ApiComponents['schemas']['AssignRoles'];
 export type PutGrant = ApiComponents['schemas']['PutGrant'];
 export type AuditLogView = ApiComponents['schemas']['AuditLogView'];
+export type ProviderAdminView = ApiComponents['schemas']['ProviderAdminView'];
+export type CreateProvider = ApiComponents['schemas']['CreateProvider'];
+export type UpdateProvider = ApiComponents['schemas']['UpdateProvider'];
+export type ProviderMutation = Pick<
+  CreateProvider,
+  'expected_policy_version' | 'confirm'
+>;
+export type ProviderVersionMutation =
+  ApiComponents['schemas']['ProviderVersionMutation'];
+export type ProviderPageResponse =
+  ApiComponents['schemas']['ProviderPageResponse'];
 import type { components as CommonComponents } from './generated/common';
 import type { components as IamComponents } from './generated/iam';
 import type { components as KnowledgeComponents } from './generated/knowledge';
@@ -86,6 +97,92 @@ const uuidPattern =
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isProviderAdminView(value: unknown): value is ProviderAdminView {
+  if (!isRecord(value)) return false;
+  const allowed = [
+    'schema_version',
+    'id',
+    'name',
+    'provider_type',
+    'config_version',
+    'status',
+    'has_credential',
+    'created_at',
+    'updated_at',
+    'base_url',
+    'timeout_seconds',
+    'proxy_configured',
+    'remarks',
+  ];
+  if (Object.keys(value).some((key) => !allowed.includes(key))) return false;
+  if (
+    value.schema_version !== '1.0' ||
+    typeof value.id !== 'string' ||
+    !uuidPattern.test(value.id) ||
+    typeof value.name !== 'string' ||
+    !value.name.trim() ||
+    value.name.length > 128 ||
+    typeof value.provider_type !== 'string' ||
+    !/^[a-z][a-z0-9_]{0,63}$/.test(value.provider_type) ||
+    typeof value.config_version !== 'string' ||
+    !value.config_version.trim() ||
+    value.config_version.length > 128 ||
+    (value.status !== 'ACTIVE' && value.status !== 'DISABLED') ||
+    typeof value.has_credential !== 'boolean' ||
+    typeof value.created_at !== 'string' ||
+    !Number.isFinite(Date.parse(value.created_at)) ||
+    typeof value.updated_at !== 'string' ||
+    !Number.isFinite(Date.parse(value.updated_at)) ||
+    typeof value.base_url !== 'string' ||
+    typeof value.timeout_seconds !== 'number' ||
+    !Number.isSafeInteger(value.timeout_seconds) ||
+    value.timeout_seconds < 1 ||
+    value.timeout_seconds > 300 ||
+    typeof value.proxy_configured !== 'boolean' ||
+    typeof value.remarks !== 'string' ||
+    value.remarks.length > 1000
+  )
+    return false;
+  try {
+    const endpoint = new URL(value.base_url);
+    return (
+      ['http:', 'https:'].includes(endpoint.protocol) &&
+      !endpoint.username &&
+      !endpoint.password &&
+      !endpoint.search &&
+      !endpoint.hash
+    );
+  } catch {
+    return false;
+  }
+}
+
+function providerPage(
+  payload: unknown,
+  page: number,
+  pageSize: number,
+): ProviderPageResponse {
+  if (
+    !isRecord(payload) ||
+    !Array.isArray(payload.items) ||
+    typeof payload.total !== 'number' ||
+    !Number.isSafeInteger(payload.total) ||
+    payload.total < 0 ||
+    payload.page !== page ||
+    payload.page_size !== pageSize ||
+    payload.items.length > pageSize ||
+    payload.items.length > payload.total ||
+    !payload.items.every(isProviderAdminView)
+  )
+    throw new Error('Invalid provider list response');
+  return {
+    items: payload.items,
+    total: payload.total,
+    page,
+    page_size: pageSize,
+  };
 }
 
 function publicError(payload: unknown): ApiError | undefined {
@@ -187,6 +284,37 @@ export function createApiClient(
     init: RequestInit = {},
   ) {
     return privateRequest(`auth/${application}/${operation}`, init);
+  }
+
+  async function adminCsrf(signal?: AbortSignal): Promise<string> {
+    const payload: unknown = await (
+      await authRequest('csrf', 'admin', signal ? { signal } : {})
+    ).json();
+    if (
+      !isRecord(payload) ||
+      typeof payload.csrf_token !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(payload.csrf_token)
+    )
+      throw new Error('Invalid CSRF response');
+    return payload.csrf_token;
+  }
+
+  async function providerMutation(
+    method: 'POST' | 'PATCH' | 'DELETE',
+    path: string,
+    payload: ProviderMutation | CreateProvider | UpdateProvider,
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    const csrf = await adminCsrf(signal);
+    return privateRequest(`admin/providers${path}`, {
+      method,
+      ...(signal ? { signal } : {}),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf,
+      },
+      body: JSON.stringify(payload),
+    });
   }
 
   async function sessionResponse(
@@ -401,6 +529,81 @@ export function createApiClient(
           signal,
           headers: { 'X-CSRF-Token': csrf },
         });
+      },
+    },
+    providers: {
+      async list(
+        query: {
+          readonly page: number;
+          readonly page_size: number;
+          readonly name?: string;
+          readonly provider_type?: string;
+          readonly status?: 'ACTIVE' | 'DISABLED';
+        },
+        signal?: AbortSignal,
+      ): Promise<ProviderPageResponse> {
+        const parameters = new URLSearchParams({
+          page: String(query.page),
+          page_size: String(query.page_size),
+        });
+        if (query.name) parameters.set('name', query.name);
+        if (query.provider_type)
+          parameters.set('provider_type', query.provider_type);
+        if (query.status) parameters.set('status', query.status);
+        const payload: unknown = await (
+          await privateRequest(
+            `admin/providers?${parameters.toString()}`,
+            signal ? { signal } : {},
+          )
+        ).json();
+        return providerPage(payload, query.page, query.page_size);
+      },
+      async get(id: string, signal?: AbortSignal): Promise<ProviderAdminView> {
+        if (!uuidPattern.test(id)) throw new Error('Invalid provider ID');
+        const payload: unknown = await (
+          await privateRequest(
+            `admin/providers/${id}`,
+            signal ? { signal } : {},
+          )
+        ).json();
+        if (!isProviderAdminView(payload))
+          throw new Error('Invalid provider response');
+        return payload;
+      },
+      async create(
+        payload: CreateProvider,
+        signal?: AbortSignal,
+      ): Promise<ProviderAdminView> {
+        const result = await providerMutation('POST', '', payload, signal);
+        const body: unknown = await result.json();
+        if (!isProviderAdminView(body))
+          throw new Error('Invalid provider response');
+        return body;
+      },
+      async update(
+        id: string,
+        payload: UpdateProvider,
+        signal?: AbortSignal,
+      ): Promise<ProviderAdminView> {
+        if (!uuidPattern.test(id)) throw new Error('Invalid provider ID');
+        const result = await providerMutation(
+          'PATCH',
+          `/${id}`,
+          payload,
+          signal,
+        );
+        const body: unknown = await result.json();
+        if (!isProviderAdminView(body))
+          throw new Error('Invalid provider response');
+        return body;
+      },
+      async delete(
+        id: string,
+        payload: ProviderVersionMutation,
+        signal?: AbortSignal,
+      ): Promise<void> {
+        if (!uuidPattern.test(id)) throw new Error('Invalid provider ID');
+        await providerMutation('DELETE', `/${id}`, payload, signal);
       },
     },
     async getLiveness(signal?: AbortSignal): Promise<LivenessResponse> {

@@ -365,6 +365,17 @@
             ],
             "title": "Permission Ids"
           },
+          "proxy_configured": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Configured"
+          },
           "resource_grant": {
             "anyOf": [
               {
@@ -505,6 +516,12 @@
         "title": "CapabilityView",
         "type": "object"
       },
+      "ConfigurationVersion": {
+        "maxLength": 128,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
       "ConfirmedMutation": {
         "additionalProperties": false,
         "properties": {
@@ -522,6 +539,92 @@
           "confirm"
         ],
         "title": "ConfirmedMutation",
+        "type": "object"
+      },
+      "CreateProvider": {
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "confirm": {
+            "const": true,
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "credential": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 4096,
+                "minLength": 1,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credential"
+          },
+          "expected_policy_version": {
+            "$ref": "#/components/schemas/PolicyVersion"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name",
+            "type": "string"
+          },
+          "provider_type": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Provider Type",
+            "type": "string"
+          },
+          "proxy_url": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 2048,
+                "minLength": 1,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Url"
+          },
+          "remarks": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Remarks",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 300.0,
+            "title": "Timeout Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_policy_version",
+          "confirm",
+          "name",
+          "provider_type",
+          "base_url",
+          "timeout_seconds"
+        ],
+        "title": "CreateProvider",
         "type": "object"
       },
       "CreateRole": {
@@ -891,6 +994,152 @@
         "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$",
         "type": "string"
       },
+      "ProviderAdminView": {
+        "additionalProperties": false,
+        "description": "Permission-bound management projection; secrets and opaque references stay private.",
+        "properties": {
+          "base_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Base Url",
+            "type": "string"
+          },
+          "config_version": {
+            "$ref": "#/components/schemas/ConfigurationVersion"
+          },
+          "created_at": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          },
+          "has_credential": {
+            "title": "Has Credential",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 128,
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Name",
+            "type": "string"
+          },
+          "provider_type": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Provider Type",
+            "type": "string"
+          },
+          "proxy_configured": {
+            "title": "Proxy Configured",
+            "type": "boolean"
+          },
+          "remarks": {
+            "maxLength": 1000,
+            "title": "Remarks",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RegistryStatus"
+          },
+          "timeout_seconds": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 300.0,
+            "title": "Timeout Seconds",
+            "type": "integer"
+          },
+          "updated_at": {
+            "$ref": "#/components/schemas/UtcTimestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "provider_type",
+          "config_version",
+          "status",
+          "has_credential",
+          "created_at",
+          "updated_at",
+          "base_url",
+          "timeout_seconds",
+          "proxy_configured",
+          "remarks"
+        ],
+        "title": "ProviderAdminView",
+        "type": "object"
+      },
+      "ProviderPageResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderAdminView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "ProviderPageResponse",
+        "type": "object"
+      },
+      "ProviderVersionMutation": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "const": true,
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "expected_config_version": {
+            "format": "uuid",
+            "title": "Expected Config Version",
+            "type": "string"
+          },
+          "expected_policy_version": {
+            "$ref": "#/components/schemas/PolicyVersion"
+          }
+        },
+        "required": [
+          "expected_policy_version",
+          "confirm",
+          "expected_config_version"
+        ],
+        "title": "ProviderVersionMutation",
+        "type": "object"
+      },
       "PutGrant": {
         "additionalProperties": false,
         "properties": {
@@ -959,6 +1208,14 @@
         ],
         "title": "ReadinessReport",
         "type": "object"
+      },
+      "RegistryStatus": {
+        "enum": [
+          "ACTIVE",
+          "DISABLED"
+        ],
+        "title": "RegistryStatus",
+        "type": "string"
       },
       "ResourceGrant": {
         "additionalProperties": false,
@@ -1125,6 +1382,143 @@
       "TraceId": {
         "pattern": "^[0-9a-f]{32}$",
         "type": "string"
+      },
+      "UpdateProvider": {
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "maxLength": 2083,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "clear_proxy": {
+            "default": false,
+            "title": "Clear Proxy",
+            "type": "boolean"
+          },
+          "confirm": {
+            "const": true,
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "credential": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 4096,
+                "minLength": 1,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credential"
+          },
+          "expected_config_version": {
+            "format": "uuid",
+            "title": "Expected Config Version",
+            "type": "string"
+          },
+          "expected_policy_version": {
+            "$ref": "#/components/schemas/PolicyVersion"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "provider_type": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Type"
+          },
+          "proxy_url": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 2048,
+                "minLength": 1,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proxy Url"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RegistryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeout_seconds": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 300.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Seconds"
+          }
+        },
+        "required": [
+          "expected_policy_version",
+          "confirm",
+          "expected_config_version"
+        ],
+        "title": "UpdateProvider",
+        "type": "object"
       },
       "UpdateRole": {
         "additionalProperties": false,
@@ -2300,6 +2694,934 @@
         "summary": "Permissions",
         "tags": [
           "authorization"
+        ]
+      }
+    },
+    "/api/v1/admin/providers": {
+      "get": {
+        "operationId": "list_providers_api_v1_admin_providers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PageNumber",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PageSize",
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "provider_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RegistryStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderPageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求格式不正确"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请先登录"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "没有访问此资源的权限"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求的资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "此资源不支持该请求方法"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "资源状态冲突，请刷新后重试"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求内容超过允许大小"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "不支持该内容类型"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求参数不合法"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求过于频繁，请稍后重试"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时无法完成请求"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务暂时不可用"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时不可用"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务响应超时"
+          }
+        },
+        "summary": "List Providers",
+        "tags": [
+          "providers"
+        ]
+      },
+      "post": {
+        "operationId": "create_api_v1_admin_providers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProvider"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求格式不正确"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请先登录"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "没有访问此资源的权限"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求的资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "此资源不支持该请求方法"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "资源状态冲突，请刷新后重试"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求内容超过允许大小"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "不支持该内容类型"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求参数不合法"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求过于频繁，请稍后重试"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时无法完成请求"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务暂时不可用"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时不可用"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务响应超时"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/v1/admin/providers/{provider_id}": {
+      "delete": {
+        "operationId": "delete_api_v1_admin_providers__provider_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderVersionMutation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求格式不正确"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请先登录"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "没有访问此资源的权限"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求的资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "此资源不支持该请求方法"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "资源状态冲突，请刷新后重试"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求内容超过允许大小"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "不支持该内容类型"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求参数不合法"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求过于频繁，请稍后重试"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时无法完成请求"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务暂时不可用"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时不可用"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务响应超时"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "providers"
+        ]
+      },
+      "get": {
+        "operationId": "get_api_v1_admin_providers__provider_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求格式不正确"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请先登录"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "没有访问此资源的权限"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求的资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "此资源不支持该请求方法"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "资源状态冲突，请刷新后重试"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求内容超过允许大小"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "不支持该内容类型"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求参数不合法"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求过于频繁，请稍后重试"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时无法完成请求"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务暂时不可用"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时不可用"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务响应超时"
+          }
+        },
+        "summary": "Get",
+        "tags": [
+          "providers"
+        ]
+      },
+      "patch": {
+        "operationId": "update_api_v1_admin_providers__provider_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProvider"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderAdminView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求格式不正确"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请先登录"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "没有访问此资源的权限"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求的资源不存在"
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "此资源不支持该请求方法"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "资源状态冲突，请刷新后重试"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求内容超过允许大小"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "不支持该内容类型"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求参数不合法"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "请求过于频繁，请稍后重试"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时无法完成请求"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务暂时不可用"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "服务暂时不可用"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "上游服务响应超时"
+          }
+        },
+        "summary": "Update",
+        "tags": [
+          "providers"
         ]
       }
     },
