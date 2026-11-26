@@ -1,0 +1,61 @@
+import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  BugOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CreditCardOutlined,
+  CrownOutlined,
+  DashboardOutlined,
+  DesktopOutlined,
+  FormOutlined,
+  HomeOutlined,
+  IdcardOutlined,
+  MonitorOutlined,
+  OrderedListOutlined,
+  ProfileOutlined,
+  ProjectOutlined,
+  ReadOutlined,
+  RobotOutlined,
+  SettingOutlined,
+  StopOutlined,
+  TableOutlined,
+  UnorderedListOutlined,
+  UserAddOutlined,
+  UserOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
+import type { ReactNode } from 'react';
+
+/** 路由表字符串 icon → 图标组件（对齐原 Umi 插件生成的 icons.tsx） */
+export const iconMap: Record<string, ReactNode> = {
+  home: <HomeOutlined />,
+  crown: <CrownOutlined />,
+  dashboard: <DashboardOutlined />,
+  barChart: <BarChartOutlined />,
+  monitor: <MonitorOutlined />,
+  desktop: <DesktopOutlined />,
+  form: <FormOutlined />,
+  orderedList: <OrderedListOutlined />,
+  profile: <ProfileOutlined />,
+  table: <TableOutlined />,
+  read: <ReadOutlined />,
+  project: <ProjectOutlined />,
+  appstore: <AppstoreOutlined />,
+  unorderedList: <UnorderedListOutlined />,
+  creditCard: <CreditCardOutlined />,
+  idcard: <IdcardOutlined />,
+  checkCircle: <CheckCircleOutlined />,
+  closeCircle: <CloseCircleOutlined />,
+  warning: <WarningOutlined />,
+  stop: <StopOutlined />,
+  bug: <BugOutlined />,
+  user: <UserOutlined />,
+  setting: <SettingOutlined />,
+  robot: <RobotOutlined />,
+  userAdd: <UserAddOutlined />,
+};
+
+export function resolveIcon(icon?: string): ReactNode | undefined {
+  return icon ? iconMap[icon] : undefined;
+}
