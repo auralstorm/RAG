@@ -2,6 +2,14 @@
 
 日期：2026-11-24。对应 P0-04-05。交付注册元数据、私有引用、Chat/Embedding/Rerank 请求与结果、用量、错误、流事件和纯规则。真实 Provider CRUD、Secret 加密/解析、LiteLLM、Tokenizer、限流/并发和模型调用按 P2/POC-04 验收；本轮没有安装 SDK、写入业务表或调用付费模型。
 
+## P2-01 实施增量（2026-11-26）
+
+[Provider 管理](../plan/V1.0-MVP/implementation/P2-01.md) 已新增真实 CRUD、AES-256-GCM 加密、当前权限与事务审计，迁移为 `0006_provider_registry`。下文 P0-04-05 的“本轮”描述保留其历史交付边界；实际存储以该迁移为准，原有公共 Provider 和模型调用契约不变。
+
+管理专用 `ProviderAdminView` 只向当前 `provider.read` 主体额外投影 Base URL、超时、备注与代理配置状态；创建/修改 DTO 接受只写凭据，读取仍不返回 SecretReference、代理地址、密文或真实 Key。Provider 当前配置与不可变私有历史分表存储，Key 与代理均绑定版本化加密引用。软删除停用当前 Provider 并保留所有版本；后续模型调用必须读取当前状态，不能凭历史 ACTIVE 快照继续调用。新增编辑/删除 API 同时检查策略版本及 `expected_config_version`，未引入租户、自动降级或动态路由。
+
+模型注册、Secret 调用解析、网络准入、LiteLLM 与真实调用尚待 P2-02/POC-04；已有禁用规则测试仍不能代替运行链路验收。
+
 ## 存量与兼容
 
 本轮前没有实际 Provider/ModelConfig/ModelRequest/Response、业务端点或模型表迁移，已有 EmbeddingBinding 是知识/检索消费者使用的稳定模型 ID、config_version、dimensions 绑定。此绑定保持兼容；注册的 ModelConfig.id 对应其 embedding_model_id，config_version/dimension 必须明确匹配，不能用其他模型的相同维度替代。

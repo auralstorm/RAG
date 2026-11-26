@@ -180,6 +180,11 @@ export interface components {
       readonly trace_id: components['schemas']['TraceId'];
     };
     /**
+     * AccessPurpose
+     * @enum {string}
+     */
+    readonly AccessPurpose: 'admin' | 'chat';
+    /**
      * AuditAction
      * @enum {string}
      */
@@ -206,6 +211,11 @@ export interface components {
     /** AuditSnapshot */
     readonly AuditSnapshot: {
       /**
+       * Application Access
+       * @default null
+       */
+      readonly application_access: readonly ('chat' | 'admin')[] | null;
+      /**
        * Configuration Id
        * @default null
        */
@@ -226,6 +236,15 @@ export interface components {
        */
       readonly permission_ids: readonly string[] | null;
       /**
+       * Proxy Configured
+       * @default null
+       */
+      readonly proxy_configured: boolean | null;
+      /** @default null */
+      readonly resource_grant: components['schemas']['ResourceGrant'] | null;
+      /** @default null */
+      readonly resource_purpose: components['schemas']['AccessPurpose'] | null;
+      /**
        * Role Ids
        * @default null
        */
@@ -239,6 +258,46 @@ export interface components {
       /** @default null */
       readonly user_status: components['schemas']['UserStatus'] | null;
     };
+    /**
+     * KnowledgePermission
+     * @enum {string}
+     */
+    readonly KnowledgePermission: 'READ' | 'MANAGE';
+    /**
+     * ResourceGrant
+     * @description Explicit KB capability; source profile types require a verified SubjectBinding.
+     */
+    readonly ResourceGrant: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      readonly id: string;
+      /**
+       * Kb Id
+       * Format: uuid
+       */
+      readonly kb_id: string;
+      readonly permission: components['schemas']['KnowledgePermission'];
+      /**
+       * Principal Id
+       * Format: uuid
+       */
+      readonly principal_id: string;
+      readonly principal_type: components['schemas']['ResourcePrincipalType'];
+      /**
+       * Schema Version
+       * @default 1.0
+       * @constant
+       */
+      readonly schema_version: '1.0';
+    };
+    /**
+     * ResourcePrincipalType
+     * @enum {string}
+     */
+    readonly ResourcePrincipalType:
+      'USER' | 'ROLE' | 'GROUP' | 'ADMIN_USER' | 'EMPLOYEE';
     /**
      * SystemRoleCode
      * @enum {string}

@@ -8,8 +8,9 @@ from pathlib import Path
 from typing import Literal
 
 from app.adapters.object_storage import open_s3_client
-from app.core.config import load_settings
+from app.core.config import Settings, load_settings
 from dotenv import dotenv_values
+from pydantic import BaseModel, ConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSE = ROOT / "infra/compose/compose.yaml"
@@ -127,27 +128,70 @@ def compose(profile: Profile, *arguments: str) -> None:
     subprocess.run(compose_command(profile, *arguments), cwd=ROOT, check=True)
 
 
-def initialize_storage(profile: Profile) -> None:
-    settings = load_settings(profile)
+class StoragePort(BaseModel):
+    target: int
+    host_ip: str
+    published: int
+
+
+class StorageService(BaseModel):
+    environment: dict[str, str]
+    ports: list[StoragePort]
+
+
+class StorageServices(BaseModel):
+    rustfs: StorageService
+
+
+class StorageComposeConfig(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
+
+    services: StorageServices
+
+
+def validate_storage_alignment(settings: Settings, service: StorageService) -> None:
+    endpoints = {f"{port.host_ip}:{port.published}" for port in service.ports if port.target == 9000}
+    if settings.object_storage_endpoint not in endpoints or (
+        service.environment.get("RUSTFS_ACCESS_KEY") != settings.object_storage_access_key.get_secret_value()
+        or service.environment.get("RUSTFS_SECRET_KEY") != settings.object_storage_secret_key.get_secret_value()
+    ):
+        raise ValueError(
+            "Object storage settings disagree with local Compose. Use matching canonical "
+            "OBJECT_STORAGE_* settings and remove conflicting MINIO_* overrides."
+        )
+
+
+def initialize_storage(settings: Settings) -> None:
     with open_s3_client(settings) as client:
         if not client.bucket_exists(settings.object_storage_bucket):
             client.make_bucket(settings.object_storage_bucket, location="us-east-1")
 
 
-def up(profile: Profile) -> None:
+def prepare_local_storage(profile: Profile) -> Settings:
     initialize_config(profile)
-    compose(profile, "config", "--quiet")
+    settings = load_settings(profile)
+    rendered = subprocess.check_output(compose_command(profile, "config", "--format", "json", "rustfs"), cwd=ROOT)
+    configuration = StorageComposeConfig.model_validate_json(rendered)
+    validate_storage_alignment(settings, configuration.services.rustfs)
+    return settings
+
+
+def start_dependencies(profile: Profile, settings: Settings) -> None:
     compose(profile, "up", "--detach", "--wait", "--wait-timeout", "240")
-    initialize_storage(profile)
+    initialize_storage(settings)
     print(f"{profile} dependencies are healthy; object storage initialization is complete.")
+
+
+def up(profile: Profile) -> None:
+    start_dependencies(profile, prepare_local_storage(profile))
 
 
 def reset(profile: Profile, *, confirmed: bool) -> None:
     if not confirmed:
         raise ValueError("Reset deletes only this profile's data volumes; pass --confirm-reset to request it")
-    initialize_config(profile)
+    settings = prepare_local_storage(profile)
     compose(profile, "down", "--volumes")
-    up(profile)
+    start_dependencies(profile, settings)
 
 
 def main() -> None:

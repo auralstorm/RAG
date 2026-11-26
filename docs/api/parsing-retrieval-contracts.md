@@ -53,7 +53,7 @@ filters 仅允许 document_ids/source_types，来源类型沿用 UPLOAD/CONNECTO
 
 RetrievedChunk 携带 chunk_id、完整版本引用、index_version_id、授权内容、有限 score、ScoreComponents、ChunkSource 与 ChunkMetadata。ScoreComponents 保留可空 Dense/BM25 排名、RRF/重排分数；RRF 分数存在时至少有一个来源排名，分数不表示回答正确率。RetrievalDiagnostics 仅提供当次 Trace、固定配置版本、返回数量与 elapsed_ms，不公开物理索引、对象 Key、主体 Grant 或被拒文档数量。
 
-validate_retrieval_result 使用新加载的事实重新准备权限范围，核对原 Scope 有效期、Trace/config 与 top_k；候选必须同时属于原始与当前可读版本、同一个活动 index/向量与处理配置，并与可信当前 Chunk 的版本、内容、来源/元数据和 Chunking 配置一致。没有权威 Chunk 证据、候选伪造、撤权、删除或版本切换均拒绝整个结果，不仅验证搜索响应自报的 Hash/ID。生产实现负责从可信已发布产物读取权威 Chunk，不能把 ES 返回正文直接复制为验证事实。
+validate_retrieval_result 使用新加载的事实重新准备权限范围，核对原 Scope 有效期、Trace/config 与 top_k。先核对本次检索使用的活动索引绑定，包括候选为空的情况。候选必须同时属于原始与当前可读版本，并与可信当前 Chunk 的版本、内容、来源/元数据和 Chunking 配置一致。缺少权威 Chunk 证据、候选伪造、撤权、删除或索引切换均拒绝整个结果。生产实现负责从可信已发布产物读取权威 Chunk。
 
 来源引用和 Parent Context 扩展继续复用当前资源校验。Conversation/Message/Citation 的消息级编号、答案引用校验与对象下载在后续分项交付，本轮只冻结片段级来源证据。异步 Retriever Protocol 仅规定调用边界，没有提供联网的完整 Retriever 实现或绕过 Gateway 的 Embedding 调用。
 

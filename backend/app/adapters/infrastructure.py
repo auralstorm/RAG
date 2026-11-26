@@ -8,12 +8,12 @@ import aio_pika
 import httpx2
 import redis.asyncio as redis
 from minio import Minio
-from psycopg import AsyncConnection
-from psycopg.conninfo import make_conninfo
 from pydantic import BaseModel
 
 from app.adapters.object_storage import open_s3_client
+from app.adapters.postgres import postgres_transaction
 from app.core.config import Settings
+from app.core.observability import MetricSink
 from app.core.readiness import ReadinessReport, check_dependencies
 
 
@@ -25,8 +25,9 @@ class ElasticsearchHealth(BaseModel):
 class InfrastructureMonitor:
     """Reuse HTTP/Redis pools and close short-lived SQL and AMQP probe connections."""
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, metrics: MetricSink | None = None) -> None:
         self.settings = settings
+        self.metrics = metrics
         self.http: httpx2.AsyncClient | None = None
         self.redis: redis.Redis | None = None
         self.storage_context = ExitStack()
@@ -67,19 +68,73 @@ class InfrastructureMonitor:
             if self.settings.infrastructure_enabled
             else {}
         )
-        return await check_dependencies(checks, self.settings.dependency_timeout)
+        return await check_dependencies(
+            checks,
+            self.settings.dependency_timeout,
+            record=self.metrics.dependency if self.metrics is not None else None,
+        )
+
+    async def sample_metrics(self) -> None:
+        """Bound read-only sampling; an unavailable source has no fabricated zero measurement."""
+        if self.metrics is None:
+            return
+        if not self.settings.infrastructure_enabled:
+            self.metrics.dependency("configuration", False, 0)
+            self.metrics.postgres_connections(None)
+            return
+
+        async def connections() -> None:
+            count = None
+            try:
+                count = await asyncio.wait_for(self.count_postgres_connections(), self.settings.dependency_timeout)
+            except Exception:
+                count = None
+            if self.metrics is not None:
+                self.metrics.postgres_connections(count)
+
+        async def messages(queue: str) -> None:
+            count = None
+            try:
+                count = await asyncio.wait_for(self.count_queue_messages(queue), self.settings.dependency_timeout)
+            except Exception:
+                count = None
+            if self.metrics is not None:
+                self.metrics.queue_messages(queue, count)
+
+        await asyncio.gather(self.check(), connections(), *(messages(name) for name in self.settings.telemetry_queues))
+
+    async def count_postgres_connections(self) -> int:
+        async with postgres_transaction(self.settings) as connection:
+            await connection.execute(
+                "SELECT set_config('statement_timeout', %s, true)", (str(int(self.settings.dependency_timeout * 1000)),)
+            )
+            cursor = await connection.execute(
+                "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()"
+            )
+            row = await cursor.fetchone()
+            if row is None:
+                raise RuntimeError("Connection observation is unavailable")
+            return int(row[0])
+
+    async def count_queue_messages(self, queue: str) -> int:
+        settings = self.settings
+        connection = await aio_pika.connect(
+            host=settings.rabbitmq_host,
+            port=settings.rabbitmq_port,
+            login=settings.rabbitmq_user,
+            password=settings.rabbitmq_password.get_secret_value(),
+            timeout=settings.dependency_timeout,
+        )
+        async with connection:
+            async with await connection.channel() as channel:
+                observed = await channel.declare_queue(queue, passive=True)
+                count = observed.declaration_result.message_count
+                if count is None:
+                    raise RuntimeError("Queue observation is unavailable")
+                return count
 
     async def check_postgres(self) -> None:
-        settings = self.settings
-        conninfo = make_conninfo(
-            host=settings.postgres_host,
-            port=str(settings.postgres_port),
-            user=settings.postgres_user,
-            password=settings.postgres_password.get_secret_value(),
-            dbname=settings.postgres_database,
-            connect_timeout=str(max(1, int(settings.dependency_timeout))),
-        )
-        async with await AsyncConnection.connect(conninfo) as connection:
+        async with postgres_transaction(self.settings) as connection:
             cursor = await connection.execute("SELECT 1")
             if await cursor.fetchone() != (1,):
                 raise RuntimeError("PostgreSQL probe did not return the expected result")

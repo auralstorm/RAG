@@ -48,6 +48,10 @@ erDiagram
 
 **逻辑契约落实（2026-11-24）：** P0-04-02 以 User、ExternalIdentity 与 SubjectBinding 明确规范平台主体及既有管理员/员工来源映射，字段、状态、权限与 Schema 见 [身份与授权契约](../../api/iam-policy-contracts.md) 和 [统一契约 2.1](../../architecture/统一契约与跨版本演进规则.md#21-v10-平台主体与身份授权契约)。下列 admin_users/employees 仍保留为原逻辑设计；实际 users/identities、来源关联和 FK/唯一约束由 P1-03 在调查实际消费者后冻结，本轮没有物理表迁移。
 
+**物理迁移落实（2026-11-25）：** P1-03 确认实际代码和本地开发库没有存量来源档案表或业务外键，采用 users/identities/subject_bindings、user_roles 及权限/审计基础表；不新建平行的 admin_users/employees/admin_user_roles。规范主体及显式来源 ID 语义保持兼容，唯一/FK、软删除、角色保护与审计追加写入约束以 [0002 迁移](../../../backend/migrations/versions/0002_iam_audit.py) 为准。调查、精确身份索引及回退边界见 [P1-03 实施记录](implementation/P1-03.md)。以下清单继续作为原逻辑设计输入，不代表当前物理 DDL。
+
+**平台账号落实（2026-11-26）：** 正式平台密码凭据独立保存于 `platform_password_credentials`，通过 identity FK 关联 `users/identities`；密码仅存 Argon2id 校验值，用户名不区分大小写唯一。`identity_applications` 独立控制 Chat/Admin 入口，`user_roles` 控制后台操作权限；建号默认授予 Chat，Admin 入口显式授权。实际 DDL 以 [0005 迁移](../../../backend/migrations/versions/0005_platform_password_accounts.py) 为准；Admin 用户管理 UI/API 仍按 P5-04 交付。
+
 #### `admin_users`
 - `id UUID PK`
 - `username VARCHAR(128) UNIQUE`
@@ -80,7 +84,7 @@ erDiagram
 
 #### `employees`
 - `id UUID PK`
-- `source_id VARCHAR(256)`：OAuth 来源的稳定主体 ID，敏感字段限制访问
+- `source_id VARCHAR(256)`：身份来源的稳定主体 ID，敏感字段限制访问；平台账号或后续外部身份均经显式映射
 - `display_name VARCHAR(128)`
 - `login_provider VARCHAR(32)`
 - `status VARCHAR(24)`：ACTIVE / PENDING_DEPARTURE / DEPARTED / DISABLED
@@ -205,6 +209,8 @@ Chunk 内容可以按数据量和保留策略选择 PostgreSQL 保存或仅存�
 
 **契约落实（2026-11-24）：** P0-04-05 的 Provider/ModelConfig、私有 Secret/供应商引用、ModelRequest/Response/Usage 与调用规则见 [模型网关契约](../../api/model-gateway-contracts.md)。以下表字段仍为物理设计输入，密文列/Key 版本、路由标识和固定配置映射在 P2 调查实际存量后明确实施；本轮无表/列迁移，公开 DTO 不返回私有 Stored 模型。
 
+**P2-01 增量（2026-11-26）：** 真实迁移 `0006_provider_registry` 将当前 Provider、不可变配置版本、加密 Secret 和代理引用分表存储，并采用软删除；管理 API 的投影、并发校验和初始化见 [P2-01](implementation/P2-01.md)。以下旧字段列表保留设计输入，实际列与私有引用以迁移为准，尚无 models/model_call_logs 表。
+
 #### `providers`
 - `id UUID PK`
 - `name VARCHAR(128)`
@@ -305,6 +311,8 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 
 审计日志不可由普通业务 API 删除。敏感快照需字段脱敏、访问受限。
 
+**实施落实（2026-11-25）：** 实际沿用 0002 的 audit_events，而非新增 audit_logs；[P1-06](implementation/P1-06.md) 提供统一追加 Writer 与 audit.read 保护的 `/api/v1/admin/audit-logs` 查询。当前角色/IP、动作前缀派生的 module、目标与请求关联及强类型摘要以实际 AuditEvent/AuditLogView 为准，protected_reason_ref 不进入公开投影。没有新 DDL 或历史回填，数据库版本保持 0004。
+
 #### `lifecycle_jobs`
 记录待离职标记、恢复、到期清理、清理结果和关联审计事件。会话正文清理、身份映射清理、匿名指标保留和合规审计保留必须分别定义规则。
 
@@ -331,7 +339,7 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 
 - 前缀：`/api/v1`
 - JSON：UTF-8；时间 ISO 8601 UTC。
-- 认证：后台 JWT；员工 OAuth 登录后由平台签发短期 Access Token + Refresh Token。
+- 认证：平台账号密码或后续外部身份源验证成功后，由平台签发短期 Access Token + Refresh Token；凭据不进入平台 Token。
 - 分页：`page, page_size` 或 cursor；列表响应统一包含 `items, total, page, page_size`。
 - 错误格式：
 
@@ -372,7 +380,7 @@ Trace 技术数据与身份映射分离。匿名 Trace 查询不应 join 出员�
 | POST | `/employees/{id}/pending-departure` | 标记待离职 | SUPER_ADMIN |
 | POST | `/employees/{id}/restore` | 恢复正常 | SUPER_ADMIN |
 
-员工 OAuth 回调路径按所选供应商确定；平台统一映射为内部 Employee。
+当前平台账号经 `/api/v1/auth/{application}/login` 完成密码验证；后续若接入外部 OAuth/OIDC，再增加绑定一次性登录事务的回调路径。所有身份来源均映射至稳定平台用户，不自动按用户名/email 合并。
 
 ### 6.2 Provider / Model
 
@@ -477,6 +485,8 @@ MVP 可不开放这些接口；如提前实现，仅允许内部实验权限。
 | Chat | - | - | - | 本人会话 |
 
 需注意：角色矩阵是后台管理权限，不自动等价于员工对知识内容的访问权限。
+
+**实施落实（2026-11-25）：** [P1-05](implementation/P1-05.md) 通过 0004 迁移冻结 23 项操作与三个固定角色关系，审计员按本节可读角色/权限目录；自定义角色仅可委派只读操作。KB 内容使用目的隔离的显式 Grant，超级管理员也无隐式内容范围；不可委派的 acl.manage 负责显式授权/撤权。当前只实现授权范围 ID，KB 实体及资源 FK 随 P2-03 补齐，未提前实现知识库 CRUD。
 
 ## 8. 数据生命周期规则
 

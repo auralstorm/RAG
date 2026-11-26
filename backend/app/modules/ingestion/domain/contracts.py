@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Self
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import Field, JsonValue, model_validator
 
 from app.core.contracts import UtcTimestamp, VersionedContract
 from app.modules.documents.domain.contracts import DocumentVersionRef
@@ -66,6 +66,10 @@ class IngestionProgress(VersionedContract):
         return self
 
 
+def _intent_hash(payload: dict[str, JsonValue]) -> str:
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 def ingestion_job_key(
     version: DocumentVersionRef,
     pipeline_version: str,
@@ -73,18 +77,20 @@ def ingestion_job_key(
     terminal_stage: IngestionStage,
 ) -> str:
     """Stable intent key, separate from client upload keys and per-stage deduplication."""
-    payload = {
-        "version": version.model_dump(mode="json"),
-        "pipeline_version": pipeline_version,
-        "job_type": job_type.value,
-        "terminal_stage": terminal_stage.value,
-    }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return _intent_hash(
+        {
+            "version": version.model_dump(mode="json"),
+            "pipeline_version": pipeline_version,
+            "job_type": job_type.value,
+            "terminal_stage": terminal_stage.value,
+        }
+    )
 
 
 def ingestion_stage_key(version: DocumentVersionRef, pipeline_version: str, stage: IngestionStage) -> str:
-    payload = {"version": version.model_dump(mode="json"), "pipeline_version": pipeline_version, "stage": stage.value}
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return _intent_hash(
+        {"version": version.model_dump(mode="json"), "pipeline_version": pipeline_version, "stage": stage.value}
+    )
 
 
 class IngestionJob(DocumentVersionRef):

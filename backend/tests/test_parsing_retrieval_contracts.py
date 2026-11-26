@@ -9,6 +9,7 @@ from app.modules.chunking.application.validation import validate_chunk_set
 from app.modules.chunking.domain.contracts import Chunk, ChunkMetadata, ChunkRole, ChunkSource, ChunkSourceSpan
 from app.modules.conversations.application.messages import (
     complete_sourced_answer,
+    prepare_sourced_generation,
     require_owned_conversation,
     require_readable_message,
 )
@@ -327,15 +328,17 @@ def test_answer_citation_uses_authoritative_metadata_and_can_be_read_by_the_owne
     request, facts = scenario()
     owner, pending = pending_answer()
     retrieved = result()
-    completed = complete_sourced_answer(
+    generation = prepare_sourced_generation(
         owner,
         pending,
-        "答案 [[cite:1]]，补充说明 [[cite:1]]",
         scope=prepare_retrieval_scope(request, facts, now=NOW),
         retrieval=retrieved,
         context_chunk_ids=(CHUNK,),
         fresh_facts=facts,
         now=NOW,
+    )
+    completed = complete_sourced_answer(
+        owner, generation, "答案 [[cite:1]]，补充说明 [[cite:1]]", fresh_facts=facts, now=NOW
     )
     assert completed.evidence_versions == (reference(),)
     (citation,) = completed.message.citations
@@ -355,17 +358,17 @@ def test_answer_citation_uses_authoritative_metadata_and_can_be_read_by_the_owne
 def test_answer_rejects_missing_unknown_or_malformed_markers(answer: str) -> None:
     request, facts = scenario()
     owner, pending = pending_answer()
+    generation = prepare_sourced_generation(
+        owner,
+        pending,
+        scope=prepare_retrieval_scope(request, facts, now=NOW),
+        retrieval=result(),
+        context_chunk_ids=(CHUNK,),
+        fresh_facts=facts,
+        now=NOW,
+    )
     with pytest.raises(ValueError, match="citation"):
-        complete_sourced_answer(
-            owner,
-            pending,
-            answer,
-            scope=prepare_retrieval_scope(request, facts, now=NOW),
-            retrieval=result(),
-            context_chunk_ids=(CHUNK,),
-            fresh_facts=facts,
-            now=NOW,
-        )
+        complete_sourced_answer(owner, generation, answer, fresh_facts=facts, now=NOW)
 
 
 @pytest.mark.parametrize("selection", [(), (CHUNK, CHUNK), (UUID(int=99),)])
@@ -373,10 +376,9 @@ def test_model_cannot_cite_chunks_outside_the_prompt_selection(selection: tuple[
     request, facts = scenario()
     owner, pending = pending_answer()
     with pytest.raises(ValueError, match="evidence"):
-        complete_sourced_answer(
+        prepare_sourced_generation(
             owner,
             pending,
-            "答案 [[cite:1]]",
             scope=prepare_retrieval_scope(request, facts, now=NOW),
             retrieval=result(),
             context_chunk_ids=selection,
@@ -402,16 +404,16 @@ def test_revocation_hides_the_entire_answer_during_completion_and_history() -> N
     request, facts = scenario()
     owner, pending = pending_answer()
     scope = prepare_retrieval_scope(request, facts, now=NOW)
-    completed = complete_sourced_answer(
+    generation = prepare_sourced_generation(
         owner,
         pending,
-        "答案 [[cite:1]]",
         scope=scope,
         retrieval=result(),
         context_chunk_ids=(CHUNK,),
         fresh_facts=facts,
         now=NOW,
     )
+    completed = complete_sourced_answer(owner, generation, "答案 [[cite:1]]", fresh_facts=facts, now=NOW)
     document = facts.documents[0]
     policy_id = UUID(int=50)
     restricted = changed(
@@ -422,11 +424,8 @@ def test_revocation_hides_the_entire_answer_during_completion_and_history() -> N
     with pytest.raises(PermissionError):
         complete_sourced_answer(
             owner,
-            pending,
+            generation,
             "答案 [[cite:1]]",
-            scope=scope,
-            retrieval=result(),
-            context_chunk_ids=(CHUNK,),
             fresh_facts=changed(facts, documents=(restricted,)),
             now=NOW,
         )
@@ -451,21 +450,67 @@ def test_history_requires_uncited_dependencies_and_valid_message_states() -> Non
         changed(pending, status=MessageStatus.CANCELLED, content="partial private output")
     with pytest.raises(ValidationError, match="matching ordered"):
         changed(pending, status=MessageStatus.COMPLETED, content="answer without evidence")
-    completed = complete_sourced_answer(
+    uncited = changed(reference(), document_id=UUID(int=90), document_version_id=UUID(int=91))
+    source = facts.documents[0]
+    packet = source.published
+    manifest = changed(packet.manifest, documents=(reference(), uncited))
+    assert packet.index.validation is not None
+    report = changed(
+        packet.index.validation,
+        manifest_sha256=manifest.content_hash,
+        expected_document_count=2,
+        actual_document_count=2,
+        expected_chunk_count=2,
+        actual_chunk_count=2,
+    )
+    packet = changed(
+        packet, manifest=manifest, index=changed(packet.index, manifest_sha256=manifest.content_hash, validation=report)
+    )
+    second_source = changed(
+        source,
+        published=changed(
+            packet,
+            document=changed(packet.document, id=uncited.document_id),
+            version=changed(
+                packet.version, document_id=uncited.document_id, document_version_id=uncited.document_version_id
+            ),
+        ),
+        policy=changed(source.policy, document_id=uncited.document_id),
+    )
+    second_chunk = changed(
+        chunk(), id=UUID(int=92), document_id=uncited.document_id, document_version_id=uncited.document_version_id
+    )
+    facts = changed(facts, documents=(changed(source, published=packet), second_source), chunks=(chunk(), second_chunk))
+    retrieved = result()
+    first_chunk = retrieved.chunks[0]
+    retrieved = changed(
+        retrieved,
+        chunks=(
+            first_chunk,
+            changed(
+                first_chunk,
+                chunk_id=second_chunk.id,
+                document_id=uncited.document_id,
+                document_version_id=uncited.document_version_id,
+            ),
+        ),
+        diagnostics=changed(retrieved.diagnostics, returned_chunk_count=2),
+    )
+    generation = prepare_sourced_generation(
         owner,
         pending,
-        "答案 [[cite:1]]",
         scope=prepare_retrieval_scope(request, facts, now=NOW),
-        retrieval=result(),
-        context_chunk_ids=(CHUNK,),
+        retrieval=retrieved,
+        context_chunk_ids=(CHUNK, second_chunk.id),
         fresh_facts=facts,
         now=NOW,
     )
-    uncited = changed(reference(), document_id=UUID(int=90), document_version_id=UUID(int=91))
-    dependent = changed(completed, evidence_versions=(*completed.evidence_versions, uncited))
+    completed = complete_sourced_answer(owner, generation, "答案 [[cite:1]]", fresh_facts=facts, now=NOW)
+    assert completed.evidence_versions == (reference(), uncited)
+    assert tuple(citation.chunk_id for citation in completed.message.citations) == (CHUNK,)
     with pytest.raises(PermissionError, match="evidence version is unavailable"):
         require_readable_message(
-            owner, dependent, request.access_context, facts.authorization, facts.documents, now=NOW
+            owner, completed, request.access_context, facts.authorization, facts.documents[:1], now=NOW
         )
     with pytest.raises(ValidationError, match="recorded evidence dependencies"):
         changed(completed, evidence_versions=())
@@ -742,7 +787,8 @@ def test_result_validation_refuses_tampered_or_unbound_candidates(error: str) ->
         validate_retrieval_result(scope, changed(response, chunks=(candidate,)), facts, now=NOW)
 
 
-def test_result_validation_rechecks_index_publication_and_rejects_stale_results() -> None:
+@pytest.mark.parametrize("has_chunks", [True, False])
+def test_result_validation_rechecks_index_publication_and_rejects_stale_results(has_chunks: bool) -> None:
     request, facts = scenario()
     scope = prepare_retrieval_scope(request, facts, now=NOW)
     packet = facts.documents[0].published
@@ -766,8 +812,11 @@ def test_result_validation_rechecks_index_publication_and_rejects_stale_results(
         alias=changed(packet.alias, active_index_version_id=target_id, physical_index_name=active.physical_index_name),
     )
     fresh = changed(facts, knowledge_bases=(kb,), documents=(changed(facts.documents[0], published=packet),))
+    response = result()
+    if not has_chunks:
+        response = changed(response, chunks=(), diagnostics=changed(response.diagnostics, returned_chunk_count=0))
     with pytest.raises(PermissionError, match="active index"):
-        validate_retrieval_result(scope, result(), fresh, now=NOW)
+        validate_retrieval_result(scope, response, fresh, now=NOW)
 
 
 def test_result_metadata_limits_and_expiry_are_checked_without_exposing_content() -> None:

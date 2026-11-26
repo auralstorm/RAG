@@ -41,7 +41,16 @@
 - [P0-01 工程初始化与本地验收](implementation/P0-01.md)：记录实际命令、结果和待执行的远程检查，不代替阶段 Exit Criteria。
 - [P0-02 Docker 开发环境与就绪检查](implementation/P0-02.md)：记录依赖启动、持久化、故障恢复和重置验证。
 - 试点口径、问答样例和 Chat/Admin 验收流程见 [P0-05 MVP 需求与验收口径](implementation/P0-05.md)。
+- [P1-01 后端工程底座](implementation/P1-01.md) 记录数据库迁移、事务边界和模块依赖验证。
+- [P1-02 前端基础交付](implementation/P1-02.md) 记录双应用登录/路由、受控状态、基础表格、真实 API 连通性及本地静态部署验收；完整任务待 P1-04/P1-05 联调，不代表真实认证闭环。
+- [P1-04 平台账号与身份映射](implementation/P1-04.md) 记录正式平台密码登录、受控 CLI 建号、会话续期与撤销、双应用入口隔离及未来外部身份源边界。
+- [P1-05 RBAC 与权限执行](implementation/P1-05.md) 记录固定矩阵、自定义角色边界、目的隔离 ACL、即时撤权、确认/审计与显式首位管理员配置。
+- [P1-06 操作审计基础能力](implementation/P1-06.md) 记录统一追加写入、登录及权限变更定位、受保护查询、防修改与审计失败回滚。
+- [P1-07 基础健康检查与可观测性](implementation/P1-07.md) 记录受控日志、SDK 指标、认证 Phoenix 导出、实际依赖观测与传播/隐私边界。
+- [P2-01 Provider 管理](implementation/P2-01.md) 记录供应商 CRUD、当前权限、加密凭据、配置并发保护、软删除与 Admin ProTable 页面；模型调用联动继续由 P2-02 验收。
+- [Chat 页面与开发回复来源](implementation/chat-ui.md) 记录目录整改、会话交互、开发 mocks 隔离及生产未接入状态；正式登录、RAG 与会话持久化继续按实施计划交付。
+- [Admin Pro 风格框架](implementation/admin-pro-ui.md) 记录保留 Vite 的 ProComponents 布局、现有页面迁移与隔离浏览器验收；后续管理业务按原计划推进。
 
 对象存储已按用户确认采用 RustFS，见 [ADR-0015](../../adr/0015-rustfs-object-storage.md) 与 [替换实施记录](implementation/rustfs-object-storage.md)。选型和开发验收已分开记录，POC-08 的生产准入检查继续在 P0-03 完成。
 
-当前进入 P0-03，已确认文档格式，百炼模型仅作为本次 POC 候选，执行顺序、功能证据及待确认项见 [P0-03 实施进度](implementation/P0-03.md)。
+技术 POC 的执行顺序、功能证据及待确认项见 [P0-03 实施进度](implementation/P0-03.md)。

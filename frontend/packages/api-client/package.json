@@ -2,6 +2,9 @@
   "name": "@enterprise-rag/api-client",
   "version": "0.1.0",
   "private": true,
+  "dependencies": {
+    "@enterprise-rag/shared": "workspace:*"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

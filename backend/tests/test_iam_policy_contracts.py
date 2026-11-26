@@ -275,6 +275,16 @@ def test_system_roles_are_protected_and_cannot_be_relabelled_as_custom(code: Sys
             Role.model_validate({**role.model_dump(), **update})
 
 
+def test_role_schema_exports_the_server_reserved_role_conditions() -> None:
+    schema = Role.model_json_schema()
+    assert schema["if"] == {
+        "properties": {"code": {"enum": [code.value for code in SystemRoleCode]}},
+        "required": ["code"],
+    }
+    assert schema["then"] == {"properties": {"is_system": {"const": True}, "protected": {"const": True}}}
+    assert schema["else"] == {"properties": {"is_system": {"const": False}}}
+
+
 def test_contracts_preserve_permission_semantics_versions_and_private_identity_fields() -> None:
     permission = Permission(id=UUID(int=70), code="kb.read", resource="kb", action="read")
     with pytest.raises(ValidationError, match="resource.action"):

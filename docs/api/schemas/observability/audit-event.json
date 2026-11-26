@@ -1,5 +1,13 @@
 {
   "$defs": {
+    "AccessPurpose": {
+      "enum": [
+        "admin",
+        "chat"
+      ],
+      "title": "AccessPurpose",
+      "type": "string"
+    },
     "AuditAction": {
       "enum": [
         "iam.login",
@@ -36,6 +44,26 @@
     "AuditSnapshot": {
       "additionalProperties": false,
       "properties": {
+        "application_access": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "chat",
+                  "admin"
+                ],
+                "type": "string"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Application Access"
+        },
         "configuration_id": {
           "anyOf": [
             {
@@ -90,6 +118,40 @@
           "default": null,
           "title": "Permission Ids"
         },
+        "proxy_configured": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proxy Configured"
+        },
+        "resource_grant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResourceGrant"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "resource_purpose": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AccessPurpose"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "role_ids": {
           "anyOf": [
             {
@@ -127,6 +189,67 @@
       },
       "title": "AuditSnapshot",
       "type": "object"
+    },
+    "KnowledgePermission": {
+      "enum": [
+        "READ",
+        "MANAGE"
+      ],
+      "title": "KnowledgePermission",
+      "type": "string"
+    },
+    "ResourceGrant": {
+      "additionalProperties": false,
+      "description": "Explicit KB capability; source profile types require a verified SubjectBinding.",
+      "properties": {
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kb_id": {
+          "format": "uuid",
+          "title": "Kb Id",
+          "type": "string"
+        },
+        "permission": {
+          "$ref": "#/$defs/KnowledgePermission"
+        },
+        "principal_id": {
+          "format": "uuid",
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "principal_type": {
+          "$ref": "#/$defs/ResourcePrincipalType"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kb_id",
+        "principal_type",
+        "principal_id",
+        "permission"
+      ],
+      "title": "ResourceGrant",
+      "type": "object"
+    },
+    "ResourcePrincipalType": {
+      "enum": [
+        "USER",
+        "ROLE",
+        "GROUP",
+        "ADMIN_USER",
+        "EMPLOYEE"
+      ],
+      "title": "ResourcePrincipalType",
+      "type": "string"
     },
     "SystemRoleCode": {
       "enum": [

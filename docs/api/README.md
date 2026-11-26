@@ -4,7 +4,7 @@
 
 | 制品 | 来源与用途 |
 |---|---|
-| [openapi.json](openapi.json) | [实际 FastAPI 应用](../../backend/app/main.py) 的 OpenAPI 3.1，当前业务路由尚未实现，只包含实际健康检查接口及公共错误组件 |
+| [openapi.json](openapi.json) | [实际 FastAPI 应用](../../backend/app/main.py) 的 OpenAPI 3.1，包含健康检查、P1-04 实际认证入口及公共错误组件；其他业务路由仍按任务交付 |
 | [API Error Schema](schemas/api-error.json) | [公共 DTO](../../backend/app/api/schemas/common.py) 的 `ApiErrorEnvelope`，固定 `error.code/message/request_id/retryable/details` |
 | [分页参数 Schema](schemas/pagination-query.json) | `PaginationQuery`，页码从 1 起、默认 1；page_size 默认 20、范围 1–100；未知字段拒绝 |
 | [分页响应 Schema](schemas/page-response.json) | `PageResponse`，包含 `items/total/page/page_size`；total 非负，返回数量不得超过 page_size 或 total |

@@ -10,7 +10,7 @@
 make poc-storage
 ```
 
-[执行入口](../../../../scripts/poc/storage.py) 按 `uv.lock` 运行 [真实服务测试](../../../../backend/tests/test_storage_poc.py)，使用固定 RustFS 镜像与 [独立编排](../../../../infra/compose/storage-poc.yaml)。仅启动 `enterprise-rag-poc-storage` 和恢复阶段的 `enterprise-rag-poc-storage-restore`；后者使用空的新数据卷，源 POC 服务暂时停止以释放相同的测试端口。结束后删除两个 POC 项目的容器与卷，开发环境和 MinIO 源卷不参与。
+执行入口按 `uv.lock` 运行真实服务测试，使用固定 RustFS 镜像。每次生成独立 Compose 项目名和随机凭据，写入前校验该项目的 RustFS 回环端口映射。恢复阶段启动独立项目和空卷，源 POC 服务暂时停止以释放测试端口。结束后删除本次生成的两个项目的容器与卷。[执行入口](../../../../scripts/poc/storage.py) · [测试](../../../../backend/tests/test_storage_poc.py) · [独立编排](../../../../infra/compose/storage-poc.yaml)
 
 测试复用 `.env.test` 的回环端口和本地根凭据，因此不能与 `make infra-test` 或其他占用 29000/29001 的测试同时运行。应用仍使用原 S3 Adapter；测试不会将管理员 SDK、STS 或身份管理引入业务接口。
 

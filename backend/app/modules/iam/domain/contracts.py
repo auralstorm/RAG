@@ -4,7 +4,7 @@ from enum import StrEnum
 from typing import Annotated, Self
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from app.core.contracts import UtcTimestamp as UtcTimestamp
 from app.core.contracts import VersionedContract
@@ -96,6 +96,14 @@ class SubjectBinding(LegacyPrincipalKey):
 
 class Role(IamContract):
     """Role metadata does not grant permissions; assignments and grants are separate facts."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "if": {"properties": {"code": {"enum": [role.value for role in SystemRoleCode]}}, "required": ["code"]},
+            "then": {"properties": {"is_system": {"const": True}, "protected": {"const": True}}},
+            "else": {"properties": {"is_system": {"const": False}}},
+        }
+    )
 
     id: UUID
     code: str = Field(min_length=1, max_length=64, pattern=r"^[A-Z][A-Z0-9_]*$")

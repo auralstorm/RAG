@@ -1,4 +1,4 @@
-.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test poc-search poc-storage
+.PHONY: install dev-backend dev-chat dev-admin lint format-check typecheck test build check contracts contracts-check infra-up infra-down infra-status infra-init infra-reset infra-test frontend-e2e db-upgrade db-current poc-search poc-storage
 
 PROFILE ?= development
 
@@ -7,7 +7,7 @@ install:
 	pnpm install --frozen-lockfile
 
 dev-backend:
-	uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+	uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --no-proxy-headers --no-access-log --log-config backend/logging.json
 
 dev-chat:
 	pnpm dev:chat
@@ -61,7 +61,16 @@ infra-reset:
 	uv run --locked python scripts/infrastructure.py reset --profile $(PROFILE) --confirm-reset
 
 infra-test:
-	uv run --locked pytest -m infrastructure -v
+	uv run --locked pytest -m 'infrastructure and not frontend_e2e' -v
+
+frontend-e2e:
+	uv run --locked pytest backend/tests/test_frontend_browser.py -m frontend_e2e -s -q --tb=short
+
+db-upgrade:
+	ENTERPRISE_RAG_INFRA_PROFILE=$(PROFILE) uv run --locked python -m scripts.migrate_database upgrade
+
+db-current:
+	ENTERPRISE_RAG_INFRA_PROFILE=$(PROFILE) uv run --locked python -m scripts.migrate_database current
 
 poc-search:
 	uv run --locked python scripts/poc/search.py

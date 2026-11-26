@@ -58,6 +58,8 @@ S3 客户端统一位于 [object_storage Adapter](../backend/app/adapters/object
 
 新配置使用 `ENTERPRISE_RAG_OBJECT_STORAGE_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET` 及 Compose 的 `OBJECT_STORAGE_PORT/OBJECT_STORAGE_CONSOLE_PORT`。`make infra-init` / `make infra-up` 发现旧 profile 时先保存 `.env.<profile>.pre-rustfs`（0600），再追加新名称并原子替换 profile；原有密码、端口和其他服务配置保留。新名称已存在时优先使用，重复运行不会再改写。旧 `ENTERPRISE_RAG_MINIO_*` 作为 Settings 环境兼容别名保留，建议新配置统一使用新名称；进程环境优先于配置文件。
 
+`make infra-up` 启动前核对后端解析的端点和凭据是否与 Compose 的 RustFS 配置一致。存在冲突时先移除旧别名覆盖或统一为匹配的规范变量。`make poc-storage` 使用当次生成的凭据和经 Compose 验证的回环端点。
+
 配置升级不复制对象，也不自动停止旧 MinIO。首次从已有 MinIO 切换时，先盘点所有桶、版本、策略/加密，验证新 RustFS 卷，再停止本项目旧容器释放端口。存在对象或版本时先按 S3 迁移并逐项校验，不直接挂载 MinIO 原卷。本次开发桶为空，旧 `enterprise-rag-dev_minio-data` 卷及镜像保留，旧服务停止。
 
 `make infra-down` 保留活动数据卷；`make infra-reset` 只删除当前 Compose 定义的卷，包括 RustFS 数据与日志，**不删除已退出编排的 MinIO 原卷**。原 MinIO Dockerfile 仅保留历史构建/回退用途。不要使用 `--remove-orphans` 清理未盘点的旧容器。

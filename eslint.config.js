@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import globals from 'globals';
+import importX from 'eslint-plugin-import-x';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
@@ -31,7 +32,25 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
     ],
+    plugins: { 'import-x': importX },
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    rules: {
+      'import-x/no-duplicates': 'error',
+      'import-x/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            { pattern: '@enterprise-rag/**', group: 'internal' },
+            { pattern: '@admin/**', group: 'internal' },
+            { pattern: '@chat/**', group: 'internal' },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
+    },
   },
   {
     files: ['frontend/apps/*/src/**/*.{ts,tsx}'],

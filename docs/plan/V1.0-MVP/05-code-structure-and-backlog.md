@@ -103,8 +103,10 @@ enterprise-agent-platform/
 │   │   │   ├── src/
 │   │   │   │   ├── app/
 │   │   │   │   ├── routes/
-│   │   │   │   ├── features/chat/
-│   │   │   │   ├── stores/
+│   │   │   │   ├── api/
+│   │   │   │   ├── assets/
+│   │   │   │   ├── pages/auth/、pages/chat/
+│   │   │   │   ├── modules/auth/、modules/chat/
 │   │   │   │   └── styles/
 │   │   │   └── tests/
 │   │   └── admin/
@@ -113,19 +115,15 @@ enterprise-agent-platform/
 │   │       ├── .env.example
 │   │       ├── src/
 │   │       │   ├── app/
+│   │       │   ├── api/
+│   │       │   ├── assets/
+│   │       │   ├── pages/auth/、pages/dashboard/
 │   │       │   ├── routes/
-│   │       │   ├── features/
+│   │       │   ├── modules/
 │   │       │   │   ├── dashboard/
-│   │       │   │   ├── providers/
-│   │       │   │   ├── knowledge-bases/
-│   │       │   │   ├── documents/
-│   │       │   │   ├── traces/
-│   │       │   │   ├── users/
-│   │       │   │   ├── roles/
-│   │       │   │   ├── audit/
-│   │       │   │   ├── evaluation/
-│   │       │   │   └── settings/
-│   │       │   ├── stores/
+│   │       │   │   ├── knowledgeBase/
+│   │       │   │   ├── document/
+│   │       │   │   └── prompt/
 │   │       │   └── styles/
 │   │       └── tests/
 │   └── packages/
@@ -149,6 +147,8 @@ enterprise-agent-platform/
 ```
 
 Chat/Admin 应用分离与工具选择依据 [ADR-0014](../../adr/0014-monorepo-and-independent-frontend-apps.md)。前端 pnpm workspace 在根目录声明 `frontend/apps/*` 与 `frontend/packages/*`，使用统一 pnpm 锁文件；Python 依赖由 uv 与实际 pyproject.toml/uv.lock 管理，不通过 pnpm 安装。
+
+前端业务模块和页面目录使用 camelCase，组件文件使用 PascalCase，普通逻辑文件使用 camelCase，基础目录使用小写单词。模块按需添加 API、store、domain、Hook 和组件，不预建空目录；模块通过 `index.ts` 导出公开接口。Admin 使用 `@admin/*`、Chat 使用 `@chat/*` 别名指向各自 `src/`，并在 Vite、TypeScript 和 Vitest 中保持一致。目录图中的未来模块只代表规划，不等同于当前版本的交付要求。
 
 两个前端各自拥有 Vite 入口、路由、环境配置、构建产物与部署目标，共用后端 API。公共包维护显式导出，依赖方向为应用 → 公共包；公共包不依赖应用，两个应用不直接导入彼此源码。登录、API 地址与跨应用跳转按真实环境配置，状态和权限以既有后端契约为准。
 
@@ -255,7 +255,7 @@ flowchart LR
 | IAM-002 | 后台用户 CRUD | 创建、编辑、禁用、重置、删除 |
 | IAM-003 | RBAC | 固定三角色 + 自定义角色 |
 | IAM-004 | API / 菜单 / 操作权限 | 后端强制校验 |
-| IAM-005 | 员工 OAuth | 首期接入一种身份源，Adapter 可扩展 |
+| IAM-005 | 平台员工账号 | 平台密码身份源、统一会话与受控 CLI 建号；外部 OAuth Adapter 按后续需求接入 |
 | IAM-006 | Employee 身份映射 | sourceId 与内部 UUID 分离 |
 | IAM-007 | 员工状态机 | ACTIVE / PENDING_DEPARTURE / DEPARTED |
 | IAM-008 | KB ACL | KB / Document 权限上下文 |
@@ -324,7 +324,7 @@ flowchart LR
 | ID | 任务 | 交付物 / 验收 |
 |---|---|---|
 | CHAT-001 | Chat 主页面 | 对话列表 + 主聊天区 |
-| CHAT-002 | OAuth 登录态 | 员工身份与权限 |
+| CHAT-002 | 平台账号登录态 | 员工身份、Chat 入口许可与资源权限 |
 | CHAT-003 | SSE 客户端 | 断线、错误、完成状态 |
 | CHAT-004 | 引用 UI | 文档、页码、摘录 |
 | CHAT-005 | 会话历史 | 仅本人可见 |
@@ -404,7 +404,7 @@ flowchart TD
 | S2 | 模型配置与 KB 基础 | Provider/Model CRUD、Model Gateway 首条链路、KB CRUD、上传 |
 | S3 | 文档入库闭环 | Parser、Chunker、Embedding、ES、Ingestion Job、索引版本 |
 | S4 | RAG 与 Chat 闭环 | Hybrid Retrieval、Reranker、Context Budget、SSE、Citation、多轮 |
-| S5 | 企业治理与运维 | Trace、Audit、权限测试、员工 OAuth、离职生命周期、Admin 页面 |
+| S5 | 企业治理与运维 | Trace、Audit、权限测试、员工账号管理与 Admin 访问授权、离职生命周期、Admin 页面 |
 | S6 | 质量评测与上线准备 | Golden Dataset、检索调试台、回归、性能/安全测试、部署演练 |
 
 该计划是排期模板，不是工期承诺。若只有 3–4 人，应减少一期范围或增加 Sprint，不应通过跳过 ACL、删除、引用验证和 Trace 来压缩时间。

@@ -8,12 +8,15 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@root/*": ["./*"]
+    },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "strict": true,
-    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx",
     "noUnusedLocals": true,
@@ -21,11 +24,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "src",
-    "../../packages/ui/src",
-    "../../packages/shared/src",
-    "../../packages/api-client/src"
-  ],
-  "exclude": ["../../packages/**/*.test.ts"]
+  "include": ["src"]
 }

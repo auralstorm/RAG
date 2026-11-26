@@ -1,11 +1,11 @@
 services:
   rustfs-volume-init:
     extends:
-      file: compose.yaml
+      file: rustfs.yaml
       service: rustfs-volume-init
   rustfs:
     extends:
-      file: compose.yaml
+      file: rustfs.yaml
       service: rustfs
     environment:
       # Test acceleration only; never inherit these into development/production.

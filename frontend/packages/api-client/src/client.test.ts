@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { createServer } from 'node:http';
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
+
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
+
 import { createApiClient } from './index';
 
 let status = 200;
@@ -51,6 +53,35 @@ it('reports unsuccessful HTTP responses without leaking their payload', async ()
     message: 'HTTP request failed (503)',
   });
 });
+
+it('preserves a configured reverse proxy prefix', async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response(JSON.stringify({ status: 'ok' })));
+  await createApiClient(`${baseUrl}/backend`, fetcher).getLiveness();
+  expect(fetcher.mock.calls[0]?.[0]?.toString()).toBe(
+    `${baseUrl}/backend/health/live`,
+  );
+});
+
+it('accepts the database-backed platform password login mode', async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response(JSON.stringify({ mode: 'platform' })));
+  await expect(
+    createApiClient('https://api.example/', fetcher).auth.configuration(
+      'chat',
+      new AbortController().signal,
+    ),
+  ).resolves.toEqual({ mode: 'platform' });
+});
+
+it.each(['javascript:alert(1)', 'https://user:password@example.com'])(
+  'rejects unsafe API URL %s',
+  (url) => {
+    expect(() => createApiClient(url)).toThrow('Invalid API base URL');
+  },
+);
 
 it('rejects an unexpected response instead of asserting its type', async () => {
   payload = { status: 'unavailable' };

@@ -21,7 +21,7 @@ line-length = 120
 select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 
 [tool.pyright]
-include = ["backend/app", "backend/tests", "scripts"]
+include = ["backend/app", "backend/migrations", "backend/tests", "scripts"]
 extraPaths = ["backend"]
 typeCheckingMode = "strict"
 pythonVersion = "3.12"
@@ -35,6 +35,7 @@ addopts = "-ra -m 'not infrastructure and not poc'"
 markers = [
     "infrastructure: starts this project's isolated Docker test environment",
     "poc: runs isolated real-service technical acceptance",
+    "frontend_e2e: production browser acceptance with isolated backend and static servers",
 ]
 
 [dependency-groups]

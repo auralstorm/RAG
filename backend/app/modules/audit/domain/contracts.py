@@ -2,13 +2,14 @@
 
 from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import Field, model_validator
 
 from app.core.contracts import TraceId, UtcTimestamp, VersionedContract
 from app.modules.iam.domain.contracts import SystemRoleCode, UserStatus
+from app.modules.policy.domain.contracts import AccessPurpose, ResourceGrant
 
 
 class AuditAction(StrEnum):
@@ -37,11 +38,23 @@ class AuditRisk(StrEnum):
 
 class AuditSnapshot(VersionedContract):
     enabled: bool | None = Field(default=None, strict=True)
+    proxy_configured: bool | None = Field(default=None, strict=True)
     user_status: UserStatus | None = None
+    application_access: tuple[Literal["chat", "admin"], ...] | None = Field(default=None, max_length=2)
     role_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)
     permission_ids: tuple[UUID, ...] | None = Field(default=None, max_length=100)
     configuration_id: UUID | None = None
     credential_present: bool | None = Field(default=None, strict=True)
+    resource_grant: ResourceGrant | None = None
+    resource_purpose: AccessPurpose | None = None
+
+    @model_validator(mode="after")
+    def require_grant_purpose(self) -> Self:
+        if (self.resource_grant is None) != (self.resource_purpose is None):
+            raise ValueError("An audited resource grant requires its application purpose")
+        if self.application_access is not None and len(set(self.application_access)) != len(self.application_access):
+            raise ValueError("Application access snapshots cannot contain duplicates")
+        return self
 
 
 class AuditEvent(VersionedContract):

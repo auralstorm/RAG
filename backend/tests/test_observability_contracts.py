@@ -6,7 +6,14 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
-from app.modules.audit.domain.contracts import AuditAction, AuditEvent, AuditResult, AuditRisk, StoredAuditEvent
+from app.modules.audit.domain.contracts import (
+    AuditAction,
+    AuditEvent,
+    AuditResult,
+    AuditRisk,
+    AuditSnapshot,
+    StoredAuditEvent,
+)
 from app.modules.traces.domain.contracts import Trace, TraceError, TraceSpan, TraceStage, TraceStatus
 from pydantic import ValidationError
 
@@ -100,6 +107,22 @@ def test_denied_audit_event_cannot_claim_committed_changes() -> None:
     with pytest.raises(ValidationError, match="committed change"):
         AuditEvent.model_validate(payload)
     assert AuditEvent.model_validate(payload | {"after": None}).result is AuditResult.DENIED
+
+
+def test_acl_audit_summary_requires_both_explicit_principal_and_application() -> None:
+    grant = {
+        "id": str(UUID(int=1)),
+        "kb_id": str(UUID(int=2)),
+        "principal_type": "USER",
+        "principal_id": str(UUID(int=3)),
+        "permission": "READ",
+    }
+    with pytest.raises(ValidationError, match="application purpose"):
+        AuditSnapshot.model_validate({"resource_grant": grant})
+    with pytest.raises(ValidationError, match="application purpose"):
+        AuditSnapshot.model_validate({"resource_purpose": "chat"})
+    summary = AuditSnapshot.model_validate({"resource_grant": grant, "resource_purpose": "chat"})
+    assert summary.resource_grant is not None and summary.resource_grant.principal_id == UUID(int=3)
 
 
 @pytest.mark.parametrize("field", ["api_key", "source_id", "prompt", "password"])
